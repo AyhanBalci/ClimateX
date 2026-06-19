@@ -1,0 +1,288 @@
+"use client";
+
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { Lead, LeadNotitie, LeadStatusHistorie, Offerte } from "../../lib/types";
+import { STATUS_OPTIONS, OFFERTE_STATUS_OPTIONS } from "../../lib/constants";
+import { supabase } from "../../lib/supabase";
+import { updateLeadStatus } from "../../lib/leadActions";
+
+function formatDateTime(value: string) {
+  return new Date(value).toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" });
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
+}
+
+type Props = {
+  lead: Lead;
+  onBack: () => void;
+  onLeadUpdated: (leadId: string, newStatus: string) => void;
+};
+
+export default function LeadDetail({ lead, onBack, onLeadUpdated }: Props) {
+  const [notities, setNotities] = useState<LeadNotitie[]>([]);
+  const [historie, setHistorie] = useState<LeadStatusHistorie[]>([]);
+  const [offertes, setOffertes] = useState<Offerte[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [newNote, setNewNote] = useState("");
+  const [newStatus, setNewStatus] = useState(lead.status);
+
+  const [offerteForm, setOfferteForm] = useState({ merk: "", model: "", prijs: "", status: OFFERTE_STATUS_OPTIONS[0] });
+
+  useEffect(() => {
+    async function fetchDetails() {
+      setLoading(true);
+      setError(null);
+
+      if (!supabase) {
+        setError("Supabase is niet geconfigureerd.");
+        setLoading(false);
+        return;
+      }
+
+      const [notitiesRes, historieRes, offertesRes] = await Promise.all([
+        supabase.from("lead_notities").select("*").eq("lead_id", lead.id).order("created_at", { ascending: false }),
+        supabase.from("lead_status_historie").select("*").eq("lead_id", lead.id).order("created_at", { ascending: false }),
+        supabase.from("offertes").select("*").eq("lead_id", lead.id).order("datum", { ascending: false }),
+      ]);
+
+      if (notitiesRes.error || historieRes.error || offertesRes.error) {
+        setError(notitiesRes.error?.message || historieRes.error?.message || offertesRes.error?.message || "Onbekende fout.");
+      } else {
+        setNotities((notitiesRes.data as LeadNotitie[]) || []);
+        setHistorie((historieRes.data as LeadStatusHistorie[]) || []);
+        setOffertes((offertesRes.data as Offerte[]) || []);
+      }
+      setLoading(false);
+    }
+
+    fetchDetails();
+  }, [lead.id]);
+
+  const timeline = useMemo(() => {
+    const items = [
+      { id: "created", type: "aangemaakt" as const, label: "Lead aangemaakt", created_at: lead.created_at },
+      ...historie.map((entry) => ({
+        id: entry.id,
+        type: "status" as const,
+        label: `Status gewijzigd naar "${entry.status}"`,
+        created_at: entry.created_at,
+      })),
+      ...notities.map((note) => ({
+        id: note.id,
+        type: "notitie" as const,
+        label: note.tekst,
+        created_at: note.created_at,
+      })),
+    ];
+    return items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [lead.created_at, historie, notities]);
+
+  const handleAddNote = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!newNote.trim() || !supabase) return;
+
+    const { data, error: insertError } = await supabase
+      .from("lead_notities")
+      .insert({ lead_id: lead.id, tekst: newNote.trim() })
+      .select()
+      .single();
+
+    if (insertError) {
+      setError(insertError.message);
+      return;
+    }
+    setNotities((current) => [data as LeadNotitie, ...current]);
+    setNewNote("");
+    setError(null);
+  };
+
+  const handleStatusChange = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const { error: statusError } = await updateLeadStatus(lead.id, newStatus);
+    if (statusError) {
+      setError(statusError);
+      return;
+    }
+    setError(null);
+    setHistorie((current) => [
+      { id: `local-${Date.now()}`, lead_id: lead.id, status: newStatus, created_at: new Date().toISOString() },
+      ...current,
+    ]);
+    onLeadUpdated(lead.id, newStatus);
+  };
+
+  const handleAddOfferte = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!supabase) return;
+
+    const prijsValue = Number(offerteForm.prijs);
+    if (!offerteForm.merk.trim() || !offerteForm.model.trim() || !prijsValue) {
+      setError("Vul merk, model en een geldige prijs in voor de offerte.");
+      return;
+    }
+
+    const { data, error: insertError } = await supabase
+      .from("offertes")
+      .insert({
+        lead_id: lead.id,
+        merk: offerteForm.merk.trim(),
+        model: offerteForm.model.trim(),
+        prijs: prijsValue,
+        status: offerteForm.status,
+        datum: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      setError(insertError.message);
+      return;
+    }
+
+    setOffertes((current) => [data as Offerte, ...current]);
+    setOfferteForm({ merk: "", model: "", prijs: "", status: OFFERTE_STATUS_OPTIONS[0] });
+    setError(null);
+  };
+
+  return (
+    <div>
+      <button onClick={onBack} className="text-sm text-cyan-300 transition hover:text-cyan-200">
+        ← Terug naar leadoverzicht
+      </button>
+
+      <div className="mt-6 rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-xl shadow-black/20 sm:p-8">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Lead</p>
+            <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">{lead.naam}</h2>
+          </div>
+          <span className="rounded-full bg-cyan-400/10 px-4 py-2 text-xs uppercase tracking-[0.2em] text-cyan-300">
+            {lead.status}
+          </span>
+        </div>
+
+        <dl className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {[
+            { label: "Telefoon", value: lead.telefoon },
+            { label: "Email", value: lead.email },
+            { label: "Plaats", value: lead.plaats },
+            { label: "Type woning", value: lead.type_woning },
+            { label: "Aangemaakt op", value: formatDateTime(lead.created_at) },
+            { label: "Opmerkingen", value: lead.opmerkingen || "—" },
+          ].map((item) => (
+            <div key={item.label} className="rounded-3xl border border-white/10 bg-[#090909] p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{item.label}</p>
+              <p className="mt-2 text-sm text-slate-200">{item.value}</p>
+            </div>
+          ))}
+        </dl>
+
+        {error ? <p className="mt-6 text-sm text-rose-400">{error}</p> : null}
+        {loading ? <p className="mt-6 text-sm text-slate-400">Bezig met laden...</p> : null}
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <section className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-xl shadow-black/20 sm:p-8">
+          <h3 className="text-lg font-semibold text-white">Status wijzigen</h3>
+          <form onSubmit={handleStatusChange} className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <select
+              value={newStatus}
+              onChange={(event) => setNewStatus(event.target.value)}
+              className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
+            >
+              {STATUS_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            <button type="submit" className="shrink-0 rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300">
+              Opslaan
+            </button>
+          </form>
+
+          <h3 className="mt-8 text-lg font-semibold text-white">Notitie toevoegen</h3>
+          <form onSubmit={handleAddNote} className="mt-4 space-y-3">
+            <textarea
+              rows={3}
+              value={newNote}
+              onChange={(event) => setNewNote(event.target.value)}
+              placeholder="Schrijf een notitie over deze lead"
+              className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
+            />
+            <button type="submit" className="w-full rounded-full bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20 sm:w-auto">
+              Notitie opslaan
+            </button>
+          </form>
+
+          <h3 className="mt-8 text-lg font-semibold text-white">Nieuwe offerte</h3>
+          <form onSubmit={handleAddOfferte} className="mt-4 grid gap-3 sm:grid-cols-2">
+            <input
+              type="text"
+              placeholder="Merk"
+              value={offerteForm.merk}
+              onChange={(event) => setOfferteForm((current) => ({ ...current, merk: event.target.value }))}
+              className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
+            />
+            <input
+              type="text"
+              placeholder="Model"
+              value={offerteForm.model}
+              onChange={(event) => setOfferteForm((current) => ({ ...current, model: event.target.value }))}
+              className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
+            />
+            <input
+              type="number"
+              min={0}
+              placeholder="Prijs (€)"
+              value={offerteForm.prijs}
+              onChange={(event) => setOfferteForm((current) => ({ ...current, prijs: event.target.value }))}
+              className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
+            />
+            <select
+              value={offerteForm.status}
+              onChange={(event) => setOfferteForm((current) => ({ ...current, status: event.target.value }))}
+              className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
+            >
+              {OFFERTE_STATUS_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            <button type="submit" className="rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 sm:col-span-2">
+              Offerte toevoegen
+            </button>
+          </form>
+
+          {offertes.length > 0 ? (
+            <div className="mt-6 space-y-3">
+              {offertes.map((offerte) => (
+                <div key={offerte.id} className="rounded-3xl border border-white/10 bg-[#090909] p-4 text-sm text-slate-300">
+                  <p className="font-semibold text-white">{offerte.merk} {offerte.model}</p>
+                  <p className="mt-1 text-slate-400">{formatCurrency(offerte.prijs)} · {offerte.status} · {formatDateTime(offerte.datum)}</p>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </section>
+
+        <section className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-xl shadow-black/20 sm:p-8">
+          <h3 className="text-lg font-semibold text-white">Tijdlijn</h3>
+          <div className="mt-4 space-y-4">
+            {timeline.map((item) => (
+              <div key={item.id} className="rounded-3xl border border-white/10 bg-[#090909] p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{formatDateTime(item.created_at)}</p>
+                <p className="mt-2 text-sm text-slate-200">{item.label}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
