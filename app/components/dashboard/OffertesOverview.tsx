@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Offerte } from "../../lib/types";
+import { Lead, Offerte, Werkbon } from "../../lib/types";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
-import { markOfferteVerstuurd } from "../../lib/offerteActions";
+import { markOfferteVerstuurd, updateOfferteStatus } from "../../lib/offerteActions";
+import { createWerkbonFromOfferte } from "../../lib/werkbonActions";
 import { downloadOffertePdf } from "../../lib/generateOffertePdf";
 
 function formatDateTime(value: string) {
@@ -14,7 +15,11 @@ function formatCurrency(value: number) {
   return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
 }
 
-export default function OffertesOverview() {
+type Props = {
+  onWerkbonCreated: (werkbon: Werkbon) => void;
+};
+
+export default function OffertesOverview({ onWerkbonCreated }: Props) {
   const [offertes, setOffertes] = useState<Offerte[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +59,42 @@ export default function OffertesOverview() {
     }
     setError(null);
     setOffertes((current) => current.map((item) => (item.id === offerte.id ? { ...item, status: "Verstuurd" } : item)));
+  };
+
+  const handleStatusBeslissing = async (offerte: Offerte, status: "Geaccepteerd" | "Afgewezen") => {
+    const { error: statusError } = await updateOfferteStatus(offerte.id, offerte.lead_id, status);
+    if (statusError) {
+      setError(statusError);
+      return;
+    }
+    setError(null);
+    setOffertes((current) => current.map((item) => (item.id === offerte.id ? { ...item, status } : item)));
+  };
+
+  const handleCreateWerkbon = async (offerte: Offerte) => {
+    if (!offerte.leads) {
+      setError("Leadgegevens ontbreken voor deze offerte.");
+      return;
+    }
+    const leadLike: Lead = {
+      id: offerte.lead_id,
+      created_at: "",
+      naam: offerte.leads.naam,
+      telefoon: offerte.leads.telefoon,
+      email: offerte.leads.email,
+      plaats: offerte.leads.plaats,
+      type_woning: offerte.leads.type_woning,
+      opmerkingen: "",
+      status: "",
+    };
+
+    const { data, error: createError } = await createWerkbonFromOfferte(leadLike, offerte);
+    if (createError || !data) {
+      setError(createError || "Werkbon aanmaken is mislukt.");
+      return;
+    }
+    setError(null);
+    onWerkbonCreated(data as Werkbon);
   };
 
   const totaalWaarde = offertes.reduce((sum, offerte) => sum + (offerte.prijs || 0), 0);
@@ -122,6 +163,30 @@ export default function OffertesOverview() {
                             Verstuurd
                           </button>
                         ) : null}
+                        {offerte.status === "Verstuurd" ? (
+                          <>
+                            <button
+                              onClick={() => handleStatusBeslissing(offerte, "Geaccepteerd")}
+                              className="rounded-full bg-emerald-400/10 px-3 py-2 text-xs text-emerald-300 transition hover:bg-emerald-400/20"
+                            >
+                              Geaccepteerd
+                            </button>
+                            <button
+                              onClick={() => handleStatusBeslissing(offerte, "Afgewezen")}
+                              className="rounded-full bg-rose-500/10 px-3 py-2 text-xs text-rose-300 transition hover:bg-rose-500/20"
+                            >
+                              Afgewezen
+                            </button>
+                          </>
+                        ) : null}
+                        {offerte.status === "Geaccepteerd" ? (
+                          <button
+                            onClick={() => handleCreateWerkbon(offerte)}
+                            className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-400/20"
+                          >
+                            Maak werkbon
+                          </button>
+                        ) : null}
                       </div>
                     </td>
                   </tr>
@@ -158,6 +223,30 @@ export default function OffertesOverview() {
                       className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10"
                     >
                       Markeer als verstuurd
+                    </button>
+                  ) : null}
+                  {offerte.status === "Verstuurd" ? (
+                    <>
+                      <button
+                        onClick={() => handleStatusBeslissing(offerte, "Geaccepteerd")}
+                        className="rounded-full bg-emerald-400/10 px-3 py-2 text-xs text-emerald-300 transition hover:bg-emerald-400/20"
+                      >
+                        Geaccepteerd
+                      </button>
+                      <button
+                        onClick={() => handleStatusBeslissing(offerte, "Afgewezen")}
+                        className="rounded-full bg-rose-500/10 px-3 py-2 text-xs text-rose-300 transition hover:bg-rose-500/20"
+                      >
+                        Afgewezen
+                      </button>
+                    </>
+                  ) : null}
+                  {offerte.status === "Geaccepteerd" ? (
+                    <button
+                      onClick={() => handleCreateWerkbon(offerte)}
+                      className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-400/20"
+                    >
+                      Maak werkbon
                     </button>
                   ) : null}
                 </div>

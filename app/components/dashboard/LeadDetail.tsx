@@ -1,11 +1,12 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Lead, LeadNotitie, LeadStatusHistorie, Offerte, Product } from "../../lib/types";
+import { Lead, LeadNotitie, LeadStatusHistorie, Offerte, Product, Werkbon } from "../../lib/types";
 import { STATUS_OPTIONS } from "../../lib/constants";
 import { supabase } from "../../lib/supabase";
 import { updateLeadStatus } from "../../lib/leadActions";
-import { markOfferteVerstuurd } from "../../lib/offerteActions";
+import { markOfferteVerstuurd, updateOfferteStatus } from "../../lib/offerteActions";
+import { createWerkbonFromOfferte } from "../../lib/werkbonActions";
 import { getNextOfferteNummer } from "../../lib/offerteNummer";
 import { downloadOffertePdf } from "../../lib/generateOffertePdf";
 
@@ -21,9 +22,10 @@ type Props = {
   lead: Lead;
   onBack: () => void;
   onLeadUpdated: (leadId: string, newStatus: string) => void;
+  onWerkbonCreated: (werkbon: Werkbon) => void;
 };
 
-export default function LeadDetail({ lead, onBack, onLeadUpdated }: Props) {
+export default function LeadDetail({ lead, onBack, onLeadUpdated, onWerkbonCreated }: Props) {
   const [notities, setNotities] = useState<LeadNotitie[]>([]);
   const [historie, setHistorie] = useState<LeadStatusHistorie[]>([]);
   const [offertes, setOffertes] = useState<Offerte[]>([]);
@@ -198,6 +200,32 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated }: Props) {
     onLeadUpdated(lead.id, "Offerte verstuurd");
   };
 
+  const handleStatusBeslissing = async (offerte: Offerte, status: "Geaccepteerd" | "Afgewezen") => {
+    const { error: statusError } = await updateOfferteStatus(offerte.id, lead.id, status);
+    if (statusError) {
+      setError(statusError);
+      return;
+    }
+    setError(null);
+    setOffertes((current) => current.map((item) => (item.id === offerte.id ? { ...item, status } : item)));
+    const leadStatus = status === "Geaccepteerd" ? "Gewonnen" : "Verloren";
+    setHistorie((current) => [
+      { id: `local-${Date.now()}`, lead_id: lead.id, status: leadStatus, created_at: new Date().toISOString() },
+      ...current,
+    ]);
+    onLeadUpdated(lead.id, leadStatus);
+  };
+
+  const handleCreateWerkbon = async (offerte: Offerte) => {
+    const { data, error: createError } = await createWerkbonFromOfferte(lead, offerte);
+    if (createError || !data) {
+      setError(createError || "Werkbon aanmaken is mislukt.");
+      return;
+    }
+    setError(null);
+    onWerkbonCreated(data as Werkbon);
+  };
+
   return (
     <div>
       <button onClick={onBack} className="text-sm text-cyan-300 transition hover:text-cyan-200">
@@ -338,6 +366,30 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated }: Props) {
                         className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white transition hover:bg-white/10"
                       >
                         Markeer als verstuurd
+                      </button>
+                    ) : null}
+                    {offerte.status === "Verstuurd" ? (
+                      <>
+                        <button
+                          onClick={() => handleStatusBeslissing(offerte, "Geaccepteerd")}
+                          className="rounded-full bg-emerald-400/10 px-4 py-2 text-xs text-emerald-300 transition hover:bg-emerald-400/20"
+                        >
+                          Geaccepteerd
+                        </button>
+                        <button
+                          onClick={() => handleStatusBeslissing(offerte, "Afgewezen")}
+                          className="rounded-full bg-rose-500/10 px-4 py-2 text-xs text-rose-300 transition hover:bg-rose-500/20"
+                        >
+                          Afgewezen
+                        </button>
+                      </>
+                    ) : null}
+                    {offerte.status === "Geaccepteerd" ? (
+                      <button
+                        onClick={() => handleCreateWerkbon(offerte)}
+                        className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-4 py-2 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-400/20"
+                      >
+                        Maak werkbon
                       </button>
                     ) : null}
                   </div>

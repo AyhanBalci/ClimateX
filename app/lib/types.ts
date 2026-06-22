@@ -51,3 +51,49 @@ export type Product = {
   afbeelding_url: string | null;
   actief: boolean;
 };
+
+export type Werkbon = {
+  id: string;
+  created_at: string;
+  werkbonnummer: string;
+  lead_id: string;
+  offerte_id: string | null;
+  datum: string;
+  klantnaam: string;
+  adres: string | null;
+  telefoon: string | null;
+  monteur: string | null;
+  werkzaamheden: string | null;
+  materialen: string | null;
+  opmerkingen: string | null;
+  status: string;
+  handtekening_klant: string | null;
+  handtekening_monteur: string | null;
+};
+
+export type Factuur = {
+  id: string;
+  created_at: string;
+  factuurnummer: string;
+  lead_id: string | null;
+  klant: string;
+  offerte_id: string | null;
+  werkbon_id: string | null;
+  bedrag: number;
+  btw: number;
+  totaal: number;
+  status: string;
+  betaaldatum: string | null;
+};
+
+export type Bestand = {
+  id: string;
+  created_at: string;
+  lead_id: string | null;
+  werkbon_id: string | null;
+  factuur_id: string | null;
+  categorie: string;
+  bestandsnaam: string;
+  pad: string;
+  url: string;
+};

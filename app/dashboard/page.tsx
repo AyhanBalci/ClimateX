@@ -2,14 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
-import { Lead } from "../lib/types";
+import { Lead, Werkbon } from "../lib/types";
 import DashboardStats from "../components/dashboard/DashboardStats";
+import DashboardKpis from "../components/dashboard/DashboardKpis";
 import LeadsTable from "../components/dashboard/LeadsTable";
 import LeadDetail from "../components/dashboard/LeadDetail";
 import OffertesOverview from "../components/dashboard/OffertesOverview";
 import ProductsManager from "../components/dashboard/ProductsManager";
+import WerkbonnenOverview from "../components/dashboard/WerkbonnenOverview";
+import WerkbonDetail from "../components/dashboard/WerkbonDetail";
+import FacturenOverview from "../components/dashboard/FacturenOverview";
 
-type View = "leads" | "offertes" | "producten";
+type View = "leads" | "offertes" | "producten" | "werkbonnen" | "facturen";
 
 export default function DashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -22,6 +26,7 @@ export default function DashboardPage() {
 
   const [view, setView] = useState<View>("leads");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [selectedWerkbon, setSelectedWerkbon] = useState<Werkbon | null>(null);
 
   const handleLogin = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -67,6 +72,16 @@ export default function DashboardPage() {
   const handleLeadUpdated = (leadId: string, newStatus: string) => {
     setLeads((current) => current.map((lead) => (lead.id === leadId ? { ...lead, status: newStatus } : lead)));
     setSelectedLead((current) => (current && current.id === leadId ? { ...current, status: newStatus } : current));
+  };
+
+  const handleWerkbonCreated = (werkbon: Werkbon) => {
+    setView("werkbonnen");
+    setSelectedWerkbon(werkbon);
+  };
+
+  const handleFactuurCreated = () => {
+    setView("facturen");
+    setSelectedWerkbon(null);
   };
 
   if (!isAuthenticated) {
@@ -115,12 +130,18 @@ export default function DashboardPage() {
           <DashboardStats leads={leads} />
         </div>
 
+        <div className="mb-6">
+          <DashboardKpis />
+        </div>
+
         <div className="mb-6 flex gap-2 overflow-x-auto">
           {(
             [
               { key: "leads", label: "Leads" },
               { key: "offertes", label: "Offertes" },
               { key: "producten", label: "Producten" },
+              { key: "werkbonnen", label: "Werkbonnen" },
+              { key: "facturen", label: "Facturen" },
             ] as const
           ).map((tab) => (
             <button
@@ -128,6 +149,7 @@ export default function DashboardPage() {
               onClick={() => {
                 setView(tab.key);
                 setSelectedLead(null);
+                setSelectedWerkbon(null);
               }}
               className={`shrink-0 rounded-full px-5 py-3 text-sm font-semibold transition ${
                 view === tab.key ? "bg-cyan-400 text-slate-950" : "border border-white/10 bg-white/5 text-white hover:bg-white/10"
@@ -140,7 +162,13 @@ export default function DashboardPage() {
 
         {view === "leads" ? (
           selectedLead ? (
-            <LeadDetail key={selectedLead.id} lead={selectedLead} onBack={() => setSelectedLead(null)} onLeadUpdated={handleLeadUpdated} />
+            <LeadDetail
+              key={selectedLead.id}
+              lead={selectedLead}
+              onBack={() => setSelectedLead(null)}
+              onLeadUpdated={handleLeadUpdated}
+              onWerkbonCreated={handleWerkbonCreated}
+            />
           ) : (
             <section className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-xl shadow-black/20 sm:p-8">
               <h2 className="text-xl font-semibold">Leads</h2>
@@ -154,9 +182,23 @@ export default function DashboardPage() {
             </section>
           )
         ) : view === "offertes" ? (
-          <OffertesOverview />
-        ) : (
+          <OffertesOverview onWerkbonCreated={handleWerkbonCreated} />
+        ) : view === "producten" ? (
           <ProductsManager />
+        ) : view === "werkbonnen" ? (
+          selectedWerkbon ? (
+            <WerkbonDetail
+              key={selectedWerkbon.id}
+              werkbon={selectedWerkbon}
+              onBack={() => setSelectedWerkbon(null)}
+              onWerkbonUpdated={setSelectedWerkbon}
+              onFactuurCreated={handleFactuurCreated}
+            />
+          ) : (
+            <WerkbonnenOverview onSelectWerkbon={setSelectedWerkbon} />
+          )
+        ) : (
+          <FacturenOverview />
         )}
       </div>
     </main>
