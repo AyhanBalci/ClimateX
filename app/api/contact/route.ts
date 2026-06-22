@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
 import { validateLead } from "../../lib/validateLead";
 import { STATUS_OPTIONS } from "../../lib/constants";
+import { sendOfferteEmails } from "../../lib/sendOfferteEmails";
 
 export async function POST(request: Request) {
   const data = await request.json();
@@ -38,6 +39,22 @@ export async function POST(request: Request) {
   }
 
   await supabase.from("lead_status_historie").insert({ lead_id: insertedLead.id, status: insertedLead.status });
+
+  try {
+    const { error: emailError } = await sendOfferteEmails({
+      naam: lead.naam,
+      telefoon: lead.telefoon,
+      email: lead.email,
+      plaats: lead.plaats,
+      type_woning: lead.type_woning,
+      opmerkingen: lead.opmerkingen,
+    });
+    if (emailError) {
+      console.error("E-mail verzenden mislukt:", emailError);
+    }
+  } catch (emailException) {
+    console.error("E-mail verzenden mislukt (onverwachte fout):", emailException);
+  }
 
   return NextResponse.json({ message: "Bedankt. Wij nemen binnen 24 uur contact met u op." });
 }
