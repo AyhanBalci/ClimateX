@@ -7,8 +7,9 @@ import DashboardStats from "../components/dashboard/DashboardStats";
 import LeadsTable from "../components/dashboard/LeadsTable";
 import LeadDetail from "../components/dashboard/LeadDetail";
 import OffertesOverview from "../components/dashboard/OffertesOverview";
+import ProductsManager from "../components/dashboard/ProductsManager";
 
-type View = "leads" | "offertes";
+type View = "leads" | "offertes" | "producten";
 
 export default function DashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -119,6 +120,7 @@ export default function DashboardPage() {
             [
               { key: "leads", label: "Leads" },
               { key: "offertes", label: "Offertes" },
+              { key: "producten", label: "Producten" },
             ] as const
           ).map((tab) => (
             <button
@@ -151,8 +153,10 @@ export default function DashboardPage() {
               ) : null}
             </section>
           )
-        ) : (
+        ) : view === "offertes" ? (
           <OffertesOverview />
+        ) : (
+          <ProductsManager />
         )}
       </div>
     </main>

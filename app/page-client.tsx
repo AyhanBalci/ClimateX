@@ -2,9 +2,13 @@
 
 import { motion } from "framer-motion";
 import { FormEvent, useMemo, useState } from "react";
-import { featuredProducts } from "./data/products";
 import ProductImagePlaceholder from "./components/ProductImagePlaceholder";
 import WhatsAppButton from "./components/WhatsAppButton";
+import { Product } from "./lib/types";
+
+function formatProductPrice(value: number) {
+  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value) + " incl. montage";
+}
 
 const contactNumber = "06 1400 4488";
 const whatsappLink = "https://wa.me/31614004488";
@@ -73,7 +77,7 @@ function estimateEnergySaving(currentCost: number, hoursPerDay: number) {
   return annualUsage * 0.4;
 }
 
-export default function HomeClient() {
+export default function HomeClient({ products }: { products: Product[] }) {
   const [formState, setFormState] = useState({
     name: "",
     phone: "",
@@ -264,37 +268,51 @@ export default function HomeClient() {
               Bekijk onze Daikin, LG en Gree modellen. Alle prijzen zijn inclusief montage en een compacte offerte-aanvraag.
             </p>
           </motion.div>
-          <div className="grid gap-6 lg:grid-cols-3">
-            {featuredProducts.map((product) => (
-              <motion.article
-                key={product.slug}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                className="overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/90 p-6 shadow-xl shadow-black/30"
-              >
-                <div className="space-y-4">
-                  <div className="rounded-[1.75rem] border border-white/10 bg-[#090909] p-5">
-                    <ProductImagePlaceholder label={product.title} />
-                    <p className="text-sm uppercase tracking-[0.24em] text-slate-400">{product.brand}</p>
-                    <h3 className="mt-2 text-xl font-semibold text-white">{product.title}</h3>
-                    <p className="mt-2 text-sm text-slate-400">{product.shortDescription}</p>
-                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                      <span className="rounded-3xl bg-slate-900/80 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-300">{product.coolingHeating}</span>
-                      <span className="rounded-3xl bg-slate-900/80 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-300">{product.energyLabel}</span>
-                    </div>
-                    <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <p className="text-lg font-semibold text-white">{product.priceLabel}</p>
-                      <a href="#contact" className="inline-flex items-center justify-center rounded-full border border-cyan-300/20 bg-cyan-400/10 px-5 py-3 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-400/15">
-                        Offerte aanvragen
-                      </a>
+          {products.length === 0 ? (
+            <p className="text-sm text-slate-400">Er zijn momenteel geen producten beschikbaar.</p>
+          ) : (
+            <div className="grid gap-6 lg:grid-cols-3">
+              {products.map((product) => (
+                <motion.article
+                  key={product.id}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                  className="overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/90 p-6 shadow-xl shadow-black/30"
+                >
+                  <div className="space-y-4">
+                    <div className="rounded-[1.75rem] border border-white/10 bg-[#090909] p-5">
+                      {product.afbeelding_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={product.afbeelding_url}
+                          alt={`${product.merk} ${product.model}`}
+                          className="mb-4 h-40 w-full rounded-[1.5rem] object-cover"
+                        />
+                      ) : (
+                        <ProductImagePlaceholder label={`${product.merk} ${product.model}`} />
+                      )}
+                      <p className="text-sm uppercase tracking-[0.24em] text-slate-400">{product.merk}</p>
+                      <h3 className="mt-2 text-xl font-semibold text-white">{product.model}</h3>
+                      <p className="mt-2 text-sm text-slate-400">{product.beschrijving}</p>
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        <span className="rounded-3xl bg-slate-900/80 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-300">Koelen {product.koelvermogen}</span>
+                        <span className="rounded-3xl bg-slate-900/80 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-300">Verwarmen {product.verwarmvermogen}</span>
+                        <span className="rounded-3xl bg-slate-900/80 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-300 sm:col-span-2">{product.energieklasse}</span>
+                      </div>
+                      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-lg font-semibold text-white">{formatProductPrice(product.prijs)}</p>
+                        <a href="#contact" className="inline-flex items-center justify-center rounded-full border border-cyan-300/20 bg-cyan-400/10 px-5 py-3 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-400/15">
+                          Offerte aanvragen
+                        </a>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </motion.article>
-            ))}
-          </div>
+                </motion.article>
+              ))}
+            </div>
+          )}
           <div className="mt-10 text-center text-sm text-slate-400">
             Voor exacte prijzen en installatiekosten maken wij graag een vrijblijvende offerte op maat.
           </div>

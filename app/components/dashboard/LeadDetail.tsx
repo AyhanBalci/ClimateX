@@ -1,10 +1,13 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Lead, LeadNotitie, LeadStatusHistorie, Offerte } from "../../lib/types";
-import { STATUS_OPTIONS, OFFERTE_STATUS_OPTIONS } from "../../lib/constants";
+import { Lead, LeadNotitie, LeadStatusHistorie, Offerte, Product } from "../../lib/types";
+import { STATUS_OPTIONS } from "../../lib/constants";
 import { supabase } from "../../lib/supabase";
 import { updateLeadStatus } from "../../lib/leadActions";
+import { markOfferteVerstuurd } from "../../lib/offerteActions";
+import { getNextOfferteNummer } from "../../lib/offerteNummer";
+import { downloadOffertePdf } from "../../lib/generateOffertePdf";
 
 function formatDateTime(value: string) {
   return new Date(value).toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" });
@@ -24,13 +27,21 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated }: Props) {
   const [notities, setNotities] = useState<LeadNotitie[]>([]);
   const [historie, setHistorie] = useState<LeadStatusHistorie[]>([]);
   const [offertes, setOffertes] = useState<Offerte[]>([]);
+  const [producten, setProducten] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [newNote, setNewNote] = useState("");
   const [newStatus, setNewStatus] = useState(lead.status);
 
-  const [offerteForm, setOfferteForm] = useState({ merk: "", model: "", prijs: "", status: OFFERTE_STATUS_OPTIONS[0] });
+  const [offerteForm, setOfferteForm] = useState({
+    productId: "",
+    merk: "",
+    model: "",
+    prijs: "",
+    werkzaamheden: "",
+    opmerkingen: "",
+  });
 
   useEffect(() => {
     async function fetchDetails() {
@@ -43,18 +54,26 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated }: Props) {
         return;
       }
 
-      const [notitiesRes, historieRes, offertesRes] = await Promise.all([
+      const [notitiesRes, historieRes, offertesRes, productenRes] = await Promise.all([
         supabase.from("lead_notities").select("*").eq("lead_id", lead.id).order("created_at", { ascending: false }),
         supabase.from("lead_status_historie").select("*").eq("lead_id", lead.id).order("created_at", { ascending: false }),
         supabase.from("offertes").select("*").eq("lead_id", lead.id).order("datum", { ascending: false }),
+        supabase.from("producten").select("*").eq("actief", true).order("merk", { ascending: true }),
       ]);
 
-      if (notitiesRes.error || historieRes.error || offertesRes.error) {
-        setError(notitiesRes.error?.message || historieRes.error?.message || offertesRes.error?.message || "Onbekende fout.");
+      if (notitiesRes.error || historieRes.error || offertesRes.error || productenRes.error) {
+        setError(
+          notitiesRes.error?.message ||
+            historieRes.error?.message ||
+            offertesRes.error?.message ||
+            productenRes.error?.message ||
+            "Onbekende fout."
+        );
       } else {
         setNotities((notitiesRes.data as LeadNotitie[]) || []);
         setHistorie((historieRes.data as LeadStatusHistorie[]) || []);
         setOffertes((offertesRes.data as Offerte[]) || []);
+        setProducten((productenRes.data as Product[]) || []);
       }
       setLoading(false);
     }
@@ -115,24 +134,40 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated }: Props) {
     onLeadUpdated(lead.id, newStatus);
   };
 
+  const handleProductSelect = (productId: string) => {
+    const product = producten.find((item) => item.id === productId);
+    setOfferteForm((current) => ({
+      ...current,
+      productId,
+      merk: product?.merk || "",
+      model: product?.model || "",
+      prijs: product ? String(product.prijs) : current.prijs,
+    }));
+  };
+
   const handleAddOfferte = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!supabase) return;
 
     const prijsValue = Number(offerteForm.prijs);
     if (!offerteForm.merk.trim() || !offerteForm.model.trim() || !prijsValue) {
-      setError("Vul merk, model en een geldige prijs in voor de offerte.");
+      setError("Kies een product en vul een geldige totaalprijs in voor de offerte.");
       return;
     }
+
+    const offertenummer = await getNextOfferteNummer();
 
     const { data, error: insertError } = await supabase
       .from("offertes")
       .insert({
         lead_id: lead.id,
+        offertenummer,
         merk: offerteForm.merk.trim(),
         model: offerteForm.model.trim(),
         prijs: prijsValue,
-        status: offerteForm.status,
+        werkzaamheden: offerteForm.werkzaamheden.trim(),
+        opmerkingen: offerteForm.opmerkingen.trim(),
+        status: "Concept",
         datum: new Date().toISOString(),
       })
       .select()
@@ -144,8 +179,23 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated }: Props) {
     }
 
     setOffertes((current) => [data as Offerte, ...current]);
-    setOfferteForm({ merk: "", model: "", prijs: "", status: OFFERTE_STATUS_OPTIONS[0] });
+    setOfferteForm({ productId: "", merk: "", model: "", prijs: "", werkzaamheden: "", opmerkingen: "" });
     setError(null);
+  };
+
+  const handleMarkVerstuurd = async (offerte: Offerte) => {
+    const { error: markError } = await markOfferteVerstuurd(offerte.id, lead.id);
+    if (markError) {
+      setError(markError);
+      return;
+    }
+    setError(null);
+    setOffertes((current) => current.map((item) => (item.id === offerte.id ? { ...item, status: "Verstuurd" } : item)));
+    setHistorie((current) => [
+      { id: `local-${Date.now()}`, lead_id: lead.id, status: "Offerte verstuurd", created_at: new Date().toISOString() },
+      ...current,
+    ]);
+    onLeadUpdated(lead.id, "Offerte verstuurd");
   };
 
   return (
@@ -221,50 +271,76 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated }: Props) {
 
           <h3 className="mt-8 text-lg font-semibold text-white">Nieuwe offerte</h3>
           <form onSubmit={handleAddOfferte} className="mt-4 grid gap-3 sm:grid-cols-2">
-            <input
-              type="text"
-              placeholder="Merk"
-              value={offerteForm.merk}
-              onChange={(event) => setOfferteForm((current) => ({ ...current, merk: event.target.value }))}
-              className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
-            />
-            <input
-              type="text"
-              placeholder="Model"
-              value={offerteForm.model}
-              onChange={(event) => setOfferteForm((current) => ({ ...current, model: event.target.value }))}
-              className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
-            />
-            <input
-              type="number"
-              min={0}
-              placeholder="Prijs (€)"
-              value={offerteForm.prijs}
-              onChange={(event) => setOfferteForm((current) => ({ ...current, prijs: event.target.value }))}
-              className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
-            />
             <select
-              value={offerteForm.status}
-              onChange={(event) => setOfferteForm((current) => ({ ...current, status: event.target.value }))}
-              className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
+              value={offerteForm.productId}
+              onChange={(event) => handleProductSelect(event.target.value)}
+              className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300 sm:col-span-2"
             >
-              {OFFERTE_STATUS_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
+              <option value="">Kies een product...</option>
+              {producten.map((product) => (
+                <option key={product.id} value={product.id}>
+                  {product.merk} {product.model}
                 </option>
               ))}
             </select>
+            <input
+              type="number"
+              min={0}
+              placeholder="Totaalprijs (€)"
+              value={offerteForm.prijs}
+              onChange={(event) => setOfferteForm((current) => ({ ...current, prijs: event.target.value }))}
+              className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300 sm:col-span-2"
+            />
+            <textarea
+              rows={3}
+              placeholder="Extra werkzaamheden (één per regel)"
+              value={offerteForm.werkzaamheden}
+              onChange={(event) => setOfferteForm((current) => ({ ...current, werkzaamheden: event.target.value }))}
+              className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300 sm:col-span-2"
+            />
+            <textarea
+              rows={2}
+              placeholder="Opmerkingen voor de offerte"
+              value={offerteForm.opmerkingen}
+              onChange={(event) => setOfferteForm((current) => ({ ...current, opmerkingen: event.target.value }))}
+              className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300 sm:col-span-2"
+            />
             <button type="submit" className="rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 sm:col-span-2">
-              Offerte toevoegen
+              Offerte genereren
             </button>
           </form>
 
           {offertes.length > 0 ? (
             <div className="mt-6 space-y-3">
+              <h4 className="text-sm uppercase tracking-[0.18em] text-slate-500">Offertehistorie</h4>
               {offertes.map((offerte) => (
                 <div key={offerte.id} className="rounded-3xl border border-white/10 bg-[#090909] p-4 text-sm text-slate-300">
-                  <p className="font-semibold text-white">{offerte.merk} {offerte.model}</p>
-                  <p className="mt-1 text-slate-400">{formatCurrency(offerte.prijs)} · {offerte.status} · {formatDateTime(offerte.datum)}</p>
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <p className="font-semibold text-white">{offerte.offertenummer}</p>
+                      <p className="mt-1 text-slate-400">{offerte.merk} {offerte.model}</p>
+                    </div>
+                    <span className="rounded-full bg-cyan-400/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-cyan-300">
+                      {offerte.status}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-slate-400">{formatCurrency(offerte.prijs)} · {formatDateTime(offerte.datum)}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      onClick={() => downloadOffertePdf(offerte, lead)}
+                      className="rounded-full bg-cyan-400 px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300"
+                    >
+                      PDF downloaden
+                    </button>
+                    {offerte.status === "Concept" ? (
+                      <button
+                        onClick={() => handleMarkVerstuurd(offerte)}
+                        className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white transition hover:bg-white/10"
+                      >
+                        Markeer als verstuurd
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
               ))}
             </div>

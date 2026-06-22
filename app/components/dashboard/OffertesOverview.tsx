@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { Offerte } from "../../lib/types";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
+import { markOfferteVerstuurd } from "../../lib/offerteActions";
+import { downloadOffertePdf } from "../../lib/generateOffertePdf";
 
 function formatDateTime(value: string) {
   return new Date(value).toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" });
@@ -30,7 +32,7 @@ export default function OffertesOverview() {
 
       const { data, error: fetchError } = await supabase
         .from("offertes")
-        .select("*, leads(naam)")
+        .select("*, leads(naam, telefoon, email, plaats, type_woning)")
         .order("datum", { ascending: false });
 
       if (fetchError) {
@@ -43,6 +45,16 @@ export default function OffertesOverview() {
 
     fetchOffertes();
   }, []);
+
+  const handleMarkVerstuurd = async (offerte: Offerte) => {
+    const { error: markError } = await markOfferteVerstuurd(offerte.id, offerte.lead_id);
+    if (markError) {
+      setError(markError);
+      return;
+    }
+    setError(null);
+    setOffertes((current) => current.map((item) => (item.id === offerte.id ? { ...item, status: "Verstuurd" } : item)));
+  };
 
   const totaalWaarde = offertes.reduce((sum, offerte) => sum + (offerte.prijs || 0), 0);
 
@@ -66,23 +78,52 @@ export default function OffertesOverview() {
             <table className="w-full min-w-[800px] border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-white/10 text-xs uppercase tracking-[0.2em] text-slate-400">
+                  <th className="px-4 py-3">Offertenummer</th>
                   <th className="px-4 py-3">Datum</th>
                   <th className="px-4 py-3">Lead</th>
                   <th className="px-4 py-3">Merk</th>
                   <th className="px-4 py-3">Model</th>
                   <th className="px-4 py-3">Prijs</th>
                   <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Acties</th>
                 </tr>
               </thead>
               <tbody>
                 {offertes.map((offerte) => (
                   <tr key={offerte.id} className="border-b border-white/5 text-slate-300">
+                    <td className="whitespace-nowrap px-4 py-3 text-white">{offerte.offertenummer}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-slate-400">{formatDateTime(offerte.datum)}</td>
                     <td className="px-4 py-3">{offerte.leads?.naam || "—"}</td>
                     <td className="px-4 py-3">{offerte.merk}</td>
                     <td className="px-4 py-3">{offerte.model}</td>
                     <td className="px-4 py-3">{formatCurrency(offerte.prijs)}</td>
                     <td className="px-4 py-3">{offerte.status}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          onClick={() =>
+                            downloadOffertePdf(offerte, {
+                              naam: offerte.leads?.naam || "",
+                              telefoon: offerte.leads?.telefoon || "",
+                              email: offerte.leads?.email || "",
+                              plaats: offerte.leads?.plaats || "",
+                              type_woning: offerte.leads?.type_woning || "",
+                            })
+                          }
+                          className="rounded-full bg-cyan-400 px-3 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300"
+                        >
+                          PDF
+                        </button>
+                        {offerte.status === "Concept" ? (
+                          <button
+                            onClick={() => handleMarkVerstuurd(offerte)}
+                            className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10"
+                          >
+                            Verstuurd
+                          </button>
+                        ) : null}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -92,9 +133,34 @@ export default function OffertesOverview() {
           <div className="mt-6 space-y-3 sm:hidden">
             {offertes.map((offerte) => (
               <div key={offerte.id} className="rounded-3xl border border-white/10 bg-[#090909] p-4">
-                <p className="font-semibold text-white">{offerte.merk} {offerte.model}</p>
+                <p className="font-semibold text-white">{offerte.offertenummer}</p>
+                <p className="mt-1 text-sm text-slate-400">{offerte.merk} {offerte.model}</p>
                 <p className="mt-1 text-sm text-slate-400">{offerte.leads?.naam || "—"} · {formatDateTime(offerte.datum)}</p>
                 <p className="mt-2 text-sm text-slate-200">{formatCurrency(offerte.prijs)} · {offerte.status}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    onClick={() =>
+                      downloadOffertePdf(offerte, {
+                        naam: offerte.leads?.naam || "",
+                        telefoon: offerte.leads?.telefoon || "",
+                        email: offerte.leads?.email || "",
+                        plaats: offerte.leads?.plaats || "",
+                        type_woning: offerte.leads?.type_woning || "",
+                      })
+                    }
+                    className="rounded-full bg-cyan-400 px-3 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300"
+                  >
+                    PDF downloaden
+                  </button>
+                  {offerte.status === "Concept" ? (
+                    <button
+                      onClick={() => handleMarkVerstuurd(offerte)}
+                      className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10"
+                    >
+                      Markeer als verstuurd
+                    </button>
+                  ) : null}
+                </div>
               </div>
             ))}
           </div>

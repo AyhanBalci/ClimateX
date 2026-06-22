@@ -32,5 +32,22 @@ export type Offerte = {
   model: string;
   prijs: number;
   status: string;
-  leads?: { naam: string } | null;
+  offertenummer: string;
+  werkzaamheden: string | null;
+  opmerkingen: string | null;
+  leads?: { naam: string; telefoon: string; email: string; plaats: string; type_woning: string } | null;
+};
+
+export type Product = {
+  id: string;
+  created_at: string;
+  merk: string;
+  model: string;
+  beschrijving: string;
+  koelvermogen: string;
+  verwarmvermogen: string;
+  energieklasse: string;
+  prijs: number;
+  afbeelding_url: string | null;
+  actief: boolean;
 };

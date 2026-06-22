@@ -132,6 +132,7 @@ export default function LeadsTable({ leads, onSelectLead, onLeadUpdated }: Props
                   <th className="px-4 py-3">Plaats</th>
                   <th className="px-4 py-3">Type woning</th>
                   <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Acties</th>
                 </tr>
               </thead>
               <tbody>
@@ -139,8 +140,12 @@ export default function LeadsTable({ leads, onSelectLead, onLeadUpdated }: Props
                   <tr key={lead.id} className="border-b border-white/5 text-slate-300">
                     <td className="whitespace-nowrap px-4 py-3 text-slate-400">{formatDate(lead.created_at)}</td>
                     <td className="px-4 py-3">
-                      <button onClick={() => onSelectLead(lead)} className="text-left font-medium text-white underline-offset-4 hover:underline">
+                      <button
+                        onClick={() => onSelectLead(lead)}
+                        className="inline-flex items-center gap-1 text-left font-medium text-cyan-300 underline-offset-4 transition hover:text-cyan-200 hover:underline"
+                      >
                         {lead.naam}
+                        <span aria-hidden="true">→</span>
                       </button>
                     </td>
                     <td className="px-4 py-3">{lead.telefoon}</td>
@@ -170,6 +175,14 @@ export default function LeadsTable({ leads, onSelectLead, onLeadUpdated }: Props
                         </button>
                       </div>
                     </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => onSelectLead(lead)}
+                        className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-4 py-2 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-400/20"
+                      >
+                        Bekijken
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -181,10 +194,10 @@ export default function LeadsTable({ leads, onSelectLead, onLeadUpdated }: Props
             {filteredLeads.map((lead) => (
               <div key={lead.id} className="rounded-3xl border border-white/10 bg-[#090909] p-4">
                 <div className="flex items-start justify-between gap-3">
-                  <button onClick={() => onSelectLead(lead)} className="text-left">
-                    <p className="text-base font-semibold text-white underline-offset-4 hover:underline">{lead.naam}</p>
+                  <div>
+                    <p className="text-base font-semibold text-white">{lead.naam}</p>
                     <p className="mt-1 text-xs text-slate-400">{formatDate(lead.created_at)}</p>
-                  </button>
+                  </div>
                   <span className="rounded-full bg-cyan-400/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-cyan-300">
                     {lead.status}
                   </span>
@@ -194,7 +207,13 @@ export default function LeadsTable({ leads, onSelectLead, onLeadUpdated }: Props
                   <p>{lead.email}</p>
                   <p>{lead.plaats} · {lead.type_woning}</p>
                 </dl>
-                <div className="mt-4 flex items-center gap-2">
+                <button
+                  onClick={() => onSelectLead(lead)}
+                  className="mt-4 w-full rounded-full border border-cyan-300/30 bg-cyan-400/10 px-4 py-3 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-400/20"
+                >
+                  Bekijken →
+                </button>
+                <div className="mt-3 flex items-center gap-2">
                   <select
                     value={selectedStatus[lead.id] ?? lead.status}
                     onChange={(event) => setSelectedStatus((current) => ({ ...current, [lead.id]: event.target.value }))}
