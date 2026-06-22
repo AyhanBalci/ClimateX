@@ -1,7 +1,7 @@
 import { resend, isResendConfigured } from "./resend";
 import { customerConfirmationEmail, adminNotificationEmail, LeadEmailData } from "./emailTemplates";
 
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "ClimateX <onboarding@resend.dev>";
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "ClimateX <offerte@climate-x.nl>";
 const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL || "ayhan-b@outlook.com";
 
 export async function sendOfferteEmails(lead: LeadEmailData) {
