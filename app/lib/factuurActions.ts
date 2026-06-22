@@ -4,7 +4,7 @@ import { Werkbon, Offerte } from "./types";
 
 const BTW_PERCENTAGE = 0.21;
 
-export async function createFactuurFromWerkbon(werkbon: Werkbon, offerte: Offerte | null) {
+export async function createFactuurFromWerkbon(werkbon: Werkbon, offerte: Offerte | null, ticketId: string | null = null) {
   if (!supabase) {
     return { data: null, error: "Supabase is niet geconfigureerd." };
   }
@@ -22,6 +22,7 @@ export async function createFactuurFromWerkbon(werkbon: Werkbon, offerte: Offert
       klant: werkbon.klantnaam,
       offerte_id: werkbon.offerte_id,
       werkbon_id: werkbon.id,
+      ticket_id: ticketId ?? werkbon.ticket_id,
       bedrag,
       btw,
       totaal,

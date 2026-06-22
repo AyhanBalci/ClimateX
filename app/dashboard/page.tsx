@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
-import { Lead, Werkbon } from "../lib/types";
+import { Lead, Vastgoedticket, Werkbon } from "../lib/types";
 import DashboardStats from "../components/dashboard/DashboardStats";
 import DashboardKpis from "../components/dashboard/DashboardKpis";
 import LeadsTable from "../components/dashboard/LeadsTable";
@@ -12,8 +12,10 @@ import ProductsManager from "../components/dashboard/ProductsManager";
 import WerkbonnenOverview from "../components/dashboard/WerkbonnenOverview";
 import WerkbonDetail from "../components/dashboard/WerkbonDetail";
 import FacturenOverview from "../components/dashboard/FacturenOverview";
+import VastgoedticketenOverview from "../components/dashboard/VastgoedticketenOverview";
+import VastgoedticketDetail from "../components/dashboard/VastgoedticketDetail";
 
-type View = "leads" | "offertes" | "producten" | "werkbonnen" | "facturen";
+type View = "leads" | "offertes" | "producten" | "werkbonnen" | "facturen" | "tickets";
 
 export default function DashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -27,6 +29,7 @@ export default function DashboardPage() {
   const [view, setView] = useState<View>("leads");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [selectedWerkbon, setSelectedWerkbon] = useState<Werkbon | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<Vastgoedticket | null>(null);
 
   const handleLogin = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -82,6 +85,12 @@ export default function DashboardPage() {
   const handleFactuurCreated = () => {
     setView("facturen");
     setSelectedWerkbon(null);
+  };
+
+  const handleOpenWerkbon = (werkbon: Werkbon) => {
+    setView("werkbonnen");
+    setSelectedWerkbon(werkbon);
+    setSelectedTicket(null);
   };
 
   if (!isAuthenticated) {
@@ -142,6 +151,7 @@ export default function DashboardPage() {
               { key: "producten", label: "Producten" },
               { key: "werkbonnen", label: "Werkbonnen" },
               { key: "facturen", label: "Facturen" },
+              { key: "tickets", label: "Vastgoedtickets" },
             ] as const
           ).map((tab) => (
             <button
@@ -150,6 +160,7 @@ export default function DashboardPage() {
                 setView(tab.key);
                 setSelectedLead(null);
                 setSelectedWerkbon(null);
+                setSelectedTicket(null);
               }}
               className={`shrink-0 rounded-full px-5 py-3 text-sm font-semibold transition ${
                 view === tab.key ? "bg-cyan-400 text-slate-950" : "border border-white/10 bg-white/5 text-white hover:bg-white/10"
@@ -197,8 +208,19 @@ export default function DashboardPage() {
           ) : (
             <WerkbonnenOverview onSelectWerkbon={setSelectedWerkbon} />
           )
-        ) : (
+        ) : view === "facturen" ? (
           <FacturenOverview />
+        ) : (
+          selectedTicket ? (
+            <VastgoedticketDetail
+              key={selectedTicket.id}
+              ticket={selectedTicket}
+              onBack={() => setSelectedTicket(null)}
+              onOpenWerkbon={handleOpenWerkbon}
+            />
+          ) : (
+            <VastgoedticketenOverview onSelectTicket={setSelectedTicket} />
+          )
         )}
       </div>
     </main>

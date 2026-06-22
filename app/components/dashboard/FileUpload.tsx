@@ -10,10 +10,11 @@ type Props = {
   werkbonId?: string;
   factuurId?: string;
   leadId?: string;
+  ticketId?: string;
   categorieen: string[];
 };
 
-export default function FileUpload({ werkbonId, factuurId, leadId, categorieen }: Props) {
+export default function FileUpload({ werkbonId, factuurId, leadId, ticketId, categorieen }: Props) {
   const [bestanden, setBestanden] = useState<Bestand[]>([]);
   const [categorie, setCategorie] = useState(categorieen[0]);
   const [uploading, setUploading] = useState(false);
@@ -26,6 +27,7 @@ export default function FileUpload({ werkbonId, factuurId, leadId, categorieen }
       let query = supabase.from("bestanden").select("*").order("created_at", { ascending: false });
       if (werkbonId) query = query.eq("werkbon_id", werkbonId);
       else if (factuurId) query = query.eq("factuur_id", factuurId);
+      else if (ticketId) query = query.eq("ticket_id", ticketId);
       else if (leadId) query = query.eq("lead_id", leadId);
 
       const { data, error: fetchError } = await query;
@@ -34,7 +36,7 @@ export default function FileUpload({ werkbonId, factuurId, leadId, categorieen }
     }
 
     fetchBestanden();
-  }, [werkbonId, factuurId, leadId]);
+  }, [werkbonId, factuurId, leadId, ticketId]);
 
   const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -43,7 +45,7 @@ export default function FileUpload({ werkbonId, factuurId, leadId, categorieen }
     setUploading(true);
     setError(null);
 
-    const path = `${werkbonId || factuurId || leadId || "overig"}/${Date.now()}-${file.name}`;
+    const path = `${werkbonId || factuurId || ticketId || leadId || "overig"}/${Date.now()}-${file.name}`;
     const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, file);
 
     if (uploadError) {
@@ -61,6 +63,7 @@ export default function FileUpload({ werkbonId, factuurId, leadId, categorieen }
         werkbon_id: werkbonId || null,
         factuur_id: factuurId || null,
         lead_id: leadId || null,
+        ticket_id: ticketId || null,
         categorie,
         bestandsnaam: file.name,
         pad: path,

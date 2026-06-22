@@ -37,7 +37,7 @@ export default function OffertesOverview({ onWerkbonCreated }: Props) {
 
       const { data, error: fetchError } = await supabase
         .from("offertes")
-        .select("*, leads(naam, telefoon, email, plaats, type_woning)")
+        .select("*, leads(naam, telefoon, email, plaats, type_woning), vastgoedtickets(klant, locatie, contactpersoon, telefoonnummer)")
         .order("datum", { ascending: false });
 
       if (fetchError) {
@@ -72,7 +72,7 @@ export default function OffertesOverview({ onWerkbonCreated }: Props) {
   };
 
   const handleCreateWerkbon = async (offerte: Offerte) => {
-    if (!offerte.leads) {
+    if (!offerte.leads || !offerte.lead_id) {
       setError("Leadgegevens ontbreken voor deze offerte.");
       return;
     }
@@ -134,7 +134,7 @@ export default function OffertesOverview({ onWerkbonCreated }: Props) {
                   <tr key={offerte.id} className="border-b border-white/5 text-slate-300">
                     <td className="whitespace-nowrap px-4 py-3 text-white">{offerte.offertenummer}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-slate-400">{formatDateTime(offerte.datum)}</td>
-                    <td className="px-4 py-3">{offerte.leads?.naam || "—"}</td>
+                    <td className="px-4 py-3">{offerte.leads?.naam || offerte.vastgoedtickets?.klant || "—"}</td>
                     <td className="px-4 py-3">{offerte.merk}</td>
                     <td className="px-4 py-3">{offerte.model}</td>
                     <td className="px-4 py-3">{formatCurrency(offerte.prijs)}</td>
@@ -144,10 +144,10 @@ export default function OffertesOverview({ onWerkbonCreated }: Props) {
                         <button
                           onClick={() =>
                             downloadOffertePdf(offerte, {
-                              naam: offerte.leads?.naam || "",
-                              telefoon: offerte.leads?.telefoon || "",
+                              naam: offerte.leads?.naam || offerte.vastgoedtickets?.klant || "",
+                              telefoon: offerte.leads?.telefoon || offerte.vastgoedtickets?.telefoonnummer || "",
                               email: offerte.leads?.email || "",
-                              plaats: offerte.leads?.plaats || "",
+                              plaats: offerte.leads?.plaats || offerte.vastgoedtickets?.locatie || "",
                               type_woning: offerte.leads?.type_woning || "",
                             })
                           }
@@ -179,7 +179,7 @@ export default function OffertesOverview({ onWerkbonCreated }: Props) {
                             </button>
                           </>
                         ) : null}
-                        {offerte.status === "Geaccepteerd" ? (
+                        {offerte.status === "Geaccepteerd" && offerte.leads ? (
                           <button
                             onClick={() => handleCreateWerkbon(offerte)}
                             className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-400/20"
@@ -200,16 +200,16 @@ export default function OffertesOverview({ onWerkbonCreated }: Props) {
               <div key={offerte.id} className="rounded-3xl border border-white/10 bg-[#090909] p-4">
                 <p className="font-semibold text-white">{offerte.offertenummer}</p>
                 <p className="mt-1 text-sm text-slate-400">{offerte.merk} {offerte.model}</p>
-                <p className="mt-1 text-sm text-slate-400">{offerte.leads?.naam || "—"} · {formatDateTime(offerte.datum)}</p>
+                <p className="mt-1 text-sm text-slate-400">{offerte.leads?.naam || offerte.vastgoedtickets?.klant || "—"} · {formatDateTime(offerte.datum)}</p>
                 <p className="mt-2 text-sm text-slate-200">{formatCurrency(offerte.prijs)} · {offerte.status}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
                     onClick={() =>
                       downloadOffertePdf(offerte, {
-                        naam: offerte.leads?.naam || "",
-                        telefoon: offerte.leads?.telefoon || "",
+                        naam: offerte.leads?.naam || offerte.vastgoedtickets?.klant || "",
+                        telefoon: offerte.leads?.telefoon || offerte.vastgoedtickets?.telefoonnummer || "",
                         email: offerte.leads?.email || "",
-                        plaats: offerte.leads?.plaats || "",
+                        plaats: offerte.leads?.plaats || offerte.vastgoedtickets?.locatie || "",
                         type_woning: offerte.leads?.type_woning || "",
                       })
                     }

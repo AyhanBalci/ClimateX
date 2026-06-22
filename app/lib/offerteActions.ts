@@ -1,7 +1,7 @@
 import { supabase } from "./supabase";
 import { updateLeadStatus } from "./leadActions";
 
-export async function markOfferteVerstuurd(offerteId: string, leadId: string) {
+export async function markOfferteVerstuurd(offerteId: string, leadId: string | null) {
   if (!supabase) {
     return { error: "Supabase is niet geconfigureerd." };
   }
@@ -11,15 +11,17 @@ export async function markOfferteVerstuurd(offerteId: string, leadId: string) {
     return { error: offerteError.message };
   }
 
-  const { error: leadError } = await updateLeadStatus(leadId, "Offerte verstuurd");
-  if (leadError) {
-    return { error: leadError };
+  if (leadId) {
+    const { error: leadError } = await updateLeadStatus(leadId, "Offerte verstuurd");
+    if (leadError) {
+      return { error: leadError };
+    }
   }
 
   return { error: null };
 }
 
-export async function updateOfferteStatus(offerteId: string, leadId: string, status: "Geaccepteerd" | "Afgewezen") {
+export async function updateOfferteStatus(offerteId: string, leadId: string | null, status: "Geaccepteerd" | "Afgewezen") {
   if (!supabase) {
     return { error: "Supabase is niet geconfigureerd." };
   }
@@ -29,10 +31,12 @@ export async function updateOfferteStatus(offerteId: string, leadId: string, sta
     return { error: offerteError.message };
   }
 
-  const leadStatus = status === "Geaccepteerd" ? "Gewonnen" : "Verloren";
-  const { error: leadError } = await updateLeadStatus(leadId, leadStatus);
-  if (leadError) {
-    return { error: leadError };
+  if (leadId) {
+    const leadStatus = status === "Geaccepteerd" ? "Gewonnen" : "Verloren";
+    const { error: leadError } = await updateLeadStatus(leadId, leadStatus);
+    if (leadError) {
+      return { error: leadError };
+    }
   }
 
   return { error: null };
