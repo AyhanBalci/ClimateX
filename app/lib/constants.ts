@@ -27,6 +27,7 @@ export const VASTGOEDTICKET_STATUS_OPTIONS = [
   "Offerte akkoord",
   "Werk ingepland",
   "Monteur onderweg",
+  "Op locatie",
   "Werk uitgevoerd",
   "Factuur verstuurd",
   "Afgerond",
@@ -35,3 +36,16 @@ export const VASTGOEDTICKET_STATUS_OPTIONS = [
 export const VASTGOEDTICKET_PRIORITEIT_OPTIONS = ["Laag", "Normaal", "Hoog", "Spoed"];
 
 export const TICKET_FOTO_CATEGORIE_OPTIONS = ["Voor", "Tijdens", "Na", "Overig"];
+
+export const PLANNING_STATUS_OPTIONS = ["Ingepland", "Onderweg", "Aangekomen", "Bezig", "Afgerond", "Geannuleerd"];
+
+export const MEDEWERKER_KLEUREN = [
+  "#22d3ee",
+  "#a78bfa",
+  "#f472b6",
+  "#fb923c",
+  "#34d399",
+  "#facc15",
+  "#60a5fa",
+  "#f87171",
+];

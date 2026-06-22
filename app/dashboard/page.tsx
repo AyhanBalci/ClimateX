@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
-import { Lead, Vastgoedticket, Werkbon } from "../lib/types";
+import { Lead, Planning, Vastgoedticket, Werkbon } from "../lib/types";
 import DashboardStats from "../components/dashboard/DashboardStats";
 import DashboardKpis from "../components/dashboard/DashboardKpis";
 import LeadsTable from "../components/dashboard/LeadsTable";
@@ -14,8 +14,10 @@ import WerkbonDetail from "../components/dashboard/WerkbonDetail";
 import FacturenOverview from "../components/dashboard/FacturenOverview";
 import VastgoedticketenOverview from "../components/dashboard/VastgoedticketenOverview";
 import VastgoedticketDetail from "../components/dashboard/VastgoedticketDetail";
+import PlanningAgenda from "../components/dashboard/PlanningAgenda";
+import PlanningDetail from "../components/dashboard/PlanningDetail";
 
-type View = "leads" | "offertes" | "producten" | "werkbonnen" | "facturen" | "tickets";
+type View = "leads" | "offertes" | "producten" | "werkbonnen" | "facturen" | "tickets" | "planning";
 
 export default function DashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -30,6 +32,7 @@ export default function DashboardPage() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [selectedWerkbon, setSelectedWerkbon] = useState<Werkbon | null>(null);
   const [selectedTicket, setSelectedTicket] = useState<Vastgoedticket | null>(null);
+  const [selectedPlanning, setSelectedPlanning] = useState<Planning | null>(null);
 
   const handleLogin = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -91,6 +94,14 @@ export default function DashboardPage() {
     setView("werkbonnen");
     setSelectedWerkbon(werkbon);
     setSelectedTicket(null);
+    setSelectedPlanning(null);
+  };
+
+  const handleOpenPlanning = (planning: Planning) => {
+    setView("planning");
+    setSelectedPlanning(planning);
+    setSelectedTicket(null);
+    setSelectedWerkbon(null);
   };
 
   if (!isAuthenticated) {
@@ -152,6 +163,7 @@ export default function DashboardPage() {
               { key: "werkbonnen", label: "Werkbonnen" },
               { key: "facturen", label: "Facturen" },
               { key: "tickets", label: "Vastgoedtickets" },
+              { key: "planning", label: "Planning" },
             ] as const
           ).map((tab) => (
             <button
@@ -161,6 +173,7 @@ export default function DashboardPage() {
                 setSelectedLead(null);
                 setSelectedWerkbon(null);
                 setSelectedTicket(null);
+                setSelectedPlanning(null);
               }}
               className={`shrink-0 rounded-full px-5 py-3 text-sm font-semibold transition ${
                 view === tab.key ? "bg-cyan-400 text-slate-950" : "border border-white/10 bg-white/5 text-white hover:bg-white/10"
@@ -204,22 +217,37 @@ export default function DashboardPage() {
               onBack={() => setSelectedWerkbon(null)}
               onWerkbonUpdated={setSelectedWerkbon}
               onFactuurCreated={handleFactuurCreated}
+              onOpenPlanning={handleOpenPlanning}
             />
           ) : (
             <WerkbonnenOverview onSelectWerkbon={setSelectedWerkbon} />
           )
         ) : view === "facturen" ? (
           <FacturenOverview />
-        ) : (
+        ) : view === "tickets" ? (
           selectedTicket ? (
             <VastgoedticketDetail
               key={selectedTicket.id}
               ticket={selectedTicket}
               onBack={() => setSelectedTicket(null)}
               onOpenWerkbon={handleOpenWerkbon}
+              onOpenPlanning={handleOpenPlanning}
             />
           ) : (
             <VastgoedticketenOverview onSelectTicket={setSelectedTicket} />
+          )
+        ) : (
+          selectedPlanning ? (
+            <PlanningDetail
+              key={selectedPlanning.id}
+              planning={selectedPlanning}
+              onBack={() => setSelectedPlanning(null)}
+              onPlanningUpdated={setSelectedPlanning}
+              onPlanningDeleted={() => setSelectedPlanning(null)}
+              onOpenWerkbon={handleOpenWerkbon}
+            />
+          ) : (
+            <PlanningAgenda onSelectPlanning={setSelectedPlanning} />
           )
         )}
       </div>

@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   Factuur,
   Offerte,
+  Planning,
   Product,
   TicketNotitie,
   TicketStatusHistorie,
@@ -20,6 +21,8 @@ import {
   updateTicketStatus,
 } from "../../lib/ticketActions";
 import { createFactuurFromWerkbon, markFactuurBetaald } from "../../lib/factuurActions";
+import { createPlanning } from "../../lib/planningActions";
+import { toDateKey } from "../../lib/dateUtils";
 import { getNextOfferteNummer } from "../../lib/offerteNummer";
 import { downloadOffertePdf } from "../../lib/generateOffertePdf";
 import { downloadFactuurPdf } from "../../lib/generateFactuurPdf";
@@ -37,12 +40,21 @@ type Props = {
   ticket: Vastgoedticket;
   onBack: () => void;
   onOpenWerkbon: (werkbon: Werkbon) => void;
+  onOpenPlanning: (planning: Planning) => void;
 };
 
-export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon }: Props) {
+export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, onOpenPlanning }: Props) {
   const [notities, setNotities] = useState<TicketNotitie[]>([]);
   const [historie, setHistorie] = useState<TicketStatusHistorie[]>([]);
   const [offertes, setOffertes] = useState<Offerte[]>([]);
+  const [afspraken, setAfspraken] = useState<Planning[]>([]);
+  const [showPlanningForm, setShowPlanningForm] = useState(false);
+  const [planningForm, setPlanningForm] = useState({
+    medewerker: "",
+    datum: toDateKey(new Date()),
+    starttijd: "09:00",
+    eindtijd: "10:00",
+  });
   const [werkbonnen, setWerkbonnen] = useState<Werkbon[]>([]);
   const [facturen, setFacturen] = useState<Factuur[]>([]);
   const [producten, setProducten] = useState<Product[]>([]);
@@ -79,7 +91,7 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon }: 
         return;
       }
 
-      const [notitiesRes, historieRes, offertesRes, werkbonnenRes, facturenRes, productenRes] = await Promise.all([
+      const [notitiesRes, historieRes, offertesRes, werkbonnenRes, facturenRes, productenRes, afsprakenRes] = await Promise.all([
         supabase.from("ticket_notities").select("*").eq("ticket_id", ticket.id).order("created_at", { ascending: false }),
         supabase
           .from("ticket_status_historie")
@@ -90,9 +102,18 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon }: 
         supabase.from("werkbonnen").select("*").eq("ticket_id", ticket.id).order("datum", { ascending: false }),
         supabase.from("facturen").select("*").eq("ticket_id", ticket.id).order("created_at", { ascending: false }),
         supabase.from("producten").select("*").eq("actief", true).order("merk", { ascending: true }),
+        supabase.from("planning").select("*").eq("ticket_id", ticket.id).order("datum", { ascending: false }),
       ]);
 
-      if (notitiesRes.error || historieRes.error || offertesRes.error || werkbonnenRes.error || facturenRes.error || productenRes.error) {
+      if (
+        notitiesRes.error ||
+        historieRes.error ||
+        offertesRes.error ||
+        werkbonnenRes.error ||
+        facturenRes.error ||
+        productenRes.error ||
+        afsprakenRes.error
+      ) {
         setError(
           notitiesRes.error?.message ||
             historieRes.error?.message ||
@@ -100,6 +121,7 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon }: 
             werkbonnenRes.error?.message ||
             facturenRes.error?.message ||
             productenRes.error?.message ||
+            afsprakenRes.error?.message ||
             "Onbekende fout."
         );
       } else {
@@ -109,12 +131,41 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon }: 
         setWerkbonnen((werkbonnenRes.data as Werkbon[]) || []);
         setFacturen((facturenRes.data as Factuur[]) || []);
         setProducten((productenRes.data as Product[]) || []);
+        setAfspraken((afsprakenRes.data as Planning[]) || []);
       }
       setLoading(false);
     }
 
     fetchDetails();
   }, [ticket.id]);
+
+  const handlePlanAfspraak = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!planningForm.medewerker.trim()) {
+      setError("Vul een medewerker in om de afspraak in te plannen.");
+      return;
+    }
+
+    const { data, error: createError } = await createPlanning({
+      titel: `Ticket ${currentTicket.ticketnummer}`,
+      klantnaam: currentTicket.klant,
+      ticket_id: currentTicket.id,
+      medewerker: planningForm.medewerker.trim(),
+      datum: planningForm.datum,
+      starttijd: planningForm.starttijd,
+      eindtijd: planningForm.eindtijd,
+      adres: currentTicket.locatie,
+      telefoon: currentTicket.telefoonnummer || "",
+    });
+
+    if (createError || !data) {
+      setError(createError || "Afspraak inplannen is mislukt.");
+      return;
+    }
+    setError(null);
+    setAfspraken((current) => [data as Planning, ...current]);
+    setShowPlanningForm(false);
+  };
 
   const timeline = useMemo(() => {
     const items = [
@@ -631,6 +682,72 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon }: 
                     </button>
                   ) : null}
                 </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6 rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-xl shadow-black/20 sm:p-8">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h3 className="text-lg font-semibold text-white">Planning</h3>
+          <button
+            onClick={() => setShowPlanningForm((current) => !current)}
+            className="rounded-full bg-cyan-400 px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300"
+          >
+            {showPlanningForm ? "Annuleren" : "+ Plan afspraak"}
+          </button>
+        </div>
+
+        {showPlanningForm ? (
+          <form onSubmit={handlePlanAfspraak} className="mt-4 grid gap-3 rounded-3xl border border-white/10 bg-[#090909] p-4 sm:grid-cols-2">
+            <input
+              type="text"
+              placeholder="Medewerker"
+              value={planningForm.medewerker}
+              onChange={(event) => setPlanningForm((current) => ({ ...current, medewerker: event.target.value }))}
+              className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
+            />
+            <input
+              type="date"
+              value={planningForm.datum}
+              onChange={(event) => setPlanningForm((current) => ({ ...current, datum: event.target.value }))}
+              className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
+            />
+            <input
+              type="time"
+              value={planningForm.starttijd}
+              onChange={(event) => setPlanningForm((current) => ({ ...current, starttijd: event.target.value }))}
+              className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
+            />
+            <input
+              type="time"
+              value={planningForm.eindtijd}
+              onChange={(event) => setPlanningForm((current) => ({ ...current, eindtijd: event.target.value }))}
+              className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
+            />
+            <button type="submit" className="rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 sm:col-span-2">
+              Inplannen
+            </button>
+          </form>
+        ) : null}
+
+        {afspraken.length === 0 ? (
+          <p className="mt-4 text-sm text-slate-400">Nog geen afspraken ingepland voor dit ticket.</p>
+        ) : (
+          <div className="mt-4 space-y-2">
+            {afspraken.map((afspraak) => (
+              <div key={afspraak.id} className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#090909] p-3 text-sm">
+                <div>
+                  <p className="font-semibold text-white">{new Date(afspraak.datum).toLocaleDateString("nl-NL")} {afspraak.starttijd.slice(0, 5)}</p>
+                  <p className="text-slate-400">{afspraak.medewerker} · {afspraak.status}</p>
+                </div>
+                <button
+                  onClick={() => onOpenPlanning(afspraak)}
+                  className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-400/20"
+                >
+                  Openen
+                </button>
               </div>
             ))}
           </div>

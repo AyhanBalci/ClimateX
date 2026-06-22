@@ -135,3 +135,25 @@ export type TicketStatusHistorie = {
   status: string;
   created_at: string;
 };
+
+export type Planning = {
+  id: string;
+  created_at: string;
+  planning_nummer: string;
+  titel: string;
+  omschrijving: string | null;
+  klant_id: string | null;
+  klantnaam: string | null;
+  lead_id: string | null;
+  ticket_id: string | null;
+  werkbon_id: string | null;
+  medewerker: string;
+  datum: string;
+  starttijd: string;
+  eindtijd: string;
+  status: string;
+  kleur: string;
+  adres: string | null;
+  telefoon: string | null;
+  opmerkingen: string | null;
+};
