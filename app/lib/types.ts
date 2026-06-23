@@ -8,6 +8,7 @@ export type Lead = {
   type_woning: string;
   opmerkingen: string;
   status: string;
+  klant_user_id?: string | null;
 };
 
 export type LeadNotitie = {
@@ -101,6 +102,7 @@ export type Bestand = {
   bestandsnaam: string;
   pad: string;
   url: string;
+  zichtbaar_voor_klant?: boolean;
 };
 
 export type Vastgoedticket = {
@@ -120,6 +122,7 @@ export type Vastgoedticket = {
   monteur: string | null;
   geplande_datum: string | null;
   geplande_tijd: string | null;
+  klant_user_id?: string | null;
 };
 
 export type TicketNotitie = {
@@ -133,6 +136,24 @@ export type TicketStatusHistorie = {
   id: string;
   ticket_id: string;
   status: string;
+  created_at: string;
+};
+
+export type KlantProfiel = {
+  id: string;
+  user_id: string;
+  naam: string;
+  email: string;
+  telefoon: string | null;
+  rol: string;
+  created_at: string;
+};
+
+export type TicketKlantBericht = {
+  id: string;
+  ticket_id: string;
+  klant_user_id: string | null;
+  tekst: string;
   created_at: string;
 };
 

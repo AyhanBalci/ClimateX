@@ -49,3 +49,18 @@ export const MEDEWERKER_KLEUREN = [
   "#60a5fa",
   "#f87171",
 ];
+
+export const KLANT_UPLOAD_CATEGORIE_OPTIONS = [
+  "Binnenruimte",
+  "Buitenmuur",
+  "Meterkast",
+  "Gewenste plek airco",
+  "Overig",
+];
+
+export const FACTUUR_STATUS_LABELS: Record<string, string> = {
+  Concept: "In voorbereiding",
+  Verzonden: "Verzonden",
+  Betaald: "Betaald",
+  Achterstallig: "Achterstallig",
+};

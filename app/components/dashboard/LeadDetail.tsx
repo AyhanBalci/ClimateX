@@ -9,6 +9,7 @@ import { markOfferteVerstuurd, updateOfferteStatus } from "../../lib/offerteActi
 import { createWerkbonFromOfferte } from "../../lib/werkbonActions";
 import { getNextOfferteNummer } from "../../lib/offerteNummer";
 import { downloadOffertePdf } from "../../lib/generateOffertePdf";
+import KlantAccountKoppeling from "./KlantAccountKoppeling";
 
 function formatDateTime(value: string) {
   return new Date(value).toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" });
@@ -261,6 +262,10 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated, onWerkbonCreat
 
         {error ? <p className="mt-6 text-sm text-rose-400">{error}</p> : null}
         {loading ? <p className="mt-6 text-sm text-slate-400">Bezig met laden...</p> : null}
+
+        <div className="mt-6">
+          <KlantAccountKoppeling naam={lead.naam} email={lead.email} leadId={lead.id} klantUserId={lead.klant_user_id} />
+        </div>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
