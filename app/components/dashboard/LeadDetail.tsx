@@ -8,8 +8,8 @@ import { updateLeadStatus } from "../../lib/leadActions";
 import { markOfferteVerstuurd, updateOfferteStatus } from "../../lib/offerteActions";
 import { createWerkbonFromOfferte } from "../../lib/werkbonActions";
 import { getNextOfferteNummer } from "../../lib/offerteNummer";
-import { downloadOffertePdf } from "../../lib/generateOffertePdf";
 import KlantAccountKoppeling from "./KlantAccountKoppeling";
+import OfferteActieKnoppen from "./OfferteActieKnoppen";
 
 function formatDateTime(value: string) {
   return new Date(value).toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" });
@@ -359,12 +359,7 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated, onWerkbonCreat
                   </div>
                   <p className="mt-2 text-slate-400">{formatCurrency(offerte.prijs)} · {formatDateTime(offerte.datum)}</p>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <button
-                      onClick={() => downloadOffertePdf(offerte, lead)}
-                      className="rounded-full bg-cyan-400 px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300"
-                    >
-                      PDF downloaden
-                    </button>
+                    <OfferteActieKnoppen offerte={offerte} klant={lead} />
                     {offerte.status === "Concept" ? (
                       <button
                         onClick={() => handleMarkVerstuurd(offerte)}

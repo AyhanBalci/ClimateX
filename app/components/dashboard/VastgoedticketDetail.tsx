@@ -24,10 +24,10 @@ import { createFactuurFromWerkbon, markFactuurBetaald } from "../../lib/factuurA
 import { createPlanning } from "../../lib/planningActions";
 import { toDateKey } from "../../lib/dateUtils";
 import { getNextOfferteNummer } from "../../lib/offerteNummer";
-import { downloadOffertePdf } from "../../lib/generateOffertePdf";
 import { downloadFactuurPdf } from "../../lib/generateFactuurPdf";
 import FileUpload from "./FileUpload";
 import KlantAccountKoppeling from "./KlantAccountKoppeling";
+import OfferteActieKnoppen from "./OfferteActieKnoppen";
 
 function formatDateTime(value: string) {
   return new Date(value).toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" });
@@ -571,20 +571,16 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
                 </div>
                 <p className="mt-2 text-slate-400">{formatCurrency(offerte.prijs)} · {formatDateTime(offerte.datum)}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    onClick={() =>
-                      downloadOffertePdf(offerte, {
-                        naam: currentTicket.klant,
-                        telefoon: currentTicket.telefoonnummer || "",
-                        email: "",
-                        plaats: currentTicket.locatie,
-                        type_woning: "",
-                      })
-                    }
-                    className="rounded-full bg-cyan-400 px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300"
-                  >
-                    PDF downloaden
-                  </button>
+                  <OfferteActieKnoppen
+                    offerte={offerte}
+                    klant={{
+                      naam: currentTicket.klant,
+                      telefoon: currentTicket.telefoonnummer || "",
+                      email: "",
+                      plaats: currentTicket.locatie,
+                      type_woning: "",
+                    }}
+                  />
                   {offerte.status === "Concept" ? (
                     <button
                       onClick={() => handleMarkVerstuurd(offerte)}

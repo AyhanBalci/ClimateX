@@ -5,7 +5,7 @@ import { Lead, Offerte, Werkbon } from "../../lib/types";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
 import { markOfferteVerstuurd, updateOfferteStatus } from "../../lib/offerteActions";
 import { createWerkbonFromOfferte } from "../../lib/werkbonActions";
-import { downloadOffertePdf } from "../../lib/generateOffertePdf";
+import OfferteActieKnoppen from "./OfferteActieKnoppen";
 
 function formatDateTime(value: string) {
   return new Date(value).toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" });
@@ -141,20 +141,16 @@ export default function OffertesOverview({ onWerkbonCreated }: Props) {
                     <td className="px-4 py-3">{offerte.status}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap items-center gap-2">
-                        <button
-                          onClick={() =>
-                            downloadOffertePdf(offerte, {
-                              naam: offerte.leads?.naam || offerte.vastgoedtickets?.klant || "",
-                              telefoon: offerte.leads?.telefoon || offerte.vastgoedtickets?.telefoonnummer || "",
-                              email: offerte.leads?.email || "",
-                              plaats: offerte.leads?.plaats || offerte.vastgoedtickets?.locatie || "",
-                              type_woning: offerte.leads?.type_woning || "",
-                            })
-                          }
-                          className="rounded-full bg-cyan-400 px-3 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300"
-                        >
-                          PDF
-                        </button>
+                        <OfferteActieKnoppen
+                          offerte={offerte}
+                          klant={{
+                            naam: offerte.leads?.naam || offerte.vastgoedtickets?.klant || "",
+                            telefoon: offerte.leads?.telefoon || offerte.vastgoedtickets?.telefoonnummer || "",
+                            email: offerte.leads?.email || "",
+                            plaats: offerte.leads?.plaats || offerte.vastgoedtickets?.locatie || "",
+                            type_woning: offerte.leads?.type_woning || "",
+                          }}
+                        />
                         {offerte.status === "Concept" ? (
                           <button
                             onClick={() => handleMarkVerstuurd(offerte)}
@@ -203,20 +199,16 @@ export default function OffertesOverview({ onWerkbonCreated }: Props) {
                 <p className="mt-1 text-sm text-slate-400">{offerte.leads?.naam || offerte.vastgoedtickets?.klant || "—"} · {formatDateTime(offerte.datum)}</p>
                 <p className="mt-2 text-sm text-slate-200">{formatCurrency(offerte.prijs)} · {offerte.status}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    onClick={() =>
-                      downloadOffertePdf(offerte, {
-                        naam: offerte.leads?.naam || offerte.vastgoedtickets?.klant || "",
-                        telefoon: offerte.leads?.telefoon || offerte.vastgoedtickets?.telefoonnummer || "",
-                        email: offerte.leads?.email || "",
-                        plaats: offerte.leads?.plaats || offerte.vastgoedtickets?.locatie || "",
-                        type_woning: offerte.leads?.type_woning || "",
-                      })
-                    }
-                    className="rounded-full bg-cyan-400 px-3 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300"
-                  >
-                    PDF downloaden
-                  </button>
+                  <OfferteActieKnoppen
+                    offerte={offerte}
+                    klant={{
+                      naam: offerte.leads?.naam || offerte.vastgoedtickets?.klant || "",
+                      telefoon: offerte.leads?.telefoon || offerte.vastgoedtickets?.telefoonnummer || "",
+                      email: offerte.leads?.email || "",
+                      plaats: offerte.leads?.plaats || offerte.vastgoedtickets?.locatie || "",
+                      type_woning: offerte.leads?.type_woning || "",
+                    }}
+                  />
                   {offerte.status === "Concept" ? (
                     <button
                       onClick={() => handleMarkVerstuurd(offerte)}
