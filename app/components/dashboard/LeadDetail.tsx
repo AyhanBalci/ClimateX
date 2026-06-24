@@ -1,15 +1,15 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Lead, LeadNotitie, LeadStatusHistorie, Offerte, Product, Werkbon } from "../../lib/types";
+import { Lead, LeadNotitie, LeadStatusHistorie, Offerte, Planning, Product, Werkbon } from "../../lib/types";
 import { STATUS_OPTIONS } from "../../lib/constants";
 import { supabase } from "../../lib/supabase";
 import { updateLeadStatus } from "../../lib/leadActions";
 import { markOfferteVerstuurd, updateOfferteStatus } from "../../lib/offerteActions";
-import { createWerkbonFromOfferte } from "../../lib/werkbonActions";
 import { getNextOfferteNummer } from "../../lib/offerteNummer";
 import KlantAccountKoppeling from "./KlantAccountKoppeling";
 import OfferteActieKnoppen from "./OfferteActieKnoppen";
+import OfferteKoppelingen from "./OfferteKoppelingen";
 
 function formatDateTime(value: string) {
   return new Date(value).toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" });
@@ -23,14 +23,17 @@ type Props = {
   lead: Lead;
   onBack: () => void;
   onLeadUpdated: (leadId: string, newStatus: string) => void;
-  onWerkbonCreated: (werkbon: Werkbon) => void;
+  onOpenWerkbon: (werkbon: Werkbon) => void;
+  onOpenPlanning: (planning: Planning) => void;
 };
 
-export default function LeadDetail({ lead, onBack, onLeadUpdated, onWerkbonCreated }: Props) {
+export default function LeadDetail({ lead, onBack, onLeadUpdated, onOpenWerkbon, onOpenPlanning }: Props) {
   const [notities, setNotities] = useState<LeadNotitie[]>([]);
   const [historie, setHistorie] = useState<LeadStatusHistorie[]>([]);
   const [offertes, setOffertes] = useState<Offerte[]>([]);
   const [producten, setProducten] = useState<Product[]>([]);
+  const [werkbonnen, setWerkbonnen] = useState<Werkbon[]>([]);
+  const [planningen, setPlanningen] = useState<Planning[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,19 +60,23 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated, onWerkbonCreat
         return;
       }
 
-      const [notitiesRes, historieRes, offertesRes, productenRes] = await Promise.all([
+      const [notitiesRes, historieRes, offertesRes, productenRes, werkbonnenRes, planningRes] = await Promise.all([
         supabase.from("lead_notities").select("*").eq("lead_id", lead.id).order("created_at", { ascending: false }),
         supabase.from("lead_status_historie").select("*").eq("lead_id", lead.id).order("created_at", { ascending: false }),
         supabase.from("offertes").select("*").eq("lead_id", lead.id).order("datum", { ascending: false }),
         supabase.from("producten").select("*").eq("actief", true).order("merk", { ascending: true }),
+        supabase.from("werkbonnen").select("*").eq("lead_id", lead.id),
+        supabase.from("planning").select("*").eq("lead_id", lead.id),
       ]);
 
-      if (notitiesRes.error || historieRes.error || offertesRes.error || productenRes.error) {
+      if (notitiesRes.error || historieRes.error || offertesRes.error || productenRes.error || werkbonnenRes.error || planningRes.error) {
         setError(
           notitiesRes.error?.message ||
             historieRes.error?.message ||
             offertesRes.error?.message ||
             productenRes.error?.message ||
+            werkbonnenRes.error?.message ||
+            planningRes.error?.message ||
             "Onbekende fout."
         );
       } else {
@@ -77,6 +84,8 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated, onWerkbonCreat
         setHistorie((historieRes.data as LeadStatusHistorie[]) || []);
         setOffertes((offertesRes.data as Offerte[]) || []);
         setProducten((productenRes.data as Product[]) || []);
+        setWerkbonnen((werkbonnenRes.data as Werkbon[]) || []);
+        setPlanningen((planningRes.data as Planning[]) || []);
       }
       setLoading(false);
     }
@@ -102,6 +111,22 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated, onWerkbonCreat
     ];
     return items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [lead.created_at, historie, notities]);
+
+  const werkbonByOfferteId = useMemo(() => {
+    const map: Record<string, Werkbon> = {};
+    werkbonnen.forEach((werkbon) => {
+      if (werkbon.offerte_id) map[werkbon.offerte_id] = werkbon;
+    });
+    return map;
+  }, [werkbonnen]);
+
+  const planningByWerkbonId = useMemo(() => {
+    const map: Record<string, Planning> = {};
+    planningen.forEach((planning) => {
+      if (planning.werkbon_id) map[planning.werkbon_id] = planning;
+    });
+    return map;
+  }, [planningen]);
 
   const handleAddNote = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -215,16 +240,6 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated, onWerkbonCreat
       ...current,
     ]);
     onLeadUpdated(lead.id, leadStatus);
-  };
-
-  const handleCreateWerkbon = async (offerte: Offerte) => {
-    const { data, error: createError } = await createWerkbonFromOfferte(lead, offerte);
-    if (createError || !data) {
-      setError(createError || "Werkbon aanmaken is mislukt.");
-      return;
-    }
-    setError(null);
-    onWerkbonCreated(data as Werkbon);
   };
 
   return (
@@ -385,12 +400,16 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated, onWerkbonCreat
                       </>
                     ) : null}
                     {offerte.status === "Geaccepteerd" ? (
-                      <button
-                        onClick={() => handleCreateWerkbon(offerte)}
-                        className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-4 py-2 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-400/20"
-                      >
-                        Maak werkbon
-                      </button>
+                      <OfferteKoppelingen
+                        werkbon={werkbonByOfferteId[offerte.id] || null}
+                        planning={
+                          werkbonByOfferteId[offerte.id]
+                            ? planningByWerkbonId[werkbonByOfferteId[offerte.id].id] || null
+                            : null
+                        }
+                        onOpenWerkbon={onOpenWerkbon}
+                        onOpenPlanning={onOpenPlanning}
+                      />
                     ) : null}
                   </div>
                 </div>

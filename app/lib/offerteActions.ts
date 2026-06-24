@@ -31,9 +31,10 @@ export async function updateOfferteStatus(offerteId: string, leadId: string | nu
     return { error: offerteError.message };
   }
 
-  if (leadId) {
-    const leadStatus = status === "Geaccepteerd" ? "Gewonnen" : "Verloren";
-    const { error: leadError } = await updateLeadStatus(leadId, leadStatus);
+  // Bij "Geaccepteerd" zet de database-trigger offerte_geaccepteerd_automatisering()
+  // de leadstatus al op "Gewonnen" en maakt automatisch werkbon + planning aan.
+  if (leadId && status === "Afgewezen") {
+    const { error: leadError } = await updateLeadStatus(leadId, "Verloren");
     if (leadError) {
       return { error: leadError };
     }

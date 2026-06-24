@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Lead, Offerte, Werkbon } from "../../lib/types";
+import { useEffect, useMemo, useState } from "react";
+import { Offerte, Planning, Werkbon } from "../../lib/types";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
 import { markOfferteVerstuurd, updateOfferteStatus } from "../../lib/offerteActions";
-import { createWerkbonFromOfferte } from "../../lib/werkbonActions";
 import OfferteActieKnoppen from "./OfferteActieKnoppen";
+import OfferteKoppelingen from "./OfferteKoppelingen";
 
 function formatDateTime(value: string) {
   return new Date(value).toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" });
@@ -16,11 +16,14 @@ function formatCurrency(value: number) {
 }
 
 type Props = {
-  onWerkbonCreated: (werkbon: Werkbon) => void;
+  onOpenWerkbon: (werkbon: Werkbon) => void;
+  onOpenPlanning: (planning: Planning) => void;
 };
 
-export default function OffertesOverview({ onWerkbonCreated }: Props) {
+export default function OffertesOverview({ onOpenWerkbon, onOpenPlanning }: Props) {
   const [offertes, setOffertes] = useState<Offerte[]>([]);
+  const [werkbonnen, setWerkbonnen] = useState<Werkbon[]>([]);
+  const [planningen, setPlanningen] = useState<Planning[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,21 +38,43 @@ export default function OffertesOverview({ onWerkbonCreated }: Props) {
         return;
       }
 
-      const { data, error: fetchError } = await supabase
-        .from("offertes")
-        .select("*, leads(naam, telefoon, email, plaats, type_woning), vastgoedtickets(klant, locatie, contactpersoon, telefoonnummer)")
-        .order("datum", { ascending: false });
+      const [offertesRes, werkbonnenRes, planningRes] = await Promise.all([
+        supabase
+          .from("offertes")
+          .select("*, leads(naam, telefoon, email, plaats, type_woning), vastgoedtickets(klant, locatie, contactpersoon, telefoonnummer)")
+          .order("datum", { ascending: false }),
+        supabase.from("werkbonnen").select("*").not("offerte_id", "is", null),
+        supabase.from("planning").select("*").not("werkbon_id", "is", null),
+      ]);
 
-      if (fetchError) {
-        setError(fetchError.message);
+      if (offertesRes.error || werkbonnenRes.error || planningRes.error) {
+        setError(offertesRes.error?.message || werkbonnenRes.error?.message || planningRes.error?.message || "Onbekende fout.");
       } else {
-        setOffertes((data as Offerte[]) || []);
+        setOffertes((offertesRes.data as Offerte[]) || []);
+        setWerkbonnen((werkbonnenRes.data as Werkbon[]) || []);
+        setPlanningen((planningRes.data as Planning[]) || []);
       }
       setLoading(false);
     }
 
     fetchOffertes();
   }, []);
+
+  const werkbonByOfferteId = useMemo(() => {
+    const map: Record<string, Werkbon> = {};
+    werkbonnen.forEach((werkbon) => {
+      if (werkbon.offerte_id) map[werkbon.offerte_id] = werkbon;
+    });
+    return map;
+  }, [werkbonnen]);
+
+  const planningByWerkbonId = useMemo(() => {
+    const map: Record<string, Planning> = {};
+    planningen.forEach((planning) => {
+      if (planning.werkbon_id) map[planning.werkbon_id] = planning;
+    });
+    return map;
+  }, [planningen]);
 
   const handleMarkVerstuurd = async (offerte: Offerte) => {
     const { error: markError } = await markOfferteVerstuurd(offerte.id, offerte.lead_id);
@@ -69,32 +94,6 @@ export default function OffertesOverview({ onWerkbonCreated }: Props) {
     }
     setError(null);
     setOffertes((current) => current.map((item) => (item.id === offerte.id ? { ...item, status } : item)));
-  };
-
-  const handleCreateWerkbon = async (offerte: Offerte) => {
-    if (!offerte.leads || !offerte.lead_id) {
-      setError("Leadgegevens ontbreken voor deze offerte.");
-      return;
-    }
-    const leadLike: Lead = {
-      id: offerte.lead_id,
-      created_at: "",
-      naam: offerte.leads.naam,
-      telefoon: offerte.leads.telefoon,
-      email: offerte.leads.email,
-      plaats: offerte.leads.plaats,
-      type_woning: offerte.leads.type_woning,
-      opmerkingen: "",
-      status: "",
-    };
-
-    const { data, error: createError } = await createWerkbonFromOfferte(leadLike, offerte);
-    if (createError || !data) {
-      setError(createError || "Werkbon aanmaken is mislukt.");
-      return;
-    }
-    setError(null);
-    onWerkbonCreated(data as Werkbon);
   };
 
   const totaalWaarde = offertes.reduce((sum, offerte) => sum + (offerte.prijs || 0), 0);
@@ -175,13 +174,17 @@ export default function OffertesOverview({ onWerkbonCreated }: Props) {
                             </button>
                           </>
                         ) : null}
-                        {offerte.status === "Geaccepteerd" && offerte.leads ? (
-                          <button
-                            onClick={() => handleCreateWerkbon(offerte)}
-                            className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-400/20"
-                          >
-                            Maak werkbon
-                          </button>
+                        {offerte.status === "Geaccepteerd" ? (
+                          <OfferteKoppelingen
+                            werkbon={werkbonByOfferteId[offerte.id] || null}
+                            planning={
+                              werkbonByOfferteId[offerte.id]
+                                ? planningByWerkbonId[werkbonByOfferteId[offerte.id].id] || null
+                                : null
+                            }
+                            onOpenWerkbon={onOpenWerkbon}
+                            onOpenPlanning={onOpenPlanning}
+                          />
                         ) : null}
                       </div>
                     </td>
@@ -234,12 +237,16 @@ export default function OffertesOverview({ onWerkbonCreated }: Props) {
                     </>
                   ) : null}
                   {offerte.status === "Geaccepteerd" ? (
-                    <button
-                      onClick={() => handleCreateWerkbon(offerte)}
-                      className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-400/20"
-                    >
-                      Maak werkbon
-                    </button>
+                    <OfferteKoppelingen
+                      werkbon={werkbonByOfferteId[offerte.id] || null}
+                      planning={
+                        werkbonByOfferteId[offerte.id]
+                          ? planningByWerkbonId[werkbonByOfferteId[offerte.id].id] || null
+                          : null
+                      }
+                      onOpenWerkbon={onOpenWerkbon}
+                      onOpenPlanning={onOpenPlanning}
+                    />
                   ) : null}
                 </div>
               </div>

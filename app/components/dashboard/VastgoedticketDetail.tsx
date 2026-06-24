@@ -14,7 +14,6 @@ import {
 import { VASTGOEDTICKET_STATUS_OPTIONS } from "../../lib/constants";
 import { supabase } from "../../lib/supabase";
 import {
-  createWerkbonFromTicket,
   markTicketAfgerond,
   markTicketOfferteVerstuurd,
   updateTicketOfferteStatus,
@@ -28,6 +27,7 @@ import { downloadFactuurPdf } from "../../lib/generateFactuurPdf";
 import FileUpload from "./FileUpload";
 import KlantAccountKoppeling from "./KlantAccountKoppeling";
 import OfferteActieKnoppen from "./OfferteActieKnoppen";
+import OfferteKoppelingen from "./OfferteKoppelingen";
 
 function formatDateTime(value: string) {
   return new Date(value).toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" });
@@ -139,6 +139,22 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
 
     fetchDetails();
   }, [ticket.id]);
+
+  const werkbonByOfferteId = useMemo(() => {
+    const map: Record<string, Werkbon> = {};
+    werkbonnen.forEach((werkbon) => {
+      if (werkbon.offerte_id) map[werkbon.offerte_id] = werkbon;
+    });
+    return map;
+  }, [werkbonnen]);
+
+  const planningByWerkbonId = useMemo(() => {
+    const map: Record<string, Planning> = {};
+    afspraken.forEach((planning) => {
+      if (planning.werkbon_id) map[planning.werkbon_id] = planning;
+    });
+    return map;
+  }, [afspraken]);
 
   const handlePlanAfspraak = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -318,17 +334,6 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
     if (status === "Geaccepteerd") {
       setCurrentTicket((current) => ({ ...current, status: "Offerte akkoord" }));
     }
-  };
-
-  const handleCreateWerkbon = async (offerte: Offerte) => {
-    const { data, error: createError } = await createWerkbonFromTicket(currentTicket, offerte);
-    if (createError || !data) {
-      setError(createError || "Werkbon aanmaken is mislukt.");
-      return;
-    }
-    setError(null);
-    setWerkbonnen((current) => [data as Werkbon, ...current]);
-    setCurrentTicket((current) => ({ ...current, status: "Werk ingepland" }));
   };
 
   const handleCreateFactuur = async (werkbon: Werkbon) => {
@@ -606,12 +611,16 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
                     </>
                   ) : null}
                   {offerte.status === "Geaccepteerd" ? (
-                    <button
-                      onClick={() => handleCreateWerkbon(offerte)}
-                      className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-4 py-2 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-400/20"
-                    >
-                      Maak werkbon
-                    </button>
+                    <OfferteKoppelingen
+                      werkbon={werkbonByOfferteId[offerte.id] || null}
+                      planning={
+                        werkbonByOfferteId[offerte.id]
+                          ? planningByWerkbonId[werkbonByOfferteId[offerte.id].id] || null
+                          : null
+                      }
+                      onOpenWerkbon={onOpenWerkbon}
+                      onOpenPlanning={onOpenPlanning}
+                    />
                   ) : null}
                 </div>
               </div>

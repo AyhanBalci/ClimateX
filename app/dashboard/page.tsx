@@ -80,11 +80,6 @@ export default function DashboardPage() {
     setSelectedLead((current) => (current && current.id === leadId ? { ...current, status: newStatus } : current));
   };
 
-  const handleWerkbonCreated = (werkbon: Werkbon) => {
-    setView("werkbonnen");
-    setSelectedWerkbon(werkbon);
-  };
-
   const handleFactuurCreated = () => {
     setView("facturen");
     setSelectedWerkbon(null);
@@ -191,7 +186,8 @@ export default function DashboardPage() {
               lead={selectedLead}
               onBack={() => setSelectedLead(null)}
               onLeadUpdated={handleLeadUpdated}
-              onWerkbonCreated={handleWerkbonCreated}
+              onOpenWerkbon={handleOpenWerkbon}
+              onOpenPlanning={handleOpenPlanning}
             />
           ) : (
             <section className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-xl shadow-black/20 sm:p-8">
@@ -206,7 +202,7 @@ export default function DashboardPage() {
             </section>
           )
         ) : view === "offertes" ? (
-          <OffertesOverview onWerkbonCreated={handleWerkbonCreated} />
+          <OffertesOverview onOpenWerkbon={handleOpenWerkbon} onOpenPlanning={handleOpenPlanning} />
         ) : view === "producten" ? (
           <ProductsManager />
         ) : view === "werkbonnen" ? (

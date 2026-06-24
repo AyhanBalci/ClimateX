@@ -85,10 +85,8 @@ export async function updateTicketOfferteStatus(offerteId: string, ticketId: str
     return { error: offerteError.message };
   }
 
-  if (status === "Geaccepteerd") {
-    return updateTicketStatus(ticketId, "Offerte akkoord");
-  }
-
+  // Bij "Geaccepteerd" zet de database-trigger offerte_geaccepteerd_automatisering()
+  // de ticketstatus al op "Offerte akkoord" en maakt automatisch werkbon + planning aan.
   return { error: null };
 }
 
