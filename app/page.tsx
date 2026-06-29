@@ -5,9 +5,9 @@ import { Product } from "./lib/types";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "ClimateX — Premium airco oplossingen",
+  title: "ClimateX — Laadpaal thuis of zakelijk installeren",
   description:
-    "ClimateX levert luxe airco oplossingen in Nederland met hoogwaardige Daikin, LG Design en Gree Budget series. Premium, modern en perfect voor iedere ruimte.",
+    "ClimateX installeert premium laadpalen voor woningen, bedrijven en VvE's met load balancing en dynamic load balancing. Vraag een gratis offerte aan voor uw laadpaal.",
 };
 
 export default async function Home() {

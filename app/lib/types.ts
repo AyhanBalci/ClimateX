@@ -9,6 +9,17 @@ export type Lead = {
   opmerkingen: string;
   status: string;
   klant_user_id?: string | null;
+  aantal_laadpunten?: number | null;
+  automerk?: string | null;
+  automodel?: string | null;
+  elektrisch_voertuig?: boolean | null;
+  aansluiting?: string | null;
+  huidige_meterkast?: string | null;
+  parkeerplaats?: string | null;
+  afstand_meterkast_meters?: number | null;
+  kabellengte_meters?: number | null;
+  load_balancing?: boolean | null;
+  dynamic_load_balancing?: boolean | null;
 };
 
 export type LeadNotitie = {
@@ -47,12 +58,16 @@ export type Product = {
   merk: string;
   model: string;
   beschrijving: string;
+  // Veldnaam in de database is ongewijzigd gebleven (koelvermogen), maar wordt nu gebruikt voor het laadvermogen (bv. "11 kW").
   koelvermogen: string;
+  // Veldnaam ongewijzigd (verwarmvermogen), gebruikt voor slimme functies (bv. "App-besturing, load balancing").
   verwarmvermogen: string;
+  // Veldnaam ongewijzigd (energieklasse), gebruikt voor "geschikt voor" (Thuis / Zakelijk / Beide).
   energieklasse: string;
   prijs: number;
   afbeelding_url: string | null;
   actief: boolean;
+  handleiding_url?: string | null;
 };
 
 export type Werkbon = {
@@ -73,6 +88,8 @@ export type Werkbon = {
   status: string;
   handtekening_klant: string | null;
   handtekening_monteur: string | null;
+  serienummer?: string | null;
+  testresultaten?: string | null;
 };
 
 export type Factuur = {

@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { validateLead } from "../lib/validateLead";
-import { HOUSING_OPTIONS } from "../lib/constants";
+import { HOUSING_OPTIONS, AANSLUITING_OPTIONS } from "../lib/constants";
 
 const initialState = {
   name: "",
@@ -10,6 +10,10 @@ const initialState = {
   email: "",
   plaats: "",
   woningType: "Gezinswoning",
+  aantalLaadpunten: "1",
+  elektrischVoertuig: "Ja",
+  aansluiting: "1-fase",
+  parkeerplaats: "",
   opmerkingen: "",
 };
 
@@ -48,6 +52,10 @@ export default function QuoteForm() {
           email: formState.email,
           plaats: formState.plaats,
           woningType: formState.woningType,
+          aantalLaadpunten: formState.aantalLaadpunten,
+          elektrischVoertuig: formState.elektrischVoertuig,
+          aansluiting: formState.aansluiting,
+          parkeerplaats: formState.parkeerplaats,
           bericht: formState.opmerkingen,
           source: "products-offerteformulier",
         }),
@@ -104,6 +112,55 @@ export default function QuoteForm() {
             ))}
           </select>
         </label>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <label className="space-y-2 text-sm text-slate-300">
+            <span>Aantal laadpunten</span>
+            <input
+              type="number"
+              min={1}
+              value={formState.aantalLaadpunten}
+              onChange={(event) => handleChange("aantalLaadpunten", event.target.value)}
+              className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
+            />
+          </label>
+          <label className="space-y-2 text-sm text-slate-300">
+            <span>Heeft u al een elektrische auto?</span>
+            <select
+              value={formState.elektrischVoertuig}
+              onChange={(event) => handleChange("elektrischVoertuig", event.target.value)}
+              className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
+            >
+              <option value="Ja">Ja</option>
+              <option value="Nee, binnenkort">Nee, binnenkort</option>
+            </select>
+          </label>
+        </div>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <label className="space-y-2 text-sm text-slate-300">
+            <span>Aansluiting</span>
+            <select
+              value={formState.aansluiting}
+              onChange={(event) => handleChange("aansluiting", event.target.value)}
+              className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
+            >
+              {AANSLUITING_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="space-y-2 text-sm text-slate-300">
+            <span>Parkeerplaats</span>
+            <input
+              type="text"
+              value={formState.parkeerplaats}
+              placeholder="Bijv. eigen oprit, garage"
+              onChange={(event) => handleChange("parkeerplaats", event.target.value)}
+              className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
+            />
+          </label>
+        </div>
         <label className="space-y-2 text-sm text-slate-300">
           <span>Opmerkingen</span>
           <textarea

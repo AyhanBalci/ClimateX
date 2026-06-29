@@ -33,6 +33,8 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
     adres: werkbon.adres || "",
     telefoon: werkbon.telefoon || "",
     monteur: werkbon.monteur || "",
+    serienummer: werkbon.serienummer || "",
+    testresultaten: werkbon.testresultaten || "",
     werkzaamheden: werkbon.werkzaamheden || "",
     materialen: werkbon.materialen || "",
     opmerkingen: werkbon.opmerkingen || "",
@@ -104,6 +106,8 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
         adres: form.adres.trim(),
         telefoon: form.telefoon.trim(),
         monteur: form.monteur.trim(),
+        serienummer: form.serienummer.trim(),
+        testresultaten: form.testresultaten.trim(),
         werkzaamheden: form.werkzaamheden.trim(),
         materialen: form.materialen.trim(),
         opmerkingen: form.opmerkingen.trim(),
@@ -200,10 +204,24 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
           />
           <input
             type="text"
-            placeholder="Monteur"
+            placeholder="Installateur"
             value={form.monteur}
             onChange={(event) => setForm((current) => ({ ...current, monteur: event.target.value }))}
             className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
+          />
+          <input
+            type="text"
+            placeholder="Serienummer laadpaal"
+            value={form.serienummer}
+            onChange={(event) => setForm((current) => ({ ...current, serienummer: event.target.value }))}
+            className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
+          />
+          <textarea
+            rows={2}
+            placeholder="Testresultaten (bijv. doormeten aansluiting, testlading)"
+            value={form.testresultaten}
+            onChange={(event) => setForm((current) => ({ ...current, testresultaten: event.target.value }))}
+            className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300 sm:col-span-2"
           />
           <textarea
             rows={3}
@@ -235,7 +253,7 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
           />
           <input
             type="text"
-            placeholder="Handtekening monteur (naam ter bevestiging)"
+            placeholder="Handtekening installateur (naam ter bevestiging)"
             value={form.handtekening_monteur}
             onChange={(event) => setForm((current) => ({ ...current, handtekening_monteur: event.target.value }))}
             className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
@@ -330,7 +348,7 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
       <div className="mt-6 rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-xl shadow-black/20 sm:p-8">
         <h3 className="text-lg font-semibold text-white">Foto&apos;s en documenten</h3>
         <div className="mt-4">
-          <FileUpload werkbonId={werkbon.id} categorieen={["Werkfoto", "Opleverfoto", "Overig"]} />
+          <FileUpload werkbonId={werkbon.id} categorieen={["Foto voor", "Foto na", "Opleverfoto", "Overig"]} />
         </div>
       </div>
     </div>

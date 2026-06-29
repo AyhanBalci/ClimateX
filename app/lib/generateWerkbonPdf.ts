@@ -52,12 +52,21 @@ export function downloadWerkbonPdf(werkbon: Werkbon) {
     `Naam: ${werkbon.klantnaam}`,
     `Adres: ${werkbon.adres || "-"}`,
     `Telefoon: ${werkbon.telefoon || "-"}`,
-    `Monteur: ${werkbon.monteur || "-"}`,
+    `Installateur: ${werkbon.monteur || "-"}`,
+    `Serienummer laadpaal: ${werkbon.serienummer || "-"}`,
   ].forEach((line) => {
     doc.text(line, margin, y);
     y += 6;
   });
   divider();
+
+  if (werkbon.testresultaten && werkbon.testresultaten.trim()) {
+    section("Testresultaten");
+    const lines = doc.splitTextToSize(werkbon.testresultaten, pageWidth - margin * 2);
+    doc.text(lines, margin, y);
+    y += lines.length * 6;
+    divider();
+  }
 
   if (werkbon.werkzaamheden && werkbon.werkzaamheden.trim()) {
     section("Werkzaamheden");
@@ -92,13 +101,13 @@ export function downloadWerkbonPdf(werkbon: Werkbon) {
   doc.setFontSize(9);
   doc.setTextColor(120, 120, 120);
   doc.text(`Klant: ${werkbon.handtekening_klant || ""}`, margin, y + 19);
-  doc.text(`Monteur: ${werkbon.handtekening_monteur || ""}`, margin + colWidth + 10, y + 19);
+  doc.text(`Installateur: ${werkbon.handtekening_monteur || ""}`, margin + colWidth + 10, y + 19);
 
   const pageHeight = doc.internal.pageSize.getHeight();
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(140, 140, 140);
-  doc.text("ClimateX — 06 1400 4488 — Premium airco-installatie met montage en service", pageWidth / 2, pageHeight - 10, {
+  doc.text("ClimateX — 06 1400 4488 — Slimme energieoplossingen voor woningen en bedrijven", pageWidth / 2, pageHeight - 10, {
     align: "center",
   });
 

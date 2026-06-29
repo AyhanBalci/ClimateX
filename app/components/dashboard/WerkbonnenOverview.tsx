@@ -73,7 +73,7 @@ export default function WerkbonnenOverview({ onSelectWerkbon }: Props) {
       <div className="mt-4 flex flex-col gap-3 sm:flex-row">
         <input
           type="text"
-          placeholder="Zoek op klant, werkbonnummer, adres of monteur"
+          placeholder="Zoek op klant, werkbonnummer, adres of installateur"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
@@ -109,7 +109,7 @@ export default function WerkbonnenOverview({ onSelectWerkbon }: Props) {
                   <th className="px-4 py-3">Datum</th>
                   <th className="px-4 py-3">Klant</th>
                   <th className="px-4 py-3">Adres</th>
-                  <th className="px-4 py-3">Monteur</th>
+                  <th className="px-4 py-3">Installateur</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Acties</th>
                 </tr>

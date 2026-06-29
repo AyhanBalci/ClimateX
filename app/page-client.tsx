@@ -1,81 +1,66 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useState } from "react";
 import ProductImagePlaceholder from "./components/ProductImagePlaceholder";
 import WhatsAppButton from "./components/WhatsAppButton";
 import { Product } from "./lib/types";
 
 function formatProductPrice(value: number) {
-  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value) + " incl. montage";
+  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value) + " incl. installatie";
 }
 
 const contactNumber = "06 1400 4488";
 const whatsappLink = "https://wa.me/31614004488";
 
-const roomOptions = [
-  { value: "slaapkamer", label: "Slaapkamer" },
-  { value: "woonkamer", label: "Woonkamer" },
+const housingOptions = ["Appartement", "Gezinswoning", "Vrijstaande woning", "Bent u aannemer of VvE?"];
+const aansluitingOptions = ["1-fase", "3-fase", "Weet ik niet"];
+
+const diensten = [
+  { titel: "Laadpaal thuis", omschrijving: "Veilig en snel laden op uw eigen oprit of in de garage, volledig op maat geïnstalleerd." },
+  { titel: "Zakelijke laadpalen", omschrijving: "Laadoplossingen voor bedrijfsterreinen, wagenparken en personeelsparkeerplaatsen." },
+  { titel: "VvE laadoplossingen", omschrijving: "Eerlijke verdeling van laadcapaciteit voor meerdere bewoners in één pand of parkeergarage." },
+  { titel: "Onderhoud", omschrijving: "Periodieke controle en onderhoud zodat uw laadpaal altijd veilig en betrouwbaar blijft werken." },
+  { titel: "Storingen", omschrijving: "Snelle storingsdienst, ook melden via het klantenportaal, met servicebezoek op korte termijn." },
+  { titel: "Slim laden", omschrijving: "Laad automatisch op de goedkoopste momenten of op zelf opgewekte zonne-energie." },
+  { titel: "Load balancing", omschrijving: "Verdeel beschikbare stroom automatisch over meerdere laadpunten zonder de hoofdaansluiting te overbelasten." },
+  { titel: "Dynamic load balancing", omschrijving: "Slimme, realtime sturing van laadvermogen op basis van het actuele verbruik in uw pand." },
+  { titel: "Meterkast uitbreiden", omschrijving: "Wij beoordelen en breiden uw meterkast uit indien nodig voor een veilige aansluiting." },
+  { titel: "Advies", omschrijving: "Onafhankelijk advies over de beste laadoplossing voor uw woning of organisatie." },
 ];
 
-const brandOptions = ["Daikin", "LG", "Gree"];
+const binnenkort = [
+  { titel: "Zonnepanelen", omschrijving: "Wek uw eigen stroom op en laad uw auto met groene energie." },
+  { titel: "Thuisbatterijen", omschrijving: "Sla zelf opgewekte energie op en gebruik deze wanneer u die nodig heeft." },
+  { titel: "Warmtepompen", omschrijving: "Duurzaam verwarmen, los van gas, met subsidiemogelijkheden." },
+];
 
-const housingOptions = ["Appartement", "Gezinswoning", "Bent u aannemer?"];
+const voordelen = [
+  "Erkende, gecertificeerde installateurs",
+  "Vaste prijs, geen verrassingen achteraf",
+  "Advies over load balancing en subsidies",
+  "Garantie op installatie en materialen",
+];
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("nl-NL", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
+const stappen = [
+  { titel: "Offerte & advies", omschrijving: "U vraagt een vrijblijvende offerte aan, wij adviseren over de beste laadoplossing." },
+  { titel: "Inspectie meterkast", omschrijving: "Onze installateur beoordeelt uw meterkast en de gewenste locatie van de laadpaal." },
+  { titel: "Installatie", omschrijving: "Veilige, vakkundige installatie van uw laadpaal, meestal binnen één dag." },
+  { titel: "Oplevering & garantie", omschrijving: "U ontvangt de testresultaten, garantie en een werkende laadpaal met uitleg." },
+];
 
-function recommendModel(answers: {
-  roomSize: string;
-  roomType: string;
-  budgetFocus: string;
-  designImportant: string;
-}) {
-  if (answers.budgetFocus === "premium") {
-    return "Daikin Stylish FTXA35CW";
-  }
-  if (answers.roomType === "woonkamer" && answers.designImportant === "yes") {
-    return "LG Artcool Mirror AC12BK";
-  }
-  if (answers.roomSize === "klein" && answers.budgetFocus === "budget") {
-    return "Gree Clivia 2,5 kW";
-  }
-  return "Daikin Stylish FTXA25CW";
-}
+const reviews = [
+  { naam: "Familie de Vries", quote: "Binnen een week een laadpaal én duidelijk advies over load balancing. Top geregeld." },
+  { naam: "Bedrijfspand Noord BV", quote: "ClimateX heeft 6 laadpunten op ons terrein geïnstalleerd met slimme verdeling. Werkt feilloos." },
+  { naam: "VvE De Hoek", quote: "Eerlijke verdeling van laadcapaciteit voor alle bewoners, prettig en duidelijk traject." },
+];
 
-function estimatePrice(brand: string, power: string, install: boolean, extraMeters: number) {
-  const base =
-    brand === "Daikin"
-      ? power === "2.5"
-        ? 1899
-        : power === "3.5"
-        ? 2099
-        : 2499
-      : brand === "LG"
-      ? power === "2.5"
-        ? 1699
-        : power === "3.5"
-        ? 1899
-        : 2299
-      : power === "2.5"
-      ? 1399
-      : power === "3.5"
-      ? 1599
-      : 1999;
-  const installCost = install ? 450 : 0;
-  const meterCost = extraMeters * 35;
-  return base + installCost + meterCost;
-}
-
-function estimateEnergySaving(currentCost: number, hoursPerDay: number) {
-  const annualUsage = currentCost * hoursPerDay * 365;
-  return annualUsage * 0.4;
-}
+const faqs = [
+  { vraag: "Wat kost een laadpaal installeren?", antwoord: "De kosten hangen af van uw meterkast, de gewenste laadpaal en de afstand tot de meterkast. Na een gratis offerte weet u exact waar u aan toe bent." },
+  { vraag: "Hoe lang duurt de installatie?", antwoord: "Een standaard installatie bij een woning duurt meestal één dagdeel. Zakelijke en VvE-projecten plannen wij in overleg in." },
+  { vraag: "Wat is load balancing?", antwoord: "Load balancing verdeelt automatisch het beschikbare vermogen over meerdere laadpunten, zodat u nooit de hoofdaansluiting overbelast." },
+  { vraag: "Krijg ik garantie?", antwoord: "Ja, op zowel de installatie als de geleverde laadpaal ontvangt u standaard garantie." },
+];
 
 export default function HomeClient({ products }: { products: Product[] }) {
   const [formState, setFormState] = useState({
@@ -84,47 +69,20 @@ export default function HomeClient({ products }: { products: Product[] }) {
     email: "",
     postcode: "",
     woningType: "Gezinswoning",
-    ruimte: "Slaapkamer",
-    merk: "Daikin",
+    aantalLaadpunten: "1",
+    elektrischVoertuig: "Ja",
+    automerk: "",
+    automodel: "",
+    aansluiting: "1-fase",
+    parkeerplaats: "",
+    loadBalancing: false,
+    dynamicLoadBalancing: false,
     bericht: "",
   });
   const [formMessage, setFormMessage] = useState<string | null>(null);
-  const [choiceState, setChoiceState] = useState({
-    roomSize: "klein",
-    roomType: "woonkamer",
-    budgetFocus: "budget",
-    designImportant: "no",
-  });
-  const [recommended, setRecommended] = useState("");
-  const [calculator, setCalculator] = useState({
-    brand: "Daikin",
-    power: "2.5",
-    install: true,
-    extraMeters: 0,
-  });
-  const [priceEstimate, setPriceEstimate] = useState(estimatePrice("Daikin", "2.5", true, 0));
-  const [energyState, setEnergyState] = useState({ currentCost: 0, hours: 0 });
-  const [energySaving, setEnergySaving] = useState(0);
 
-  const recommendedProduct = useMemo(() => recommendModel(choiceState), [choiceState]);
-
-  const handleFormChange = (field: string, value: string) => {
+  const handleFormChange = (field: string, value: string | boolean) => {
     setFormState((current) => ({ ...current, [field]: value }));
-  };
-
-  const handleChoiceSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setRecommended(recommendedProduct);
-  };
-
-  const handleCalculatorSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setPriceEstimate(estimatePrice(calculator.brand, calculator.power, calculator.install, calculator.extraMeters));
-  };
-
-  const handleEnergySubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setEnergySaving(estimateEnergySaving(energyState.currentCost, energyState.hours));
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -152,14 +110,20 @@ export default function HomeClient({ products }: { products: Product[] }) {
           email: "",
           postcode: "",
           woningType: "Gezinswoning",
-          ruimte: "Slaapkamer",
-          merk: "Daikin",
+          aantalLaadpunten: "1",
+          elektrischVoertuig: "Ja",
+          automerk: "",
+          automodel: "",
+          aansluiting: "1-fase",
+          parkeerplaats: "",
+          loadBalancing: false,
+          dynamicLoadBalancing: false,
           bericht: "",
         });
       } else {
         setFormMessage(result.error || "Er is iets misgegaan. Probeer het later opnieuw.");
       }
-    } catch (error) {
+    } catch {
       setFormMessage("Er is iets misgegaan. Probeer het later opnieuw.");
     }
   };
@@ -181,26 +145,27 @@ export default function HomeClient({ products }: { products: Product[] }) {
               <div className="flex flex-wrap gap-3">
                 <a href="#home" className="transition hover:text-white">Home</a>
                 <a href="/products" className="transition hover:text-white">Producten</a>
-                <a href="#keuzehulp" className="transition hover:text-white">Keuzehulp</a>
-                <a href="#calculator" className="transition hover:text-white">Calculator</a>
+                <a href="#diensten" className="transition hover:text-white">Diensten</a>
+                <a href="#binnenkort" className="transition hover:text-white">Binnenkort</a>
+                <a href="#faq" className="transition hover:text-white">Veelgesteld</a>
                 <a href="#contact" className="transition hover:text-white">Contact</a>
               </div>
             </nav>
             <div className="inline-flex rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 backdrop-blur-xl">
-              Premium airco-installatie met montage en service in Nederland
+              Slimme energieoplossingen voor woningen en bedrijven
             </div>
             <h1 className="text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
-              ClimateX. Premium airco’s inclusief montage.
+              ClimateX. Premium laadpalen, vakkundig geïnstalleerd.
             </h1>
             <p className="max-w-xl text-lg leading-8 text-slate-300 sm:text-xl">
-              Daikin, LG en Gree airco’s met strakke installatie en snelle service. Vraag direct uw offerte aan via telefoon of WhatsApp.
+              Laadpalen van Alfen, Zaptec, Easee, Wallbox, ABB, EVBox en Smappee voor thuis, zakelijk en VvE. Vraag direct een gratis offerte aan via telefoon of WhatsApp.
             </p>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <a
                 href="#contact"
                 className="inline-flex items-center justify-center rounded-full bg-white px-7 py-3 text-sm font-semibold text-black transition hover:bg-slate-100"
               >
-                Direct offerte aanvragen
+                Gratis offerte aanvragen
               </a>
               <a
                 href="tel:+31614004488"
@@ -227,18 +192,13 @@ export default function HomeClient({ products }: { products: Product[] }) {
             <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,_rgba(56,189,248,0.18),_transparent_40%)]" />
             <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-5">
               <p className="text-sm uppercase tracking-[0.3em] text-slate-400">Installatie & service</p>
-              <h2 className="mt-3 text-3xl font-semibold text-white">Vakkundige montage en service</h2>
+              <h2 className="mt-3 text-3xl font-semibold text-white">Vakkundige installatie en service</h2>
               <p className="mt-3 text-sm leading-6 text-slate-300">
-                Installatie met een vaste prijs inclusief montage, koudemiddelcontrole en oplevering.
+                Installatie met een vaste prijs inclusief meterkastcontrole, testresultaten en oplevering.
               </p>
             </div>
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              {[
-                "Professionele montage",
-                "Koude- en leidingcontrole",
-                "Veilige elektrische aansluiting",
-                "Advies over rendement",
-              ].map((item) => (
+              {voordelen.map((item) => (
                 <div
                   key={item}
                   className="rounded-3xl border border-white/10 bg-slate-900/80 p-4 text-sm text-slate-300"
@@ -251,7 +211,32 @@ export default function HomeClient({ products }: { products: Product[] }) {
         </div>
       </section>
 
-      <section className="px-6 py-16 sm:px-10 lg:px-16">
+      <section id="diensten" className="px-6 py-16 sm:px-10 lg:px-16">
+        <div className="mx-auto max-w-7xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="mb-8 max-w-2xl"
+          >
+            <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Diensten</p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              Alles voor slim en veilig laden.
+            </h2>
+          </motion.div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {diensten.map((dienst) => (
+              <div key={dienst.titel} className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6">
+                <h3 className="text-lg font-semibold text-white">{dienst.titel}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-400">{dienst.omschrijving}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-[#070707] px-6 py-16 sm:px-10 lg:px-16">
         <div className="mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -262,10 +247,10 @@ export default function HomeClient({ products }: { products: Product[] }) {
           >
             <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Producten</p>
             <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              Premium airco modellen met scherpe vanaf-prijzen.
+              Premium laadpalen met scherpe vanaf-prijzen.
             </h2>
             <p className="mt-4 max-w-xl text-sm leading-7 text-slate-400 sm:text-base">
-              Bekijk onze Daikin, LG en Gree modellen. Alle prijzen zijn inclusief montage en een compacte offerte-aanvraag.
+              Bekijk onze laadpalen van Alfen, Zaptec, Easee, Wallbox, ABB, EVBox en Smappee. Alle prijzen zijn inclusief installatie en een vrijblijvende offerte-aanvraag.
             </p>
           </motion.div>
           {products.length === 0 ? (
@@ -297,9 +282,9 @@ export default function HomeClient({ products }: { products: Product[] }) {
                       <h3 className="mt-2 text-xl font-semibold text-white">{product.model}</h3>
                       <p className="mt-2 text-sm text-slate-400">{product.beschrijving}</p>
                       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                        <span className="rounded-3xl bg-slate-900/80 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-300">Koelen {product.koelvermogen}</span>
-                        <span className="rounded-3xl bg-slate-900/80 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-300">Verwarmen {product.verwarmvermogen}</span>
-                        <span className="rounded-3xl bg-slate-900/80 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-300 sm:col-span-2">{product.energieklasse}</span>
+                        <span className="rounded-3xl bg-slate-900/80 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-300">Laadvermogen {product.koelvermogen}</span>
+                        <span className="rounded-3xl bg-slate-900/80 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-300">{product.verwarmvermogen}</span>
+                        <span className="rounded-3xl bg-slate-900/80 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-300 sm:col-span-2">Geschikt voor: {product.energieklasse}</span>
                       </div>
                       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <p className="text-lg font-semibold text-white">{formatProductPrice(product.prijs)}</p>
@@ -319,212 +304,102 @@ export default function HomeClient({ products }: { products: Product[] }) {
         </div>
       </section>
 
-      <section id="keuzehulp" className="bg-[#070707] px-6 py-16 sm:px-10 lg:px-16">
+      <section id="binnenkort" className="px-6 py-16 sm:px-10 lg:px-16">
         <div className="mx-auto max-w-7xl">
-          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-            <div>
-              <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Airco keuzehulp</p>
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                Vind het beste model voor uw situatie.
-              </h2>
-              <p className="mt-4 max-w-xl text-sm leading-7 text-slate-400 sm:text-base">
-                Vul uw voorkeuren in en wij tonen direct een aanbevolen model met een realistische prijsindicatie.
-              </p>
-            </div>
-            <form onSubmit={handleChoiceSubmit} className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-8 shadow-xl shadow-black/20">
-              <div className="grid gap-5">
-                <label className="space-y-2 text-sm text-slate-300">
-                  <span>Hoe groot is de ruimte?</span>
-                  <select
-                    value={choiceState.roomSize}
-                    onChange={(event) => setChoiceState((current) => ({ ...current, roomSize: event.target.value }))}
-                    className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
-                  >
-                    <option value="klein">Klein</option>
-                    <option value="middel">Middel</option>
-                    <option value="groot">Groot</option>
-                  </select>
-                </label>
-                <label className="space-y-2 text-sm text-slate-300">
-                  <span>Slaapkamer of woonkamer?</span>
-                  <select
-                    value={choiceState.roomType}
-                    onChange={(event) => setChoiceState((current) => ({ ...current, roomType: event.target.value }))}
-                    className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
-                  >
-                    {roomOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="space-y-2 text-sm text-slate-300">
-                  <span>Budget of premium?</span>
-                  <select
-                    value={choiceState.budgetFocus}
-                    onChange={(event) => setChoiceState((current) => ({ ...current, budgetFocus: event.target.value }))}
-                    className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
-                  >
-                    <option value="budget">Budget</option>
-                    <option value="premium">Premium</option>
-                  </select>
-                </label>
-                <label className="space-y-2 text-sm text-slate-300">
-                  <span>Design belangrijk?</span>
-                  <select
-                    value={choiceState.designImportant}
-                    onChange={(event) => setChoiceState((current) => ({ ...current, designImportant: event.target.value }))}
-                    className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
-                  >
-                    <option value="no">Nee</option>
-                    <option value="yes">Ja</option>
-                  </select>
-                </label>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="mb-8 max-w-2xl"
+          >
+            <p className="text-sm uppercase tracking-[0.24em] text-emerald-300/80">Binnenkort beschikbaar</p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              Op weg naar volledig duurzame energie.
+            </h2>
+            <p className="mt-4 max-w-xl text-sm leading-7 text-slate-400 sm:text-base">
+              Naast laadpalen breidt ClimateX binnenkort uit met de volgende energieoplossingen.
+            </p>
+          </motion.div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {binnenkort.map((item) => (
+              <div key={item.titel} className="relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-slate-950/60 p-6">
+                <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
+                  Binnenkort
+                </span>
+                <h3 className="mt-4 text-lg font-semibold text-white">{item.titel}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-400">{item.omschrijving}</p>
               </div>
-              <button type="submit" className="mt-8 w-full rounded-full bg-cyan-400 px-6 py-4 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300">
-                Aanbevolen model tonen
-              </button>
-            </form>
-          </div>
-          {recommended ? (
-            <div className="mt-10 rounded-[2rem] border border-white/10 bg-slate-950/80 p-8 shadow-xl shadow-black/20">
-              <h3 className="text-xl font-semibold text-white">Aanbevolen model</h3>
-              <p className="mt-4 text-sm text-slate-300">Wij raden u het volgende model aan op basis van uw keuzes:</p>
-              <div className="mt-6 rounded-[1.75rem] border border-white/10 bg-[#090909] p-6">
-                <p className="text-lg font-semibold text-white">{recommended}</p>
-                <p className="mt-2 text-sm text-slate-400">Deze keuze past bij uw ruimte en gebruiksvoorkeur.</p>
-              </div>
-            </div>
-          ) : null}
-        </div>
-      </section>
-
-      <section id="calculator" className="px-6 py-16 sm:px-10 lg:px-16">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-            <div>
-              <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Prijscalculator</p>
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                Bereken direct een prijsindicatie.
-              </h2>
-              <p className="mt-4 max-w-xl text-sm leading-7 text-slate-400 sm:text-base">
-                Kies merk, vermogen, montage en extra leidingmeters. De calculator toont een realistische indicatieprijs.
-              </p>
-            </div>
-            <form onSubmit={handleCalculatorSubmit} className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-8 shadow-xl shadow-black/20">
-              <div className="grid gap-5">
-                <label className="space-y-2 text-sm text-slate-300">
-                  <span>Merk</span>
-                  <select
-                    value={calculator.brand}
-                    onChange={(event) => setCalculator((current) => ({ ...current, brand: event.target.value }))}
-                    className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
-                  >
-                    {brandOptions.map((brand) => (
-                      <option key={brand} value={brand}>
-                        {brand}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="space-y-2 text-sm text-slate-300">
-                  <span>Vermogen</span>
-                  <select
-                    value={calculator.power}
-                    onChange={(event) => setCalculator((current) => ({ ...current, power: event.target.value }))}
-                    className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
-                  >
-                    <option value="2.5">2,5 kW</option>
-                    <option value="3.5">3,5 kW</option>
-                    <option value="5.0">5,0 kW</option>
-                  </select>
-                </label>
-                <label className="flex items-center gap-3 text-sm text-slate-300">
-                  <input
-                    type="checkbox"
-                    checked={calculator.install}
-                    onChange={(event) => setCalculator((current) => ({ ...current, install: event.target.checked }))}
-                    className="h-5 w-5 rounded border-white/10 bg-black/40 text-cyan-300 focus:ring-cyan-300"
-                  />
-                  Montage inbegrepen
-                </label>
-                <label className="space-y-2 text-sm text-slate-300">
-                  <span>Extra leidingmeters</span>
-                  <input
-                    type="number"
-                    min={0}
-                    value={calculator.extraMeters}
-                    onChange={(event) => setCalculator((current) => ({ ...current, extraMeters: Number(event.target.value) }))}
-                    className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
-                  />
-                </label>
-              </div>
-              <button type="submit" className="mt-8 w-full rounded-full bg-cyan-400 px-6 py-4 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300">
-                Bereken indicatieprijs
-              </button>
-              <div className="mt-6 rounded-[1.75rem] border border-white/10 bg-[#090909] p-5 text-white">
-                Indicatieprijs: <span className="font-semibold">{formatCurrency(priceEstimate)}</span>
-              </div>
-            </form>
+            ))}
           </div>
         </div>
       </section>
 
       <section className="bg-[#070707] px-6 py-16 sm:px-10 lg:px-16">
         <div className="mx-auto max-w-7xl">
-          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-            <div>
-              <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Energiebesparing</p>
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                Bereken uw mogelijke jaarlijkse besparing.
-              </h2>
-              <p className="mt-4 max-w-xl text-sm leading-7 text-slate-400 sm:text-base">
-                Vul uw huidige energiekosten en gebruiksuren in. Wij tonen een realistische besparing bij een moderne airco.
-              </p>
-            </div>
-            <form onSubmit={handleEnergySubmit} className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-8 shadow-xl shadow-black/20">
-              <div className="grid gap-5">
-                <label className="space-y-2 text-sm text-slate-300">
-                  <span>Huidige kosten per uur</span>
-                  <input
-                    type="number"
-                    min={0}
-                    step={0.01}
-                    value={energyState.currentCost}
-                    onChange={(event) => setEnergyState((current) => ({ ...current, currentCost: Number(event.target.value) }))}
-                    className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
-                  />
-                </label>
-                <label className="space-y-2 text-sm text-slate-300">
-                  <span>Aantal gebruiksuren per dag</span>
-                  <input
-                    type="number"
-                    min={0}
-                    value={energyState.hours}
-                    onChange={(event) => setEnergyState((current) => ({ ...current, hours: Number(event.target.value) }))}
-                    className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
-                  />
-                </label>
+          <div className="mb-10 max-w-2xl">
+            <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Installatieproces</p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              Van offerte tot werkende laadpaal.
+            </h2>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {stappen.map((stap, index) => (
+              <div key={stap.titel} className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6">
+                <span className="text-sm font-semibold text-cyan-300">Stap {index + 1}</span>
+                <h3 className="mt-2 text-lg font-semibold text-white">{stap.titel}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-400">{stap.omschrijving}</p>
               </div>
-              <button type="submit" className="mt-8 w-full rounded-full bg-cyan-400 px-6 py-4 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300">
-                Bereken besparing
-              </button>
-              <div className="mt-6 rounded-[1.75rem] border border-white/10 bg-[#090909] p-5 text-white">
-                Geschatte jaarlijkse besparing: <span className="font-semibold">{formatCurrency(energySaving)}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-6 py-16 sm:px-10 lg:px-16">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-10 max-w-2xl">
+            <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Reviews</p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              Wat klanten van ClimateX zeggen.
+            </h2>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {reviews.map((review) => (
+              <div key={review.naam} className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6">
+                <p className="text-sm leading-6 text-slate-300">&ldquo;{review.quote}&rdquo;</p>
+                <p className="mt-4 text-sm font-semibold text-white">{review.naam}</p>
               </div>
-            </form>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="faq" className="bg-[#070707] px-6 py-16 sm:px-10 lg:px-16">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-10 max-w-2xl">
+            <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Veelgestelde vragen</p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              Alles wat u wilt weten over laadpalen.
+            </h2>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {faqs.map((faq) => (
+              <div key={faq.vraag} className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6">
+                <h3 className="text-base font-semibold text-white">{faq.vraag}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-400">{faq.antwoord}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       <section id="contact" className="px-6 py-16 sm:px-10 lg:px-16">
         <div className="mx-auto max-w-7xl">
-          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
             <div className="space-y-6">
               <p className="text-sm uppercase tracking-[0.24em] text-emerald-300/80">Contact</p>
               <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                Vraag nu uw offerte aan.
+                Vraag nu uw gratis offerte aan.
               </h2>
               <p className="max-w-xl text-sm leading-7 text-slate-400 sm:text-base">
                 Vul het formulier in of bel direct. Wij nemen binnen 24 uur contact met u op voor een persoonlijk adviesgesprek.
@@ -573,43 +448,110 @@ export default function HomeClient({ products }: { products: Product[] }) {
                     ))}
                   </select>
                 </label>
-                <label className="space-y-2 text-sm text-slate-300">
-                  <span>Gewenste ruimte</span>
-                  <input
-                    type="text"
-                    value={formState.ruimte}
-                    placeholder="Bijv. woonkamer, slaapkamer"
-                    onChange={(event) => handleFormChange("ruimte", event.target.value)}
-                    className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
-                  />
-                </label>
-                <label className="space-y-2 text-sm text-slate-300">
-                  <span>Gewenst merk</span>
-                  <select
-                    value={formState.merk}
-                    onChange={(event) => handleFormChange("merk", event.target.value)}
-                    className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
-                  >
-                    {brandOptions.map((brand) => (
-                      <option key={brand} value={brand}>
-                        {brand}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <label className="space-y-2 text-sm text-slate-300">
+                    <span>Aantal laadpunten</span>
+                    <input
+                      type="number"
+                      min={1}
+                      value={formState.aantalLaadpunten}
+                      onChange={(event) => handleFormChange("aantalLaadpunten", event.target.value)}
+                      className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
+                    />
+                  </label>
+                  <label className="space-y-2 text-sm text-slate-300">
+                    <span>Heeft u al een elektrische auto?</span>
+                    <select
+                      value={formState.elektrischVoertuig}
+                      onChange={(event) => handleFormChange("elektrischVoertuig", event.target.value)}
+                      className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
+                    >
+                      <option value="Ja">Ja</option>
+                      <option value="Nee, binnenkort">Nee, binnenkort</option>
+                    </select>
+                  </label>
+                </div>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <label className="space-y-2 text-sm text-slate-300">
+                    <span>Automerk (optioneel)</span>
+                    <input
+                      type="text"
+                      value={formState.automerk}
+                      placeholder="Bijv. Tesla, Volkswagen"
+                      onChange={(event) => handleFormChange("automerk", event.target.value)}
+                      className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
+                    />
+                  </label>
+                  <label className="space-y-2 text-sm text-slate-300">
+                    <span>Automodel (optioneel)</span>
+                    <input
+                      type="text"
+                      value={formState.automodel}
+                      placeholder="Bijv. Model 3, ID.4"
+                      onChange={(event) => handleFormChange("automodel", event.target.value)}
+                      className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
+                    />
+                  </label>
+                </div>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <label className="space-y-2 text-sm text-slate-300">
+                    <span>Aansluiting</span>
+                    <select
+                      value={formState.aansluiting}
+                      onChange={(event) => handleFormChange("aansluiting", event.target.value)}
+                      className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
+                    >
+                      {aansluitingOptions.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="space-y-2 text-sm text-slate-300">
+                    <span>Parkeerplaats</span>
+                    <input
+                      type="text"
+                      value={formState.parkeerplaats}
+                      placeholder="Bijv. eigen oprit, garage, openbare weg"
+                      onChange={(event) => handleFormChange("parkeerplaats", event.target.value)}
+                      className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
+                    />
+                  </label>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="flex items-center gap-3 text-sm text-slate-300">
+                    <input
+                      type="checkbox"
+                      checked={formState.loadBalancing}
+                      onChange={(event) => handleFormChange("loadBalancing", event.target.checked)}
+                      className="h-5 w-5 rounded border-white/10 bg-black/40 text-cyan-300 focus:ring-cyan-300"
+                    />
+                    Interesse in load balancing
+                  </label>
+                  <label className="flex items-center gap-3 text-sm text-slate-300">
+                    <input
+                      type="checkbox"
+                      checked={formState.dynamicLoadBalancing}
+                      onChange={(event) => handleFormChange("dynamicLoadBalancing", event.target.checked)}
+                      className="h-5 w-5 rounded border-white/10 bg-black/40 text-cyan-300 focus:ring-cyan-300"
+                    />
+                    Interesse in dynamic load balancing
+                  </label>
+                </div>
                 <label className="space-y-2 text-sm text-slate-300">
                   <span>Bericht</span>
                   <textarea
                     rows={4}
                     value={formState.bericht}
-                    placeholder="Korte omschrijving van uw wens"
+                    placeholder="Korte omschrijving van uw wens, bijv. afstand tot de meterkast of kabellengte"
                     onChange={(event) => handleFormChange("bericht", event.target.value)}
                     className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
                   />
                 </label>
               </div>
               <button type="submit" className="mt-8 w-full rounded-full bg-cyan-400 px-6 py-4 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300">
-                Offerte aanvragen
+                Gratis offerte aanvragen
               </button>
               {formMessage ? (
                 <p className="mt-4 text-sm text-slate-300">{formMessage}</p>

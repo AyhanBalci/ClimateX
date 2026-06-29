@@ -15,6 +15,14 @@ export async function POST(request: Request) {
     type_woning: data.woningType,
     opmerkingen: data.bericht,
     status: STATUS_OPTIONS[0],
+    aantal_laadpunten: data.aantalLaadpunten ? Number(data.aantalLaadpunten) : null,
+    automerk: data.automerk || null,
+    automodel: data.automodel || null,
+    elektrisch_voertuig: data.elektrischVoertuig ? data.elektrischVoertuig === "Ja" : null,
+    aansluiting: data.aansluiting || null,
+    parkeerplaats: data.parkeerplaats || null,
+    load_balancing: Boolean(data.loadBalancing),
+    dynamic_load_balancing: Boolean(data.dynamicLoadBalancing),
   };
 
   const validationError = validateLead(lead);

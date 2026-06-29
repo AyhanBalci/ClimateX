@@ -11,6 +11,8 @@ const NAV_ITEMS = [
   { href: "/portal/facturen", label: "Facturen" },
   { href: "/portal/werkbonnen", label: "Werkbonnen" },
   { href: "/portal/tickets", label: "Meldingen" },
+  { href: "/portal/storing", label: "Storing melden" },
+  { href: "/portal/handleidingen", label: "Handleidingen" },
   { href: "/portal/uploads", label: "Foto's uploaden" },
 ];
 

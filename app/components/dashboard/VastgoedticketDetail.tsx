@@ -468,7 +468,7 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
             />
             <input
               type="text"
-              placeholder="Monteur"
+              placeholder="Installateur"
               value={toewijzing.monteur}
               onChange={(event) => setToewijzing((current) => ({ ...current, monteur: event.target.value }))}
               className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
@@ -643,7 +643,7 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
                     {werkbon.status}
                   </span>
                 </div>
-                <p className="mt-2 text-slate-400">{werkbon.monteur || "Nog geen monteur toegewezen"}</p>
+                <p className="mt-2 text-slate-400">{werkbon.monteur || "Nog geen installateur toegewezen"}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
                     onClick={() => onOpenWerkbon(werkbon)}

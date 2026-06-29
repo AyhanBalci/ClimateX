@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ClimateX | Premium Airco Installatie Nederland",
+  title: "ClimateX | Laadpaal Installateur Nederland",
   description:
-    "Premium Daikin, LG en Gree airco’s inclusief montage. Vraag direct een offerte aan bij ClimateX.",
+    "Laadpaal installeren voor thuis, zakelijk of VvE. Slimme laadpalen met load balancing van Alfen, Zaptec, Easee en meer. Vraag direct een gratis offerte aan bij ClimateX.",
 };
 
 export default function RootLayout({
@@ -25,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="nl"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>

@@ -67,7 +67,7 @@ export default function PlanningKpis() {
     { label: "Afspraken deze week", value: afsprakenDezeWeek },
     { label: "Openstaande afspraken", value: openstaand },
     { label: "Afgeronde afspraken", value: afgerond },
-    { label: "Ingeplande monteurs", value: ingeplandeMonteurs },
+    { label: "Ingeplande installateurs", value: ingeplandeMonteurs },
   ];
 
   return (

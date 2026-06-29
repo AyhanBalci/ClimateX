@@ -59,7 +59,7 @@ function renderEmailLayout(title: string, introHtml: string, lead: LeadEmailData
       </tr>
       <tr>
         <td style="background-color:#f9fafb;padding:16px 32px;text-align:center;color:#9ca3af;font-size:12px;">
-          ClimateX — Premium airco-installatie met montage en service — 06 1400 4488
+          ClimateX — Slimme energieoplossingen voor woningen en bedrijven — 06 1400 4488
         </td>
       </tr>
     </table>
@@ -107,7 +107,7 @@ export function portalUitnodigingEmail(naam: string, inlogLink: string) {
       </tr>
       <tr>
         <td style="background-color:#f9fafb;padding:16px 32px;text-align:center;color:#9ca3af;font-size:12px;">
-          ClimateX — Premium airco-installatie met montage en service — 06 1400 4488
+          ClimateX — Slimme energieoplossingen voor woningen en bedrijven — 06 1400 4488
         </td>
       </tr>
     </table>
@@ -140,7 +140,7 @@ export function offertePdfEmail(klantNaam: string, offertenummer: string) {
       </tr>
       <tr>
         <td style="background-color:#f9fafb;padding:16px 32px;text-align:center;color:#9ca3af;font-size:12px;">
-          ClimateX — Premium airco-installatie met montage en service — 06 1400 4488
+          ClimateX — Slimme energieoplossingen voor woningen en bedrijven — 06 1400 4488
         </td>
       </tr>
     </table>

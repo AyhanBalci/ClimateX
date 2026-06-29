@@ -1,11 +1,25 @@
 import { jsPDF } from "jspdf";
 import { Factuur } from "./types";
+import { isSupabaseConfigured, supabase } from "./supabase";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(value);
 }
 
-export function downloadFactuurPdf(factuur: Factuur) {
+export async function downloadFactuurPdf(factuur: Factuur) {
+  let installatiegegevens: { serienummer: string | null; datum: string | null } | null = null;
+
+  if (factuur.werkbon_id && isSupabaseConfigured && supabase) {
+    const { data } = await supabase
+      .from("werkbonnen")
+      .select("serienummer, datum")
+      .eq("id", factuur.werkbon_id)
+      .maybeSingle();
+    if (data) {
+      installatiegegevens = { serienummer: data.serienummer, datum: data.datum };
+    }
+  }
+
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 14;
@@ -56,6 +70,19 @@ export function downloadFactuurPdf(factuur: Factuur) {
   y += 6;
   divider();
 
+  if (installatiegegevens) {
+    section("Installatiegegevens");
+    doc.text(`Serienummer laadpaal: ${installatiegegevens.serienummer || "-"}`, margin, y);
+    y += 6;
+    if (installatiegegevens.datum) {
+      doc.text(`Installatiedatum: ${new Date(installatiegegevens.datum).toLocaleDateString("nl-NL")}`, margin, y);
+      y += 6;
+    }
+    doc.text("Op de installatie en de laadpaal geldt standaard garantie van ClimateX.", margin, y);
+    y += 6;
+    divider();
+  }
+
   section("Specificatie");
   doc.text(`Bedrag excl. btw: ${formatCurrency(factuur.bedrag)}`, margin, y);
   y += 6;
@@ -86,7 +113,7 @@ export function downloadFactuurPdf(factuur: Factuur) {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(140, 140, 140);
-  doc.text("ClimateX — 06 1400 4488 — Premium airco-installatie met montage en service", pageWidth / 2, pageHeight - 10, {
+  doc.text("ClimateX — 06 1400 4488 — Slimme energieoplossingen voor woningen en bedrijven", pageWidth / 2, pageHeight - 10, {
     align: "center",
   });
 

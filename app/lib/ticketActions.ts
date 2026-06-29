@@ -129,3 +129,44 @@ export async function createWerkbonFromTicket(ticket: Vastgoedticket, offerte: O
 export async function markTicketAfgerond(ticketId: string) {
   return updateTicketStatus(ticketId, "Afgerond");
 }
+
+export async function createStoringAlsKlant(payload: {
+  klantUserId: string;
+  klant: string;
+  locatie: string;
+  telefoonnummer: string;
+  prioriteit: string;
+  omschrijving: string;
+}) {
+  if (!supabase) {
+    return { data: null, error: "Supabase is niet geconfigureerd." };
+  }
+
+  const ticketnummer = await getNextTicketNummer();
+
+  const { data, error } = await supabase
+    .from("vastgoedtickets")
+    .insert({
+      ticketnummer,
+      datum: new Date().toISOString(),
+      klant: payload.klant,
+      locatie: payload.locatie,
+      contactpersoon: payload.klant,
+      telefoonnummer: payload.telefoonnummer,
+      type_melding: "Storing",
+      prioriteit: payload.prioriteit,
+      omschrijving: payload.omschrijving,
+      status: "Nieuw",
+      klant_user_id: payload.klantUserId,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    return { data: null, error: error.message };
+  }
+
+  await supabase.from("ticket_status_historie").insert({ ticket_id: data.id, status: "Nieuw" });
+
+  return { data, error: null };
+}

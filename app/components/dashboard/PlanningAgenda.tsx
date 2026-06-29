@@ -181,7 +181,7 @@ export default function PlanningAgenda({ onSelectPlanning }: Props) {
         <form onSubmit={handleSubmit} className="mt-6 grid gap-3 rounded-3xl border border-white/10 bg-[#090909] p-5 sm:grid-cols-2 sm:p-6">
           <input
             type="text"
-            placeholder="Titel (bijv. Installatie airco)"
+            placeholder="Titel (bijv. Installatie laadpaal)"
             value={form.titel}
             onChange={(event) => setForm((current) => ({ ...current, titel: event.target.value }))}
             className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300 sm:col-span-2"

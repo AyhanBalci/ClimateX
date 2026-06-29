@@ -275,6 +275,27 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated, onOpenWerkbon,
           ))}
         </dl>
 
+        <h4 className="mt-6 text-sm uppercase tracking-[0.18em] text-slate-500">Laadpaal-intake</h4>
+        <dl className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {[
+            { label: "Aantal laadpunten", value: lead.aantal_laadpunten != null ? String(lead.aantal_laadpunten) : "—" },
+            { label: "Elektrisch voertuig", value: lead.elektrisch_voertuig == null ? "—" : lead.elektrisch_voertuig ? "Ja" : "Nog niet" },
+            { label: "Automerk / model", value: [lead.automerk, lead.automodel].filter(Boolean).join(" ") || "—" },
+            { label: "Aansluiting", value: lead.aansluiting || "—" },
+            { label: "Huidige meterkast", value: lead.huidige_meterkast || "—" },
+            { label: "Parkeerplaats", value: lead.parkeerplaats || "—" },
+            { label: "Afstand meterkast", value: lead.afstand_meterkast_meters != null ? `${lead.afstand_meterkast_meters} m` : "—" },
+            { label: "Kabellengte", value: lead.kabellengte_meters != null ? `${lead.kabellengte_meters} m` : "—" },
+            { label: "Load balancing", value: lead.load_balancing ? "Gewenst" : "Niet gewenst" },
+            { label: "Dynamic load balancing", value: lead.dynamic_load_balancing ? "Gewenst" : "Niet gewenst" },
+          ].map((item) => (
+            <div key={item.label} className="rounded-3xl border border-white/10 bg-[#090909] p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{item.label}</p>
+              <p className="mt-2 text-sm text-slate-200">{item.value}</p>
+            </div>
+          ))}
+        </dl>
+
         {error ? <p className="mt-6 text-sm text-rose-400">{error}</p> : null}
         {loading ? <p className="mt-6 text-sm text-slate-400">Bezig met laden...</p> : null}
 

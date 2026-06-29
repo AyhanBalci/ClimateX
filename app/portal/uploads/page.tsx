@@ -30,7 +30,7 @@ export default function PortalUploadsPage() {
       <section className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-xl shadow-black/20 sm:p-8">
         <h2 className="text-xl font-semibold text-white">Foto&apos;s uploaden</h2>
         <p className="mt-2 text-sm text-slate-400">
-          Voeg foto&apos;s toe van uw binnenruimte, buitenmuur, meterkast, de gewenste plek voor de airco, of overige foto&apos;s.
+          Voeg foto&apos;s toe van uw meterkast, parkeerplaats, het kabeltraject of de gewenste plek voor de laadpaal.
         </p>
 
         {loading ? <p className="mt-6 text-sm text-slate-400">Bezig met laden...</p> : null}

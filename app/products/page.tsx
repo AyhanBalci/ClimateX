@@ -8,7 +8,7 @@ import { Product } from "../lib/types";
 export const dynamic = "force-dynamic";
 
 function formatPrice(value: number) {
-  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value) + " incl. montage";
+  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value) + " incl. installatie";
 }
 
 export default async function ProductsPage() {
@@ -37,10 +37,10 @@ export default async function ProductsPage() {
           <div className="mb-12 max-w-2xl">
             <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Productpagina</p>
             <h1 className="mt-4 text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-              Daikin, LG en Gree modellen met prijzen en specificaties.
+              Laadpalen van Alfen, Zaptec, Easee, Wallbox, ABB, EVBox en Smappee.
             </h1>
             <p className="mt-4 text-sm leading-7 text-slate-400 sm:text-base">
-              Alle prijzen zijn inclusief montage. Kies het model dat past bij uw ruimte en vraag direct een offerte aan.
+              Alle prijzen zijn inclusief installatie. Kies de laadpaal die past bij uw situatie en vraag direct een gratis offerte aan.
             </p>
           </div>
 
@@ -64,9 +64,9 @@ export default async function ProductsPage() {
                   <h2 className="mt-2 text-xl font-semibold text-white">{product.model}</h2>
                   <p className="mt-3 text-sm leading-6 text-slate-300">{product.beschrijving}</p>
                   <div className="mt-4 grid gap-2">
-                    <span className="rounded-3xl bg-slate-900/80 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-300">Koelen {product.koelvermogen}</span>
-                    <span className="rounded-3xl bg-slate-900/80 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-300">Verwarmen {product.verwarmvermogen}</span>
-                    <span className="rounded-3xl bg-slate-900/80 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-300">{product.energieklasse}</span>
+                    <span className="rounded-3xl bg-slate-900/80 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-300">Laadvermogen {product.koelvermogen}</span>
+                    <span className="rounded-3xl bg-slate-900/80 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-300">{product.verwarmvermogen}</span>
+                    <span className="rounded-3xl bg-slate-900/80 px-3 py-2 text-xs uppercase tracking-[0.2em] text-slate-300">Geschikt voor: {product.energieklasse}</span>
                   </div>
                   <div className="mt-6 flex items-center justify-between gap-4">
                     <span className="text-lg font-semibold text-white">{formatPrice(product.prijs)}</span>
@@ -83,7 +83,7 @@ export default async function ProductsPage() {
             <div className="mx-auto max-w-2xl">
               <p className="text-center text-sm uppercase tracking-[0.24em] text-emerald-300/80">Offerte</p>
               <h2 className="mt-3 text-center text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-                Vraag een offerte aan voor uw airco.
+                Vraag een gratis offerte aan voor uw laadpaal.
               </h2>
               <p className="mt-3 text-center text-sm leading-7 text-slate-400">
                 Vul het formulier in en wij nemen binnen 24 uur contact met u op.

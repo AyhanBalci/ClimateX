@@ -17,6 +17,7 @@ const emptyForm = {
   energieklasse: "",
   prijs: "",
   afbeelding_url: "",
+  handleiding_url: "",
 };
 
 type FormState = typeof emptyForm;
@@ -72,6 +73,7 @@ export default function ProductsManager() {
       energieklasse: product.energieklasse || "",
       prijs: product.prijs != null ? String(product.prijs) : "",
       afbeelding_url: product.afbeelding_url || "",
+      handleiding_url: product.handleiding_url || "",
     });
     setFormMode(product.id);
   };
@@ -99,6 +101,7 @@ export default function ProductsManager() {
       energieklasse: formState.energieklasse.trim(),
       prijs: Number(formState.prijs) || 0,
       afbeelding_url: formState.afbeelding_url.trim() || null,
+      handleiding_url: formState.handleiding_url.trim() || null,
     };
 
     if (formMode === "new") {
@@ -190,21 +193,21 @@ export default function ProductsManager() {
             />
             <input
               type="text"
-              placeholder="Koelvermogen (bijv. 3,5 kW)"
+              placeholder="Laadvermogen (bijv. 11 kW)"
               value={formState.koelvermogen}
               onChange={(event) => setFormState((current) => ({ ...current, koelvermogen: event.target.value }))}
               className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
             />
             <input
               type="text"
-              placeholder="Verwarmvermogen (bijv. 4,0 kW)"
+              placeholder="Slimme functies (bijv. App-besturing, load balancing)"
               value={formState.verwarmvermogen}
               onChange={(event) => setFormState((current) => ({ ...current, verwarmvermogen: event.target.value }))}
               className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
             />
             <input
               type="text"
-              placeholder="Energieklasse (bijv. A+++)"
+              placeholder="Geschikt voor (bijv. Thuis & Zakelijk)"
               value={formState.energieklasse}
               onChange={(event) => setFormState((current) => ({ ...current, energieklasse: event.target.value }))}
               className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
@@ -212,7 +215,7 @@ export default function ProductsManager() {
             <input
               type="number"
               min={0}
-              placeholder="Prijs incl. montage (€)"
+              placeholder="Indicatieprijs incl. installatie (€)"
               value={formState.prijs}
               onChange={(event) => setFormState((current) => ({ ...current, prijs: event.target.value }))}
               className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
@@ -222,6 +225,13 @@ export default function ProductsManager() {
               placeholder="Afbeeldings-URL"
               value={formState.afbeelding_url}
               onChange={(event) => setFormState((current) => ({ ...current, afbeelding_url: event.target.value }))}
+              className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
+            />
+            <input
+              type="text"
+              placeholder="Handleiding-URL (optioneel, zichtbaar in klantenportaal)"
+              value={formState.handleiding_url}
+              onChange={(event) => setFormState((current) => ({ ...current, handleiding_url: event.target.value }))}
               className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300 sm:col-span-2"
             />
             <textarea
@@ -255,7 +265,7 @@ export default function ProductsManager() {
                 <tr className="border-b border-white/10 text-xs uppercase tracking-[0.2em] text-slate-400">
                   <th className="px-4 py-3">Merk</th>
                   <th className="px-4 py-3">Model</th>
-                  <th className="px-4 py-3">Energieklasse</th>
+                  <th className="px-4 py-3">Geschikt voor</th>
                   <th className="px-4 py-3">Prijs</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Acties</th>

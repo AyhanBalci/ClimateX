@@ -14,9 +14,10 @@ export const OFFERTE_GELDIGHEID_DAGEN = 30;
 const ALGEMENE_VOORWAARDEN = [
   "Deze offerte is vrijblijvend en geldig tot de hierboven vermelde geldigheidsdatum.",
   "Genoemde prijzen zijn inclusief btw, tenzij anders vermeld, en zijn gebaseerd op de bij ClimateX bekende situatie.",
-  "Na akkoord plant ClimateX de werkzaamheden in overleg met de klant in.",
+  "Na akkoord plant ClimateX de installatie in overleg met de klant in.",
+  "Op de installatie en de geleverde laadpaal geldt standaard garantie volgens de garantievoorwaarden van ClimateX.",
   "Op alle offertes en overeenkomsten van ClimateX zijn de algemene voorwaarden van ClimateX van toepassing.",
-  "Eventuele meerwerkzaamheden worden vooraf met de klant afgestemd en apart in rekening gebracht.",
+  "Eventuele meerwerkzaamheden, zoals het uitbreiden van de meterkast, worden vooraf met de klant afgestemd en apart in rekening gebracht.",
 ];
 
 function formatCurrency(value: number) {
@@ -175,7 +176,7 @@ export function buildOffertePdfDocument(offerte: Offerte, klant: KlantGegevens):
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(140, 140, 140);
-  doc.text("ClimateX — 06 1400 4488 — Premium airco-installatie met montage en service", pageWidth / 2, pageHeight - 10, {
+  doc.text("ClimateX — 06 1400 4488 — Slimme energieoplossingen voor woningen en bedrijven", pageWidth / 2, pageHeight - 10, {
     align: "center",
   });
 
