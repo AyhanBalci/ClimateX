@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, Zap } from "lucide-react";
 
@@ -271,12 +272,12 @@ export default function LaadpaalWizard() {
             <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-slate-400">{result.uitleg}</p>
             <p className="mt-4 text-lg font-semibold text-cyan-300">{result.prijs}</p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <a
-                href="#contact"
+              <Link
+                href="/#contact"
                 className="inline-flex items-center justify-center rounded-full bg-white px-7 py-3 text-sm font-semibold text-black transition hover:bg-slate-100"
               >
                 Vraag offerte aan
-              </a>
+              </Link>
               <button
                 onClick={restart}
                 className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-7 py-3 text-sm text-white transition hover:border-white/30 hover:bg-white/10"

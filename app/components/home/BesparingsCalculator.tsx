@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { TrendingDown } from "lucide-react";
+import AnimatedNumber from "./AnimatedNumber";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(value);
@@ -61,25 +63,37 @@ export default function BesparingsCalculator() {
           <div className="mt-4 space-y-4">
             <div>
               <p className="text-sm text-slate-400">Per maand</p>
-              <p className="text-2xl font-semibold text-emerald-300">{formatCurrency(resultaat.besparingPerMaand)}</p>
+              <p className="text-2xl font-semibold text-emerald-300">
+                <AnimatedNumber value={resultaat.besparingPerMaand} format={(n) => formatCurrency(n)} />
+              </p>
             </div>
             <div>
               <p className="text-sm text-slate-400">Per jaar</p>
-              <p className="text-2xl font-semibold text-white">{formatCurrency(resultaat.besparingPerJaar)}</p>
+              <p className="text-2xl font-semibold text-white">
+                <AnimatedNumber value={resultaat.besparingPerJaar} format={(n) => formatCurrency(n)} />
+              </p>
             </div>
             <div>
               <p className="text-sm text-slate-400">Geschatte terugverdientijd laadpaal</p>
               <p className="text-2xl font-semibold text-white">
                 {resultaat.terugverdientijdMaanden ? `${Math.round(resultaat.terugverdientijdMaanden)} maanden` : "—"}
               </p>
+              {resultaat.terugverdientijdMaanden ? (
+                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 transition-all duration-500 ease-out"
+                    style={{ width: `${Math.min(100, (24 / Math.max(resultaat.terugverdientijdMaanden, 1)) * 100)}%` }}
+                  />
+                </div>
+              ) : null}
             </div>
           </div>
-          <a
-            href="#contact"
+          <Link
+            href="/#contact"
             className="mt-6 block w-full rounded-full bg-emerald-400 px-6 py-3 text-center text-sm font-semibold text-slate-950 transition hover:bg-emerald-300"
           >
             Start met besparen
-          </a>
+          </Link>
           <p className="mt-4 text-xs leading-5 text-slate-500">
             Dit is een indicatie op basis van uw invoer en gemiddelde marktprijzen. Werkelijke besparing is afhankelijk van uw energiecontract en laadgedrag.
           </p>

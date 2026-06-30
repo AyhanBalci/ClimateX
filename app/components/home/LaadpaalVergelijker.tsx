@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Minus, Scale } from "lucide-react";
+import Link from "next/link";
+import { Check, Minus, Scale, Sparkles } from "lucide-react";
+import { getMerkInfo } from "../../lib/laadpaalMerken";
 
 type Laadpaal = {
   merk: string;
@@ -14,13 +16,14 @@ type Laadpaal = {
   dynamicLoadBalancing: boolean;
   thuis: boolean;
   zakelijk: boolean;
+  aanbevolen?: boolean;
 };
 
 const laadpalen: Laadpaal[] = [
   { merk: "Alfen", model: "Eve Single Pro-line", prijs: "€1.295", laadvermogen: "11 kW", app: true, garantie: "3 jaar", loadBalancing: true, dynamicLoadBalancing: false, thuis: true, zakelijk: false },
   { merk: "Zaptec", model: "Zaptec Go", prijs: "€1.095", laadvermogen: "11 kW", app: true, garantie: "5 jaar", loadBalancing: true, dynamicLoadBalancing: false, thuis: true, zakelijk: false },
   { merk: "Wallbox", model: "Pulsar Plus", prijs: "€999", laadvermogen: "11 kW", app: true, garantie: "3 jaar", loadBalancing: false, dynamicLoadBalancing: false, thuis: true, zakelijk: false },
-  { merk: "Easee", model: "Easee One", prijs: "€1.395", laadvermogen: "22 kW", app: true, garantie: "5 jaar", loadBalancing: true, dynamicLoadBalancing: true, thuis: true, zakelijk: true },
+  { merk: "Easee", model: "Easee One", prijs: "€1.395", laadvermogen: "22 kW", app: true, garantie: "5 jaar", loadBalancing: true, dynamicLoadBalancing: true, thuis: true, zakelijk: true, aanbevolen: true },
   { merk: "ABB", model: "Terra AC Wallbox", prijs: "€1.795", laadvermogen: "22 kW", app: true, garantie: "2 jaar", loadBalancing: true, dynamicLoadBalancing: true, thuis: false, zakelijk: true },
 ];
 
@@ -85,12 +88,25 @@ export default function LaadpaalVergelijker() {
           <thead>
             <tr>
               <th className="px-3 py-3 text-left text-xs uppercase tracking-[0.18em] text-slate-500">Kenmerk</th>
-              {zichtbaar.map((p) => (
-                <th key={p.merk} className="px-3 py-3 text-center">
-                  <p className="text-sm font-semibold text-white">{p.merk}</p>
-                  <p className="text-xs text-slate-500">{p.model}</p>
-                </th>
-              ))}
+              {zichtbaar.map((p) => {
+                const info = getMerkInfo(p.merk);
+                return (
+                  <th key={p.merk} className="px-3 py-3 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400/20 to-emerald-400/10 text-xs font-bold text-cyan-300">
+                        {info?.monogram ?? p.merk.slice(0, 2).toUpperCase()}
+                      </span>
+                      {p.aanbevolen ? (
+                        <span className="flex items-center gap-1 rounded-full bg-emerald-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-300">
+                          <Sparkles className="h-3 w-3" /> Aanbevolen
+                        </span>
+                      ) : null}
+                      <p className="text-sm font-semibold text-white">{p.merk}</p>
+                      <p className="text-xs text-slate-500">{p.model}</p>
+                    </div>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>
@@ -108,12 +124,12 @@ export default function LaadpaalVergelijker() {
               <td className="px-3 py-4"></td>
               {zichtbaar.map((p) => (
                 <td key={p.merk} className="px-3 py-4 text-center">
-                  <a
-                    href="#contact"
+                  <Link
+                    href="/#contact"
                     className="inline-flex items-center justify-center rounded-full border border-cyan-300/20 bg-cyan-400/10 px-4 py-2 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-400/15"
                   >
                     Offerte
-                  </a>
+                  </Link>
                 </td>
               ))}
             </tr>
