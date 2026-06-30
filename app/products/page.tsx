@@ -7,6 +7,12 @@ import { Product } from "../lib/types";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "Laadpalen vergelijken | Alfen, Zaptec, Easee, Wallbox, ABB",
+  description:
+    "Bekijk en vergelijk premium laadpalen voor thuis en zakelijk gebruik. Inclusief installatie, load balancing en garantie. Vraag direct een gratis offerte aan.",
+};
+
 function formatPrice(value: number) {
   return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value) + " incl. installatie";
 }
@@ -55,6 +61,7 @@ export default async function ProductsPage() {
                     <img
                       src={product.afbeelding_url}
                       alt={`${product.merk} ${product.model}`}
+                      loading="lazy"
                       className="mb-4 h-40 w-full rounded-[1.5rem] object-cover"
                     />
                   ) : (

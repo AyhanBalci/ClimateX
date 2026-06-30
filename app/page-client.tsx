@@ -2,8 +2,30 @@
 
 import { motion } from "framer-motion";
 import { FormEvent, useState } from "react";
+import {
+  Award,
+  BatteryCharging,
+  Building2,
+  Gauge,
+  Home as HomeIcon,
+  MessageCircle,
+  Phone,
+  PlugZap,
+  ShieldCheck,
+  Sparkles,
+  Wrench,
+  Zap,
+} from "lucide-react";
 import ProductImagePlaceholder from "./components/ProductImagePlaceholder";
 import WhatsAppButton from "./components/WhatsAppButton";
+import LaadpaalWizard from "./components/home/LaadpaalWizard";
+import PrijsCalculator from "./components/home/PrijsCalculator";
+import BesparingsCalculator from "./components/home/BesparingsCalculator";
+import LaadpaalVergelijker from "./components/home/LaadpaalVergelijker";
+import MeterkastCheck from "./components/home/MeterkastCheck";
+import FaqSection from "./components/home/FaqSection";
+import TrustSection from "./components/home/TrustSection";
+import StickyMobileCta from "./components/home/StickyMobileCta";
 import { Product } from "./lib/types";
 
 function formatProductPrice(value: number) {
@@ -16,17 +38,26 @@ const whatsappLink = "https://wa.me/31614004488";
 const housingOptions = ["Appartement", "Gezinswoning", "Vrijstaande woning", "Bent u aannemer of VvE?"];
 const aansluitingOptions = ["1-fase", "3-fase", "Weet ik niet"];
 
+const navLinks = [
+  { href: "/products", label: "Producten" },
+  { href: "#diensten", label: "Diensten" },
+  { href: "#keuzehulp", label: "Keuzehulp" },
+  { href: "#calculator", label: "Calculator" },
+  { href: "#vergelijk", label: "Vergelijk" },
+  { href: "#faq", label: "Veelgesteld" },
+];
+
 const diensten = [
-  { titel: "Laadpaal thuis", omschrijving: "Veilig en snel laden op uw eigen oprit of in de garage, volledig op maat geïnstalleerd." },
-  { titel: "Zakelijke laadpalen", omschrijving: "Laadoplossingen voor bedrijfsterreinen, wagenparken en personeelsparkeerplaatsen." },
-  { titel: "VvE laadoplossingen", omschrijving: "Eerlijke verdeling van laadcapaciteit voor meerdere bewoners in één pand of parkeergarage." },
-  { titel: "Onderhoud", omschrijving: "Periodieke controle en onderhoud zodat uw laadpaal altijd veilig en betrouwbaar blijft werken." },
-  { titel: "Storingen", omschrijving: "Snelle storingsdienst, ook melden via het klantenportaal, met servicebezoek op korte termijn." },
-  { titel: "Slim laden", omschrijving: "Laad automatisch op de goedkoopste momenten of op zelf opgewekte zonne-energie." },
-  { titel: "Load balancing", omschrijving: "Verdeel beschikbare stroom automatisch over meerdere laadpunten zonder de hoofdaansluiting te overbelasten." },
-  { titel: "Dynamic load balancing", omschrijving: "Slimme, realtime sturing van laadvermogen op basis van het actuele verbruik in uw pand." },
-  { titel: "Meterkast uitbreiden", omschrijving: "Wij beoordelen en breiden uw meterkast uit indien nodig voor een veilige aansluiting." },
-  { titel: "Advies", omschrijving: "Onafhankelijk advies over de beste laadoplossing voor uw woning of organisatie." },
+  { icon: HomeIcon, titel: "Laadpaal thuis", omschrijving: "Veilig en snel laden op uw eigen oprit of in de garage, volledig op maat geïnstalleerd." },
+  { icon: Building2, titel: "Zakelijke laadpalen", omschrijving: "Laadoplossingen voor bedrijfsterreinen, wagenparken en personeelsparkeerplaatsen." },
+  { icon: Building2, titel: "VvE laadoplossingen", omschrijving: "Eerlijke verdeling van laadcapaciteit voor meerdere bewoners in één pand of parkeergarage." },
+  { icon: Wrench, titel: "Onderhoud", omschrijving: "Periodieke controle en onderhoud zodat uw laadpaal altijd veilig en betrouwbaar blijft werken." },
+  { icon: Zap, titel: "Storingen", omschrijving: "Snelle storingsdienst, ook melden via het klantenportaal, met servicebezoek op korte termijn." },
+  { icon: Sparkles, titel: "Slim laden", omschrijving: "Laad automatisch op de goedkoopste momenten of op zelf opgewekte zonne-energie." },
+  { icon: Gauge, titel: "Load balancing", omschrijving: "Verdeel beschikbare stroom automatisch over meerdere laadpunten zonder de hoofdaansluiting te overbelasten." },
+  { icon: Gauge, titel: "Dynamic load balancing", omschrijving: "Slimme, realtime sturing van laadvermogen op basis van het actuele verbruik in uw pand." },
+  { icon: PlugZap, titel: "Meterkast uitbreiden", omschrijving: "Wij beoordelen en breiden uw meterkast uit indien nodig voor een veilige aansluiting." },
+  { icon: ShieldCheck, titel: "Advies", omschrijving: "Onafhankelijk advies over de beste laadoplossing voor uw woning of organisatie." },
 ];
 
 const binnenkort = [
@@ -35,31 +66,10 @@ const binnenkort = [
   { titel: "Warmtepompen", omschrijving: "Duurzaam verwarmen, los van gas, met subsidiemogelijkheden." },
 ];
 
-const voordelen = [
-  "Erkende, gecertificeerde installateurs",
-  "Vaste prijs, geen verrassingen achteraf",
-  "Advies over load balancing en subsidies",
-  "Garantie op installatie en materialen",
-];
-
-const stappen = [
-  { titel: "Offerte & advies", omschrijving: "U vraagt een vrijblijvende offerte aan, wij adviseren over de beste laadoplossing." },
-  { titel: "Inspectie meterkast", omschrijving: "Onze installateur beoordeelt uw meterkast en de gewenste locatie van de laadpaal." },
-  { titel: "Installatie", omschrijving: "Veilige, vakkundige installatie van uw laadpaal, meestal binnen één dag." },
-  { titel: "Oplevering & garantie", omschrijving: "U ontvangt de testresultaten, garantie en een werkende laadpaal met uitleg." },
-];
-
-const reviews = [
-  { naam: "Familie de Vries", quote: "Binnen een week een laadpaal én duidelijk advies over load balancing. Top geregeld." },
-  { naam: "Bedrijfspand Noord BV", quote: "ClimateX heeft 6 laadpunten op ons terrein geïnstalleerd met slimme verdeling. Werkt feilloos." },
-  { naam: "VvE De Hoek", quote: "Eerlijke verdeling van laadcapaciteit voor alle bewoners, prettig en duidelijk traject." },
-];
-
-const faqs = [
-  { vraag: "Wat kost een laadpaal installeren?", antwoord: "De kosten hangen af van uw meterkast, de gewenste laadpaal en de afstand tot de meterkast. Na een gratis offerte weet u exact waar u aan toe bent." },
-  { vraag: "Hoe lang duurt de installatie?", antwoord: "Een standaard installatie bij een woning duurt meestal één dagdeel. Zakelijke en VvE-projecten plannen wij in overleg in." },
-  { vraag: "Wat is load balancing?", antwoord: "Load balancing verdeelt automatisch het beschikbare vermogen over meerdere laadpunten, zodat u nooit de hoofdaansluiting overbelast." },
-  { vraag: "Krijg ik garantie?", antwoord: "Ja, op zowel de installatie als de geleverde laadpaal ontvangt u standaard garantie." },
+const heroBadges = [
+  { icon: ShieldCheck, label: "Gecertificeerde installateurs" },
+  { icon: Award, label: "Garantie op installatie" },
+  { icon: BatteryCharging, label: "500+ projecten" },
 ];
 
 export default function HomeClient({ products }: { products: Product[] }) {
@@ -130,79 +140,109 @@ export default function HomeClient({ products }: { products: Product[] }) {
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
-      <section id="home" className="relative overflow-hidden bg-[#060606] px-6 py-12 sm:px-10 lg:px-16">
-        <div className="absolute inset-x-0 top-0 h-64 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.18),_transparent_52%)] blur-3xl" />
+      {/* Sticky premium nav */}
+      <header className="sticky top-0 z-50 border-b border-white/5 bg-zinc-950/70 backdrop-blur-xl">
+        <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4 text-sm text-slate-300 sm:px-10 lg:px-16">
+          <a href="#home" className="flex items-center gap-2 font-semibold text-white">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-300">
+              <Zap className="h-4 w-4" />
+            </span>
+            ClimateX
+          </a>
+          <div className="hidden items-center gap-6 lg:flex">
+            {navLinks.map((link) => (
+              <a key={link.href} href={link.href} className="transition hover:text-white">
+                {link.label}
+              </a>
+            ))}
+          </div>
+          <a
+            href="#contact"
+            className="inline-flex items-center justify-center rounded-full bg-white px-5 py-2.5 text-xs font-semibold text-black transition hover:bg-slate-100 sm:text-sm"
+          >
+            Gratis offerte
+          </a>
+        </nav>
+      </header>
+
+      {/* Hero */}
+      <section id="home" className="relative overflow-hidden bg-[#060606] px-6 py-16 sm:px-10 sm:py-24 lg:px-16">
+        <div className="absolute inset-x-0 top-0 h-[36rem] bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.16),_transparent_55%)] blur-3xl" />
+        <div className="absolute -left-32 top-40 h-72 w-72 rounded-full bg-emerald-500/10 blur-[120px]" />
         <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-black via-transparent" />
-        <div className="relative mx-auto flex max-w-7xl flex-col gap-12 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative mx-auto flex max-w-7xl flex-col gap-14 lg:flex-row lg:items-center lg:justify-between">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="max-w-2xl space-y-8"
           >
-            <nav className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4 text-sm text-slate-300">
-              <span className="font-semibold text-white">ClimateX</span>
-              <div className="flex flex-wrap gap-3">
-                <a href="#home" className="transition hover:text-white">Home</a>
-                <a href="/products" className="transition hover:text-white">Producten</a>
-                <a href="#diensten" className="transition hover:text-white">Diensten</a>
-                <a href="#binnenkort" className="transition hover:text-white">Binnenkort</a>
-                <a href="#faq" className="transition hover:text-white">Veelgesteld</a>
-                <a href="#contact" className="transition hover:text-white">Contact</a>
-              </div>
-            </nav>
-            <div className="inline-flex rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 backdrop-blur-xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 backdrop-blur-xl">
+              <Sparkles className="h-4 w-4 text-cyan-300" />
               Slimme energieoplossingen voor woningen en bedrijven
             </div>
-            <h1 className="text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
-              ClimateX. Premium laadpalen, vakkundig geïnstalleerd.
+            <h1 className="text-4xl font-semibold leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-7xl">
+              Laden, opnieuw
+              <br />
+              <span className="bg-gradient-to-r from-cyan-300 via-cyan-200 to-emerald-300 bg-clip-text text-transparent">
+                doordacht.
+              </span>
             </h1>
             <p className="max-w-xl text-lg leading-8 text-slate-300 sm:text-xl">
-              Laadpalen van Alfen, Zaptec, Easee, Wallbox, ABB, EVBox en Smappee voor thuis, zakelijk en VvE. Vraag direct een gratis offerte aan via telefoon of WhatsApp.
+              Premium laadpalen van Alfen, Zaptec, Easee, Wallbox, ABB, EVBox en Smappee. Vakkundig geïnstalleerd voor thuis, zakelijk en VvE — met slim laden en load balancing als standaard.
             </p>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <a
                 href="#contact"
-                className="inline-flex items-center justify-center rounded-full bg-white px-7 py-3 text-sm font-semibold text-black transition hover:bg-slate-100"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-black transition hover:bg-slate-100"
               >
-                Gratis offerte aanvragen
+                <Zap className="h-4 w-4" /> Gratis offerte aanvragen
               </a>
               <a
                 href="tel:+31614004488"
-                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-7 py-3 text-sm text-white transition hover:border-white/30 hover:bg-white/10"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/5 px-7 py-3.5 text-sm text-white transition hover:border-white/30 hover:bg-white/10"
               >
-                Bel direct
+                <Phone className="h-4 w-4" /> Bel direct
               </a>
               <a
                 href={whatsappLink}
-                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-7 py-3 text-sm text-white transition hover:border-white/30 hover:bg-white/10"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/5 px-7 py-3.5 text-sm text-white transition hover:border-white/30 hover:bg-white/10"
                 target="_blank"
                 rel="noreferrer"
               >
-                WhatsApp
+                <MessageCircle className="h-4 w-4" /> WhatsApp
               </a>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-white/10 pt-6">
+              {heroBadges.map((badge) => (
+                <div key={badge.label} className="flex items-center gap-2 text-sm text-slate-400">
+                  <badge.icon className="h-4 w-4 text-cyan-300" />
+                  {badge.label}
+                </div>
+              ))}
             </div>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.9, ease: "easeOut" }}
-            className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-2xl shadow-black/40 backdrop-blur-xl sm:max-w-md"
+            className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/5 p-7 shadow-2xl shadow-black/40 backdrop-blur-xl sm:max-w-md"
           >
-            <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,_rgba(56,189,248,0.18),_transparent_40%)]" />
-            <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-5">
-              <p className="text-sm uppercase tracking-[0.3em] text-slate-400">Installatie & service</p>
-              <h2 className="mt-3 text-3xl font-semibold text-white">Vakkundige installatie en service</h2>
-              <p className="mt-3 text-sm leading-6 text-slate-300">
-                Installatie met een vaste prijs inclusief meterkastcontrole, testresultaten en oplevering.
-              </p>
+            <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,_rgba(56,189,248,0.2),_transparent_45%)]" />
+            <div className="flex items-center justify-between">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-400/10 text-cyan-300">
+                <BatteryCharging className="h-6 w-6" />
+              </span>
+              <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-300">Live</span>
             </div>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              {voordelen.map((item) => (
-                <div
-                  key={item}
-                  className="rounded-3xl border border-white/10 bg-slate-900/80 p-4 text-sm text-slate-300"
-                >
+            <p className="mt-6 text-sm uppercase tracking-[0.3em] text-slate-400">Installatie &amp; service</p>
+            <h2 className="mt-2 text-3xl font-semibold text-white">Vakkundig geïnstalleerd</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-300">
+              Vaste prijs inclusief meterkastcontrole, testresultaten en oplevering door een gecertificeerde installateur.
+            </p>
+            <div className="mt-8 grid grid-cols-2 gap-3">
+              {["Vaste prijs", "Load balancing", "Garantie", "Snelle service"].map((item) => (
+                <div key={item} className="rounded-2xl border border-white/10 bg-slate-900/80 px-4 py-3 text-sm text-slate-300">
                   {item}
                 </div>
               ))}
@@ -211,14 +251,15 @@ export default function HomeClient({ products }: { products: Product[] }) {
         </div>
       </section>
 
-      <section id="diensten" className="px-6 py-16 sm:px-10 lg:px-16">
+      {/* Diensten */}
+      <section id="diensten" className="px-6 py-20 sm:px-10 lg:px-16">
         <div className="mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, ease: "easeOut" }}
-            className="mb-8 max-w-2xl"
+            className="mb-10 max-w-2xl"
           >
             <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Diensten</p>
             <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
@@ -226,24 +267,35 @@ export default function HomeClient({ products }: { products: Product[] }) {
             </h2>
           </motion.div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {diensten.map((dienst) => (
-              <div key={dienst.titel} className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6">
-                <h3 className="text-lg font-semibold text-white">{dienst.titel}</h3>
+            {diensten.map((dienst, i) => (
+              <motion.div
+                key={dienst.titel}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: (i % 3) * 0.06, ease: "easeOut" }}
+                className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6 transition hover:border-cyan-300/30"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-400/10 text-cyan-300">
+                  <dienst.icon className="h-5 w-5" />
+                </span>
+                <h3 className="mt-4 text-lg font-semibold text-white">{dienst.titel}</h3>
                 <p className="mt-2 text-sm leading-6 text-slate-400">{dienst.omschrijving}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="bg-[#070707] px-6 py-16 sm:px-10 lg:px-16">
+      {/* Producten */}
+      <section className="bg-[#070707] px-6 py-20 sm:px-10 lg:px-16">
         <div className="mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, ease: "easeOut" }}
-            className="mb-8 max-w-2xl"
+            className="mb-10 max-w-2xl"
           >
             <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Producten</p>
             <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
@@ -273,6 +325,7 @@ export default function HomeClient({ products }: { products: Product[] }) {
                         <img
                           src={product.afbeelding_url}
                           alt={`${product.merk} ${product.model}`}
+                          loading="lazy"
                           className="mb-4 h-40 w-full rounded-[1.5rem] object-cover"
                         />
                       ) : (
@@ -304,14 +357,44 @@ export default function HomeClient({ products }: { products: Product[] }) {
         </div>
       </section>
 
-      <section id="binnenkort" className="px-6 py-16 sm:px-10 lg:px-16">
+      {/* Laadpaal keuzehulp */}
+      <section id="keuzehulp" className="px-6 py-20 sm:px-10 lg:px-16">
+        <div className="mx-auto max-w-4xl">
+          <LaadpaalWizard />
+        </div>
+      </section>
+
+      {/* Calculators */}
+      <section id="calculator" className="bg-[#070707] px-6 py-20 sm:px-10 lg:px-16">
+        <div className="mx-auto max-w-5xl space-y-10">
+          <PrijsCalculator />
+          <BesparingsCalculator />
+        </div>
+      </section>
+
+      {/* Vergelijker */}
+      <section id="vergelijk" className="px-6 py-20 sm:px-10 lg:px-16">
+        <div className="mx-auto max-w-6xl">
+          <LaadpaalVergelijker />
+        </div>
+      </section>
+
+      {/* Meterkastcheck */}
+      <section id="meterkastcheck" className="bg-[#070707] px-6 py-20 sm:px-10 lg:px-16">
+        <div className="mx-auto max-w-5xl">
+          <MeterkastCheck />
+        </div>
+      </section>
+
+      {/* Binnenkort beschikbaar */}
+      <section id="binnenkort" className="px-6 py-20 sm:px-10 lg:px-16">
         <div className="mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, ease: "easeOut" }}
-            className="mb-8 max-w-2xl"
+            className="mb-10 max-w-2xl"
           >
             <p className="text-sm uppercase tracking-[0.24em] text-emerald-300/80">Binnenkort beschikbaar</p>
             <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
@@ -335,65 +418,22 @@ export default function HomeClient({ products }: { products: Product[] }) {
         </div>
       </section>
 
-      <section className="bg-[#070707] px-6 py-16 sm:px-10 lg:px-16">
+      {/* Vertrouwen: waarom ClimateX, proces, reviews, partners */}
+      <section className="bg-[#070707] px-6 py-20 sm:px-10 lg:px-16">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-10 max-w-2xl">
-            <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Installatieproces</p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              Van offerte tot werkende laadpaal.
-            </h2>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {stappen.map((stap, index) => (
-              <div key={stap.titel} className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6">
-                <span className="text-sm font-semibold text-cyan-300">Stap {index + 1}</span>
-                <h3 className="mt-2 text-lg font-semibold text-white">{stap.titel}</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-400">{stap.omschrijving}</p>
-              </div>
-            ))}
-          </div>
+          <TrustSection />
         </div>
       </section>
 
-      <section className="px-6 py-16 sm:px-10 lg:px-16">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-10 max-w-2xl">
-            <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Reviews</p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              Wat klanten van ClimateX zeggen.
-            </h2>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {reviews.map((review) => (
-              <div key={review.naam} className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6">
-                <p className="text-sm leading-6 text-slate-300">&ldquo;{review.quote}&rdquo;</p>
-                <p className="mt-4 text-sm font-semibold text-white">{review.naam}</p>
-              </div>
-            ))}
-          </div>
+      {/* FAQ */}
+      <section id="faq" className="px-6 py-20 sm:px-10 lg:px-16">
+        <div className="mx-auto max-w-5xl">
+          <FaqSection />
         </div>
       </section>
 
-      <section id="faq" className="bg-[#070707] px-6 py-16 sm:px-10 lg:px-16">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-10 max-w-2xl">
-            <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Veelgestelde vragen</p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              Alles wat u wilt weten over laadpalen.
-            </h2>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {faqs.map((faq) => (
-              <div key={faq.vraag} className="rounded-[1.75rem] border border-white/10 bg-slate-950/80 p-6">
-                <h3 className="text-base font-semibold text-white">{faq.vraag}</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-400">{faq.antwoord}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="contact" className="px-6 py-16 sm:px-10 lg:px-16">
+      {/* Contact */}
+      <section id="contact" className="bg-[#070707] px-6 py-20 sm:px-10 lg:px-16">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
             <div className="space-y-6">
@@ -402,7 +442,7 @@ export default function HomeClient({ products }: { products: Product[] }) {
                 Vraag nu uw gratis offerte aan.
               </h2>
               <p className="max-w-xl text-sm leading-7 text-slate-400 sm:text-base">
-                Vul het formulier in of bel direct. Wij nemen binnen 24 uur contact met u op voor een persoonlijk adviesgesprek.
+                Vul het formulier in of bel direct voor een gratis adviesgesprek. Wij nemen binnen 24 uur contact met u op.
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-6">
@@ -414,6 +454,14 @@ export default function HomeClient({ products }: { products: Product[] }) {
                   <p className="mt-3 text-xl font-semibold text-white">contact@climatex.nl</p>
                 </div>
               </div>
+              <a
+                href={whatsappLink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-400/10 px-6 py-3 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-400/15"
+              >
+                <MessageCircle className="h-4 w-4" /> Gratis adviesgesprek via WhatsApp
+              </a>
             </div>
             <form onSubmit={handleSubmit} className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-8 shadow-xl shadow-black/20">
               <div className="grid gap-5">
@@ -562,6 +610,8 @@ export default function HomeClient({ products }: { products: Product[] }) {
       </section>
 
       <WhatsAppButton />
+      <StickyMobileCta />
+      <div className="h-16 sm:hidden" aria-hidden="true" />
     </main>
   );
 }

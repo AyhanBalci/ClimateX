@@ -13,9 +13,35 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ClimateX | Laadpaal Installateur Nederland",
+  title: {
+    default: "ClimateX | Laadpaal Installateur Nederland",
+    template: "%s | ClimateX",
+  },
   description:
     "Laadpaal installeren voor thuis, zakelijk of VvE. Slimme laadpalen met load balancing van Alfen, Zaptec, Easee en meer. Vraag direct een gratis offerte aan bij ClimateX.",
+  keywords: [
+    "laadpaal installeren",
+    "laadpaal thuis",
+    "zakelijke laadpaal",
+    "laadpaal installateur",
+    "EV charger",
+    "elektrisch laden",
+    "slimme laadpaal",
+    "load balancing",
+    "dynamic load balancing",
+    "VvE laadpalen",
+  ],
+  openGraph: {
+    title: "ClimateX | Laadpaal Installateur Nederland",
+    description:
+      "Premium laadpalen voor thuis, zakelijk en VvE. Vakkundig geïnstalleerd met load balancing als standaard.",
+    locale: "nl_NL",
+    type: "website",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
