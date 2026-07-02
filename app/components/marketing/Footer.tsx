@@ -27,7 +27,7 @@ export default function Footer() {
   return (
     <footer className="border-t border-white/10 bg-[#040404]">
       <div className="mx-auto max-w-7xl px-6 py-16 sm:px-10 lg:px-16">
-        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
+        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1fr]">
           {/* Brand */}
           <div className="space-y-5">
             <Link href="/" className="flex items-center gap-2.5 font-semibold text-white">
@@ -70,6 +70,27 @@ export default function Footer() {
                 <li key={d}>
                   <Link href="/diensten" className="text-sm text-slate-400 transition hover:text-white">
                     {d}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Bedrijf */}
+          <div>
+            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Bedrijf</p>
+            <ul className="space-y-3">
+              {[
+                { href: "/over-ons", label: "Over ons" },
+                { href: "/waarom-climatex", label: "Waarom ClimateX" },
+                { href: "/projecten", label: "Projecten" },
+                { href: "/reviews", label: "Reviews" },
+                { href: "/calculator", label: "Calculator" },
+                { href: "/#contact", label: "Contact" },
+              ].map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="text-sm text-slate-400 transition hover:text-white">
+                    {link.label}
                   </Link>
                 </li>
               ))}

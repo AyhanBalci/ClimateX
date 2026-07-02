@@ -1,10 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { BadgeCheck, Clock, ShieldCheck, Sparkles } from "lucide-react";
 import ProductImagePlaceholder from "../ProductImagePlaceholder";
 import { Product } from "../../lib/types";
 import { getMerkInfo } from "../../lib/laadpaalMerken";
+import { LAADPAAL_SPECIFICATIES } from "../../lib/laadpaalSpecificaties";
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value) + " incl. installatie";
@@ -12,6 +14,8 @@ function formatPrice(value: number) {
 
 export default function ProductCard({ product, index }: { product: Product; index: number }) {
   const info = getMerkInfo(product.merk);
+  const spec = LAADPAAL_SPECIFICATIES.find((s) => s.merk === product.merk);
+  const detailSlug = spec?.slug;
 
   return (
     <motion.article
@@ -82,14 +86,24 @@ export default function ProductCard({ product, index }: { product: Product; inde
             </span>
           </div>
 
-          <div className="mt-6 flex flex-1 flex-col justify-end gap-4">
+          <div className="mt-6 flex flex-1 flex-col justify-end gap-3">
             <p className="text-2xl font-semibold text-white">{formatPrice(product.prijs)}</p>
-            <a
-              href="#offerte"
-              className="inline-flex items-center justify-center rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
-            >
-              Offerte aanvragen
-            </a>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <a
+                href="#offerte"
+                className="inline-flex flex-1 items-center justify-center rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
+              >
+                Offerte aanvragen
+              </a>
+              {detailSlug ? (
+                <Link
+                  href={`/products/${detailSlug}`}
+                  className="inline-flex flex-1 items-center justify-center rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm text-slate-300 transition hover:bg-white/10"
+                >
+                  Meer details
+                </Link>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
