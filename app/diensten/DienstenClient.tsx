@@ -15,6 +15,7 @@ import SiteNav from "../components/marketing/SiteNav";
 import StickyMobileCta from "../components/marketing/StickyMobileCta";
 import WhatsAppButton from "../components/WhatsAppButton";
 import CtaBand from "../components/marketing/CtaBand";
+import Footer from "../components/marketing/Footer";
 
 const diensten = [
   { icon: HomeIcon, titel: "Laadpaal thuis", omschrijving: "Veilig en snel laden op uw eigen oprit of in de garage, volledig op maat geïnstalleerd." },
@@ -109,6 +110,7 @@ export default function DienstenClient() {
         <StickyMobileCta />
         <div className="h-16 sm:hidden" aria-hidden="true" />
       </main>
+      <Footer />
     </>
   );
 }

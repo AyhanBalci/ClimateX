@@ -6,6 +6,7 @@ import { Calculator, Camera, Compass, Scale, TrendingDown } from "lucide-react";
 import SiteNav from "../components/marketing/SiteNav";
 import StickyMobileCta from "../components/marketing/StickyMobileCta";
 import WhatsAppButton from "../components/WhatsAppButton";
+import Footer from "../components/marketing/Footer";
 import LaadpaalWizard from "../components/home/LaadpaalWizard";
 import PrijsCalculator from "../components/home/PrijsCalculator";
 import BesparingsCalculator from "../components/home/BesparingsCalculator";
@@ -83,6 +84,7 @@ export default function CalculatorClient() {
         <StickyMobileCta />
         <div className="h-16 sm:hidden" aria-hidden="true" />
       </main>
+      <Footer />
     </>
   );
 }

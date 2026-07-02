@@ -6,6 +6,7 @@ import SiteNav from "../components/marketing/SiteNav";
 import StickyMobileCta from "../components/marketing/StickyMobileCta";
 import WhatsAppButton from "../components/WhatsAppButton";
 import CtaBand from "../components/marketing/CtaBand";
+import Footer from "../components/marketing/Footer";
 
 const projecten = [
   {
@@ -114,6 +115,7 @@ export default function ProjectenClient() {
         <StickyMobileCta />
         <div className="h-16 sm:hidden" aria-hidden="true" />
       </main>
+      <Footer />
     </>
   );
 }

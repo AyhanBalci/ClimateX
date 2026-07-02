@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, HelpCircle } from "lucide-react";
 
 const faqs = [
@@ -47,35 +48,73 @@ const faqs = [
 ];
 
 export default function FaqSection() {
-  const [open, setOpen] = useState<number | null>(0);
+  const [open, setOpen] = useState<number | null>(null);
 
   return (
     <div>
-      <div className="mb-10 max-w-2xl">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="mb-12 max-w-2xl"
+      >
         <p className="flex items-center gap-2 text-sm uppercase tracking-[0.24em] text-cyan-300/80">
           <HelpCircle className="h-4 w-4" /> Veelgestelde vragen
         </p>
-        <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+        <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
           Alles wat u wilt weten over laadpalen.
         </h2>
-      </div>
-      <div className="grid gap-3">
+        <p className="mt-4 text-sm leading-7 text-slate-400 sm:text-base">
+          Staat uw vraag er niet bij? Bel ons gerust op 06 1400 4488.
+        </p>
+      </motion.div>
+
+      <div className="grid gap-2">
         {faqs.map((faq, index) => {
           const isOpen = open === index;
           return (
-            <div key={faq.vraag} className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/60">
+            <motion.div
+              key={faq.vraag}
+              initial={{ opacity: 0, y: 8 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: index * 0.03, ease: "easeOut" }}
+              className={`overflow-hidden rounded-2xl border transition-colors ${
+                isOpen ? "border-cyan-300/25 bg-slate-950/90" : "border-white/10 bg-slate-950/50"
+              }`}
+            >
               <button
                 onClick={() => setOpen(isOpen ? null : index)}
                 className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
                 aria-expanded={isOpen}
               >
-                <span className="text-sm font-semibold text-white sm:text-base">{faq.vraag}</span>
-                <ChevronDown className={`h-5 w-5 shrink-0 text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                <span className={`text-sm font-semibold transition-colors sm:text-base ${isOpen ? "text-white" : "text-slate-200"}`}>
+                  {faq.vraag}
+                </span>
+                <motion.span
+                  animate={{ rotate: isOpen ? 180 : 0 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5"
+                >
+                  <ChevronDown className={`h-4 w-4 transition-colors ${isOpen ? "text-cyan-300" : "text-slate-400"}`} />
+                </motion.span>
               </button>
-              {isOpen ? (
-                <p className="px-6 pb-5 text-sm leading-7 text-slate-400">{faq.antwoord}</p>
-              ) : null}
-            </div>
+              <AnimatePresence initial={false}>
+                {isOpen ? (
+                  <motion.div
+                    key="answer"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.28, ease: "easeOut" }}
+                    style={{ overflow: "hidden" }}
+                  >
+                    <p className="px-6 pb-6 text-sm leading-7 text-slate-400">{faq.antwoord}</p>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            </motion.div>
           );
         })}
       </div>

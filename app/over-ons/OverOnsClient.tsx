@@ -7,6 +7,7 @@ import StickyMobileCta from "../components/marketing/StickyMobileCta";
 import WhatsAppButton from "../components/WhatsAppButton";
 import WaaromClimateX from "../components/marketing/WaaromClimateX";
 import CtaBand from "../components/marketing/CtaBand";
+import Footer from "../components/marketing/Footer";
 
 const waarden = [
   { icon: Target, titel: "Vakmanschap", tekst: "Elke installatie wordt uitgevoerd door gecertificeerde installateurs, volgens de hoogste veiligheidsnormen." },
@@ -79,6 +80,7 @@ export default function OverOnsClient() {
         <StickyMobileCta />
         <div className="h-16 sm:hidden" aria-hidden="true" />
       </main>
+      <Footer />
     </>
   );
 }

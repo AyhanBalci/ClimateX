@@ -3,6 +3,7 @@ import WhatsAppButton from "../components/WhatsAppButton";
 import SiteNav from "../components/marketing/SiteNav";
 import StickyMobileCta from "../components/marketing/StickyMobileCta";
 import ProductCard from "../components/marketing/ProductCard";
+import Footer from "../components/marketing/Footer";
 import { supabase } from "../lib/supabase";
 import { Product } from "../lib/types";
 
@@ -77,6 +78,7 @@ export default async function ProductsPage() {
         <StickyMobileCta />
         <div className="h-16 sm:hidden" aria-hidden="true" />
       </main>
+      <Footer />
     </>
   );
 }
