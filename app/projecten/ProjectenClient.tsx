@@ -188,7 +188,7 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
                 {/* CTA */}
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <Link
-                    href={`/products/${project.laadpaalSlug}`}
+                    href={`/producten/${project.laadpaalSlug}`}
                     className="inline-flex items-center justify-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-400/10 px-5 py-3 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-400/15"
                   >
                     <BatteryCharging className="h-4 w-4" /> Bekijk de {project.laadpaal}

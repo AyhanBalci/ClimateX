@@ -33,7 +33,6 @@ const diensten = [
 const binnenkort = [
   { titel: "Zonnepanelen", omschrijving: "Wek uw eigen stroom op en laad uw auto met groene energie." },
   { titel: "Thuisbatterijen", omschrijving: "Sla zelf opgewekte energie op en gebruik deze wanneer u die nodig heeft." },
-  { titel: "Warmtepompen", omschrijving: "Duurzaam verwarmen, los van gas, met subsidiemogelijkheden." },
 ];
 
 export default function DienstenClient() {

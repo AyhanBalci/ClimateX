@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { LAADPAAL_MERKEN } from "../../lib/laadpaalMerken";
+import { BRANDS } from "../../lib/producten/brands";
 
 export default function OnzeLaadpaalmerken() {
   return (
@@ -20,31 +20,38 @@ export default function OnzeLaadpaalmerken() {
             Premium kwaliteit, voor elke situatie.
           </h2>
         </div>
-        <Link href="/products" className="hidden text-sm font-semibold text-cyan-300 transition hover:text-cyan-200 sm:inline-flex">
+        <Link href="/producten" className="hidden text-sm font-semibold text-cyan-300 transition hover:text-cyan-200 sm:inline-flex">
           Bekijk alle producten →
         </Link>
       </motion.div>
 
-      <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {LAADPAAL_MERKEN.map((merk, i) => (
+      <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {BRANDS.map((brand, i) => (
           <motion.div
-            key={merk.merk}
+            key={brand.slug}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: (i % 4) * 0.07, ease: "easeOut" }}
+            transition={{ duration: 0.5, delay: (i % 5) * 0.07, ease: "easeOut" }}
             whileHover={{ y: -4 }}
-            className="rounded-[1.75rem] border border-white/10 bg-slate-950/70 p-6 transition-colors hover:border-cyan-300/30"
           >
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400/20 to-emerald-400/10 text-sm font-bold text-cyan-300">
-              {merk.monogram}
-            </span>
-            <h3 className="mt-4 text-base font-semibold text-white">{merk.merk}</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-400">{merk.beschrijving}</p>
+            <Link
+              href={`/producten/${brand.slug}`}
+              className="block h-full rounded-[1.75rem] border border-white/10 bg-slate-950/70 p-6 transition-colors hover:border-cyan-300/30"
+            >
+              <span
+                className="flex h-12 w-12 items-center justify-center rounded-2xl text-sm font-bold text-slate-950"
+                style={{ background: brand.accentHex }}
+              >
+                {brand.monogram}
+              </span>
+              <h3 className="mt-4 text-base font-semibold text-white">{brand.naam}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-400">{brand.beschrijving}</p>
+            </Link>
           </motion.div>
         ))}
       </div>
-      <Link href="/products" className="mt-8 inline-flex text-sm font-semibold text-cyan-300 transition hover:text-cyan-200 sm:hidden">
+      <Link href="/producten" className="mt-8 inline-flex text-sm font-semibold text-cyan-300 transition hover:text-cyan-200 sm:hidden">
         Bekijk alle producten →
       </Link>
     </div>

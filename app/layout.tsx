@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://climate-x-alpha.vercel.app"),
   title: {
     default: "ClimateX | Laadpaal Installateur Nederland",
     template: "%s | ClimateX",

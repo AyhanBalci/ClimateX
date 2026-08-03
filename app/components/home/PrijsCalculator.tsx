@@ -5,17 +5,19 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Calculator, Clock } from "lucide-react";
 import AnimatedNumber from "./AnimatedNumber";
-import { LAADPAAL_MERKEN, getMerkInfo } from "../../lib/laadpaalMerken";
+import { BRANDS, getBrand } from "../../lib/producten/brands";
+import { getProductByRef } from "../../lib/producten/products";
 
-const laadpalen = [
-  { naam: "Wallbox Pulsar Plus", merk: "Wallbox", prijs: 999 },
-  { naam: "Zaptec Go", merk: "Zaptec", prijs: 1095 },
-  { naam: "Alfen Eve Single Pro-line", merk: "Alfen", prijs: 1295 },
-  { naam: "Easee One", merk: "Easee", prijs: 1395 },
-  { naam: "EVBox Elvi", merk: "EVBox", prijs: 1650 },
-  { naam: "ABB Terra AC Wallbox", merk: "ABB", prijs: 1795 },
-  { naam: "Smappee EV Wall Business", merk: "Smappee", prijs: 1895 },
-];
+// Eén representatief (bestseller) model per merk voor deze snelle prijsindicatie.
+// Volledige specificaties en alle varianten staan op /producten.
+const CALCULATOR_REFS = ["alfen/eve-single-pro-line", "ratio/start", "easee/charge-up", "wallbox/pulsar-plus", "zaptec/go"];
+
+const laadpalen = CALCULATOR_REFS.map((ref) => {
+  const product = getProductByRef(ref);
+  if (!product) throw new Error(`Onbekende productverwijzing in PrijsCalculator: ${ref}`);
+  const brand = getBrand(product.merkSlug);
+  return { naam: `${brand?.naam} ${product.model}`, merk: brand?.naam ?? product.merkSlug, prijs: product.vanafPrijs };
+});
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
@@ -48,7 +50,7 @@ export default function PrijsCalculator() {
     return { product, basisinstallatie, kabelkosten, meterkastkosten, graafkosten, loadBalancingKosten, dynamicKosten, installatiekosten, totaal, installatietijd };
   }, [laadpaal, kabellengte, meterkast, graafwerk, loadBalancing, dynamicLoadBalancing]);
 
-  const merkInfo = getMerkInfo(breakdown.product.merk);
+  const merkInfo = BRANDS.find((b) => b.naam === breakdown.product.merk);
 
   return (
     <div className="rounded-[2rem] border border-white/10 bg-gradient-to-b from-slate-900/80 to-slate-950/90 p-6 shadow-2xl shadow-black/30 sm:p-10">
@@ -68,7 +70,7 @@ export default function PrijsCalculator() {
             <span>Laadpaal</span>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {laadpalen.map((p) => {
-                const info = LAADPAAL_MERKEN.find((m) => m.merk === p.merk);
+                const info = BRANDS.find((b) => b.naam === p.merk);
                 const isActive = laadpaal === p.naam;
                 return (
                   <button

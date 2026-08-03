@@ -24,7 +24,7 @@ const tijdlijn = [
   { jaar: "2021", titel: "Uitbreiding naar VvE-markt", omschrijving: "We starten met gespecialiseerde laadoplossingen voor VvE's en appartementencomplexen — een nieuwe groeimarkt." },
   { jaar: "2022", titel: "Lancering zakelijke laadpalen", omschrijving: "ClimateX richt zich actief op bedrijven en wagenparken met dynamic load balancing oplossingen." },
   { jaar: "2023", titel: "500+ installaties bereikt", omschrijving: "Een mijlpaal: meer dan 500 tevreden klanten en 1.200+ laadpunten in heel Nederland." },
-  { jaar: "2024", titel: "Premium portfolio uitgebreid", omschrijving: "Zeven topmerken in ons portfolio — Alfen, Zaptec, Easee, Wallbox, ABB, EVBox en Smappee." },
+  { jaar: "2024", titel: "Premium portfolio uitgebreid", omschrijving: "Vijf topmerken in ons portfolio — Alfen, Ratio, Easee, Wallbox en Zaptec." },
   { jaar: "2025+", titel: "Zonnepanelen & thuisbatterijen", omschrijving: "Uitbreiding naar zonnepanelen en thuisbatterijen als logische volgende stap in de energietransitie." },
 ];
 

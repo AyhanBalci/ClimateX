@@ -30,7 +30,7 @@ const initialAnswers: Answers = {
 function recommend(answers: Answers) {
   if (answers.segment === "zakelijk" || Number(answers.aantalAutos) >= 3 || answers.dynamicLoadBalancing) {
     return {
-      naam: "ABB Terra AC Wallbox",
+      naam: "Zaptec Pro",
       uitleg:
         "Voor zakelijk gebruik of meerdere voertuigen adviseren wij een robuuste laadpaal met dynamic load balancing, zodat uw hoofdaansluiting nooit overbelast raakt.",
       prijs: "vanaf €1.795",
@@ -38,10 +38,10 @@ function recommend(answers: Answers) {
   }
   if (answers.loadBalancing || Number(answers.aantalAutos) === 2) {
     return {
-      naam: "Easee One",
+      naam: "Easee Charge Up",
       uitleg:
-        "Met twee auto's of de wens voor load balancing is Easee One een uitstekende keuze: compact, slim en eenvoudig uit te breiden.",
-      prijs: "vanaf €1.395",
+        "Met twee auto's of de wens voor load balancing is de Easee Charge Up een uitstekende keuze: compact, slim en tot drie laders koppelbaar.",
+      prijs: "vanaf €1.195",
     };
   }
   if (answers.aansluiting === "3-fase") {

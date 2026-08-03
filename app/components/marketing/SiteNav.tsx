@@ -7,7 +7,7 @@ import { BatteryCharging, Menu, Phone, X } from "lucide-react";
 
 const navLinks = [
   { href: "/", label: "Home" },
-  { href: "/products", label: "Producten" },
+  { href: "/producten", label: "Producten" },
   { href: "/calculator", label: "Calculator" },
   { href: "/diensten", label: "Diensten" },
   { href: "/projecten", label: "Projecten" },

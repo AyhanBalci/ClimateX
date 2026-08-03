@@ -13,12 +13,12 @@ const diensten = [
 ];
 
 const producten = [
-  "Alfen Eve Pro-line",
-  "Zaptec Go",
-  "Wallbox Pulsar Plus",
-  "Easee One",
-  "EVBox Elvi",
-  "ABB Terra AC",
+  { label: "Alfen laadpalen", href: "/producten/alfen" },
+  { label: "Ratio laadpalen", href: "/producten/ratio" },
+  { label: "Easee laadpalen", href: "/producten/easee" },
+  { label: "Wallbox laadpalen", href: "/producten/wallbox" },
+  { label: "Zaptec laadpalen", href: "/producten/zaptec" },
+  { label: "Alle laadpalen", href: "/producten" },
 ];
 
 const certificaten = ["NEN 1010 gecertificeerd", "EVSRB erkend installateur", "Keurmerk Laadpalen", "VCA gecertificeerd", "ISO 9001"];
@@ -102,9 +102,9 @@ export default function Footer() {
             <p className="mb-5 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Producten</p>
             <ul className="space-y-3">
               {producten.map((p) => (
-                <li key={p}>
-                  <Link href="/products" className="text-sm text-slate-400 transition hover:text-white">
-                    {p}
+                <li key={p.href}>
+                  <Link href={p.href} className="text-sm text-slate-400 transition hover:text-white">
+                    {p.label}
                   </Link>
                 </li>
               ))}
