@@ -42,3 +42,61 @@ textarea:focus-visible {
   outline: 2px solid rgba(34, 211, 238, 0.6);
   outline-offset: 2px;
 }
+
+/* ── AI Agent Platform (/agents) — namespaced tokens, scoped to .agents-shell ── */
+@theme {
+  --color-agentbase-950: #08090b;
+  --color-agentbase-900: #0a0b0e;
+  --color-agentbase-850: #0f1114;
+  --color-agentbase-800: #131519;
+  --color-agentbase-700: #1b1e24;
+  --color-agentbase-600: #262a32;
+  --color-agentbase-border: #20242b;
+  --color-agentice-300: #9fe7ff;
+  --color-agentice-400: #6ed4fa;
+  --color-agentice-500: #4cc3f0;
+  --color-agentice-600: #2fa3d6;
+  --color-agentamber-300: #ffd48a;
+  --color-agentamber-400: #f5b85c;
+  --color-agentamber-500: #f2a93b;
+  --color-agentamber-600: #d98c1f;
+  --color-agentgood: #3fcb8f;
+  --color-agentwarn: #f2a93b;
+  --color-agentbad: #f0555a;
+  --color-agentcrit: #ff3b5c;
+  --font-agentdisplay: var(--font-agentdisplay);
+  --shadow-agentglow: 0 0 0 1px rgba(79, 195, 240, 0.15), 0 8px 30px -8px rgba(79, 195, 240, 0.25);
+}
+
+.agents-shell {
+  background-color: #0a0b0e;
+  background-image: radial-gradient(circle at 15% -10%, rgba(79, 195, 240, 0.1), transparent 40%),
+    radial-gradient(circle at 90% 5%, rgba(242, 169, 59, 0.06), transparent 35%);
+  background-attachment: fixed;
+}
+
+.agents-shell ::selection {
+  background: rgba(79, 195, 240, 0.35);
+}
+
+.agents-shell ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.agents-shell ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.agents-shell ::-webkit-scrollbar-thumb {
+  background: #262a32;
+  border-radius: 999px;
+}
+
+.agents-shell ::-webkit-scrollbar-thumb:hover {
+  background: #333844;
+}
+
+.agents-shell .tabular {
+  font-variant-numeric: tabular-nums;
+}

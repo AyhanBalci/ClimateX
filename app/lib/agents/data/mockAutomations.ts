@@ -1,0 +1,60 @@
+import { Automation } from '@/lib/agents/types'
+
+export const AUTOMATIONS: Automation[] = [
+  {
+    id: 'auto-1',
+    name: 'Dagelijkse analyse',
+    description: 'Elke ochtend worden alle campagnes doorgerekend op budget, CPA en ROAS ten opzichte van je doelstellingen.',
+    frequency: 'Dagelijks om 06:00',
+    enabled: true,
+    lastRun: 'Vandaag, 06:00',
+  },
+  {
+    id: 'auto-2',
+    name: 'Wekelijkse rapportage',
+    description: 'Een samenvatting van performance, top-aanbevelingen en budgetverbruik wordt gegenereerd voor het weekoverzicht.',
+    frequency: 'Elke maandag om 08:00',
+    enabled: true,
+    lastRun: 'Afgelopen maandag',
+  },
+  {
+    id: 'auto-3',
+    name: 'Budgetcontrole',
+    description: 'Signaleert wanneer een campagne dreigt het maand- of dagbudget te overschrijden of onderbenutten.',
+    frequency: 'Elke 4 uur',
+    enabled: true,
+    lastRun: '2 uur geleden',
+  },
+  {
+    id: 'auto-4',
+    name: 'Zoekwoordencontrole',
+    description: 'Controleert Quality Score en conversieratio per zoekwoord en markeert kandidaten om te pauzeren.',
+    frequency: 'Dagelijks',
+    enabled: true,
+    lastRun: 'Vandaag, 06:00',
+  },
+  {
+    id: 'auto-5',
+    name: 'Controle op stijgende CPC',
+    description: 'Vergelijkt de CPC per zoekwoord met het 7-daags gemiddelde en waarschuwt bij een stijging van meer dan 20%.',
+    frequency: 'Dagelijks',
+    enabled: true,
+    lastRun: 'Vandaag, 06:00',
+  },
+  {
+    id: 'auto-6',
+    name: 'Controle op dalende CTR',
+    description: 'Detecteert advertenties waarvan de CTR meer dan 25% daalt ten opzichte van het gemiddelde van de afgelopen 14 dagen.',
+    frequency: 'Dagelijks',
+    enabled: false,
+    lastRun: '3 dagen geleden',
+  },
+  {
+    id: 'auto-7',
+    name: 'Controle op campagnes zonder conversies',
+    description: 'Markeert campagnes die meer dan 5x het dagbudget hebben uitgegeven zonder een conversie te registreren.',
+    frequency: 'Elke 6 uur',
+    enabled: true,
+    lastRun: '4 uur geleden',
+  },
+]
