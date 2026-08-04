@@ -152,6 +152,30 @@ export function productJsonLd(product: Product, brand: Brand, afbeeldingen: stri
   };
 }
 
+/**
+ * Kennisbankartikel. `dateModified` gebruikt de datum waarop de inhoud voor het
+ * laatst tegen de officiële bronnen is gecontroleerd — voor subsidie- en
+ * regelgevingsinformatie is dat het meest betekenisvolle signaal.
+ */
+export function artikelJsonLd(artikel: {
+  slug: string;
+  titel: string;
+  samenvatting: string;
+  gecontroleerdOp: string;
+}): JsonLdObject {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: artikel.titel,
+    description: artikel.samenvatting,
+    dateModified: artikel.gecontroleerdOp,
+    inLanguage: "nl-NL",
+    mainEntityOfPage: absoluteUrl(`/kennisbank/${artikel.slug}`),
+    author: { "@id": `${SITE_URL}/#organisatie` },
+    publisher: { "@id": `${SITE_URL}/#organisatie` },
+  };
+}
+
 /** Installatiedienst als los aanbod, voor de dienstenpagina. */
 export function serviceJsonLd(): JsonLdObject {
   return {

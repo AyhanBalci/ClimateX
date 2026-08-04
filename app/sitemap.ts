@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { BRANDS } from "./lib/producten/brands";
 import { PRODUCTS } from "./lib/producten/products";
+import { ARTIKELEN } from "./lib/kennisbank/artikelen";
 
 const BASE_URL = "https://climate-x-alpha.vercel.app";
 
@@ -10,6 +11,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/producten`, priority: 0.9, changeFrequency: "weekly" },
     { url: `${BASE_URL}/calculator`, priority: 0.8, changeFrequency: "monthly" },
     { url: `${BASE_URL}/diensten`, priority: 0.7, changeFrequency: "monthly" },
+    { url: `${BASE_URL}/kennisbank`, priority: 0.8, changeFrequency: "monthly" },
     { url: `${BASE_URL}/projecten`, priority: 0.7, changeFrequency: "monthly" },
     { url: `${BASE_URL}/over-ons`, priority: 0.5, changeFrequency: "yearly" },
     { url: `${BASE_URL}/waarom-climatex`, priority: 0.5, changeFrequency: "yearly" },
@@ -27,5 +29,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "weekly",
   }));
 
-  return [...statisch, ...merken, ...producten];
+  const artikelen: MetadataRoute.Sitemap = ARTIKELEN.map((a) => ({
+    url: `${BASE_URL}/kennisbank/${a.slug}`,
+    priority: 0.7,
+    changeFrequency: "monthly",
+    lastModified: new Date(a.gecontroleerdOp),
+  }));
+
+  return [...statisch, ...merken, ...producten, ...artikelen];
 }
