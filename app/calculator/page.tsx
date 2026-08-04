@@ -4,6 +4,7 @@ export const metadata = {
   title: "Laadpaal calculator | Prijs, besparing en advies",
   description:
     "Bereken direct uw indicatieprijs, jaarlijkse besparing en de beste laadpaal voor uw situatie. Vergelijk merken en vraag een gratis meterkastbeoordeling aan.",
+  alternates: { canonical: "/calculator" },
 };
 
 export default function CalculatorPage() {

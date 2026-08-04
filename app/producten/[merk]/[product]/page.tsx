@@ -23,7 +23,9 @@ import DownloadsList from "../../../components/producten/DownloadsList";
 import RelatedProducts from "../../../components/producten/RelatedProducts";
 import { getBrand } from "../../../lib/producten/brands";
 import { getProduct, PRODUCTS, STANDAARD_INSTALLATIE } from "../../../lib/producten/products";
-import { formatPrijs, getRelatedProducts, productDisplayName } from "../../../lib/producten/helpers";
+import { formatPrijs, getRelatedProducts, productDisplayName, productImagePath } from "../../../lib/producten/helpers";
+import JsonLd from "../../../components/seo/JsonLd";
+import { breadcrumbJsonLd, faqJsonLd, productJsonLd } from "../../../lib/seo";
 
 type Params = { params: Promise<{ merk: string; product: string }> };
 
@@ -52,8 +54,23 @@ export default async function ProductDetailPage({ params }: Params) {
 
   const gerelateerd = getRelatedProducts(product, 3);
 
+  const structuredData = [
+    productJsonLd(product, brand, [
+      productImagePath(product, "hero"),
+      productImagePath(product, "angle"),
+      productImagePath(product, "front"),
+    ]),
+    breadcrumbJsonLd([
+      { naam: "Producten", pad: "/producten" },
+      { naam: brand.naam, pad: `/producten/${brand.slug}` },
+      { naam: productDisplayName(product), pad: `/producten/${brand.slug}/${product.productSlug}` },
+    ]),
+    faqJsonLd(product.faqs),
+  ];
+
   return (
     <>
+      <JsonLd data={structuredData} />
       <SiteNav />
       <main className="min-h-screen bg-zinc-950 text-white">
         {/* Hero */}

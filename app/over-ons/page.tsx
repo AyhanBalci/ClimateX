@@ -4,6 +4,7 @@ export const metadata = {
   title: "Over ons | ClimateX laadpaal installateur",
   description:
     "ClimateX is gespecialiseerd in het installeren van laadpalen voor woningen, bedrijven en VvE's. Maak kennis met onze aanpak en gecertificeerde installateurs.",
+  alternates: { canonical: "/over-ons" },
 };
 
 export default function OverOnsPage() {

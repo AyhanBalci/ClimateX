@@ -11,6 +11,8 @@ import CatalogClient from "../../components/producten/CatalogClient";
 import { BRANDS, getBrand } from "../../lib/producten/brands";
 import { withBrand } from "../../lib/producten/helpers";
 import { getProductsByBrand } from "../../lib/producten/products";
+import JsonLd from "../../components/seo/JsonLd";
+import { breadcrumbJsonLd } from "../../lib/seo";
 
 type Params = { params: Promise<{ merk: string }> };
 
@@ -38,6 +40,12 @@ export default async function MerkPage({ params }: Params) {
 
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { naam: "Producten", pad: "/producten" },
+          { naam: brand.naam, pad: `/producten/${brand.slug}` },
+        ])}
+      />
       <SiteNav />
       <main className="min-h-screen bg-zinc-950 text-white">
         <section className="relative overflow-hidden bg-[#060606] px-6 py-16 sm:px-10 sm:py-20 lg:px-16">
