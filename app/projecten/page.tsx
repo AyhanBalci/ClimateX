@@ -1,9 +1,9 @@
 import ProjectenClient from "./ProjectenClient";
 
 export const metadata = {
-  title: "Projecten | Gerealiseerde laadpaalinstallaties",
+  title: "Voorbeeldsituaties | Zo verloopt een laadpaalinstallatie",
   description:
-    "Een overzicht van gerealiseerde laadpaalprojecten van ClimateX voor woningen, bedrijven en VvE's, inclusief load balancing en dynamic load balancing.",
+    "Representatieve installatiesituaties voor woningen, bedrijven en VvE's: van load balancing op een 1-fase aansluiting tot MID-meting per laadpunt.",
   alternates: { canonical: "/projecten" },
 };
 

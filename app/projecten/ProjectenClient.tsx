@@ -6,14 +6,9 @@ import Link from "next/link";
 import {
   Award,
   BatteryCharging,
-  Calendar,
-  Car,
   CheckCircle2,
   ChevronDown,
   Clock,
-  MapPin,
-  Quote,
-  Star,
   Users,
   Zap,
 } from "lucide-react";
@@ -82,8 +77,6 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
       <div className="p-7">
         {/* Meta row */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-500">
-          <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {project.plaats}, {project.provincie}</span>
-          <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> {project.datum}</span>
           <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {project.installatieduur}</span>
           <span className="flex items-center gap-1"><Zap className="h-3.5 w-3.5" /> {project.aantalLaadpunten} laadpunt{project.aantalLaadpunten > 1 ? "en" : ""}</span>
         </div>
@@ -98,8 +91,8 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
             <p className="mt-0.5 text-sm font-semibold text-white">{project.laadpaal}</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
-            <p className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Automerk</p>
-            <p className="mt-0.5 text-sm font-semibold text-white">{project.automerk}</p>
+            <p className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Laadpunten</p>
+            <p className="mt-0.5 text-sm font-semibold text-white">{project.aantalLaadpunten}</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
             <p className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Type</p>
@@ -121,7 +114,7 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
           onClick={() => setExpanded((v) => !v)}
           className="mt-5 flex w-full items-center justify-between border-t border-white/10 pt-4 text-sm text-slate-400 transition hover:text-white"
         >
-          <span>{expanded ? "Minder details" : "Meer details & review"}</span>
+          <span>{expanded ? "Minder details" : "Meer details"}</span>
           <motion.span animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
             <ChevronDown className="h-4 w-4" />
           </motion.span>
@@ -154,34 +147,12 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
                 {/* Bijzonderheden + Resultaat */}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Bijzonderheden</p>
-                    <p className="text-sm leading-6 text-slate-300">{project.bijzonderheden}</p>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Uitdaging</p>
+                    <p className="text-sm leading-6 text-slate-300">{project.uitdaging}</p>
                   </div>
                   <div className="rounded-2xl border border-emerald-300/15 bg-emerald-400/5 p-5">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-400/60">Resultaat</p>
-                    <p className="text-sm leading-6 text-slate-300">{project.resultaat}</p>
-                  </div>
-                </div>
-
-                {/* Review */}
-                <div className="relative rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900/80 to-slate-950 p-6">
-                  <Quote className="absolute right-5 top-5 h-7 w-7 text-white/5" />
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: project.review.rating }).map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
-                    ))}
-                  </div>
-                  <p className="mt-3 text-sm leading-6 text-slate-300">&ldquo;{project.review.quote}&rdquo;</p>
-                  <div className="mt-4 flex items-center gap-3">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400/20 to-emerald-400/10 text-xs font-bold text-cyan-200">
-                      {project.review.naam.slice(0, 2).toUpperCase()}
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold text-white">{project.review.naam}</p>
-                      <p className="flex items-center gap-1 text-xs text-slate-500">
-                        <MapPin className="h-3 w-3" /> {project.plaats} · {project.type}
-                      </p>
-                    </div>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-400/60">Onze oplossing</p>
+                    <p className="text-sm leading-6 text-slate-300">{project.oplossing}</p>
                   </div>
                 </div>
 
@@ -197,7 +168,7 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
                     href="/#contact"
                     className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm text-slate-300 transition hover:bg-white/10"
                   >
-                    <Car className="h-4 w-4" /> Vergelijkbaar project?
+                    <Zap className="h-4 w-4" /> Vergelijkbare situatie?
                   </Link>
                 </div>
               </div>
@@ -223,21 +194,21 @@ export default function ProjectenClient() {
           <div className="absolute inset-x-0 top-0 h-80 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.14),_transparent_55%)] blur-3xl" />
           <div className="relative mx-auto max-w-7xl">
             <div className="max-w-3xl">
-              <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Gerealiseerde projecten</p>
+              <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Voorbeeldsituaties</p>
               <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
-                500+ installaties door heel Nederland.
+                Zo pakken wij een installatie aan.
               </h1>
               <p className="mt-5 text-base leading-7 text-slate-400 sm:text-lg">
-                Van een enkele laadpaal op de eigen oprit tot een volledig laadpark voor een bedrijfsvloot — bekijk onze gerealiseerde projecten.
+                Van een enkele laadpaal op de eigen oprit tot een laadplein voor een wagenpark. Hieronder ziet u representatieve situaties met de techniek die daarbij komt kijken.
               </p>
             </div>
             {/* KPIs */}
             <div className="mt-10 flex flex-wrap gap-4">
               {[
-                { label: "Installaties", value: "500+" },
-                { label: "Laadpunten", value: "1.200+" },
-                { label: "Beoordeling", value: "4,9/5" },
-                { label: "Provincies", value: "12" },
+                { label: "Montage", value: "NEN 1010" },
+                { label: "Installateur", value: "EVSRB" },
+                { label: "Prijs", value: "Vooraf vast" },
+                { label: "Werkgebied", value: "Landelijk" },
               ].map((kpi) => (
                 <div key={kpi.label} className="rounded-2xl border border-white/10 bg-white/5 px-6 py-4 backdrop-blur-sm">
                   <p className="text-2xl font-semibold text-white">{kpi.value}</p>

@@ -21,6 +21,12 @@ const nextConfig: NextConfig = {
         destination: "/producten",
         permanent: true,
       },
+      {
+        // De reviewpagina is verwijderd tot er geverifieerde klantbeoordelingen zijn.
+        source: "/reviews",
+        destination: "/waarom-climatex",
+        permanent: false,
+      },
     ];
   },
 };

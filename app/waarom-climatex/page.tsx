@@ -3,7 +3,7 @@ import WaaromClimatexClient from "./WaaromClimatexClient";
 export const metadata = {
   title: "Waarom ClimateX | Gecertificeerd laadpaal installateur",
   description:
-    "Ontdek waarom 500+ klanten voor ClimateX kiezen. Gecertificeerde monteurs, vaste prijzen, gratis inspectie en uitgebreide garantie op laadpalen voor thuis, zakelijk en VvE.",
+    "Ontdek waarom klanten voor ClimateX kiezen. NEN 1010 gecertificeerde monteurs, vaste prijzen vooraf, gratis inspectie en uitgebreide garantie op laadpalen voor thuis, zakelijk en VvE.",
   alternates: { canonical: "/waarom-climatex" },
 };
 

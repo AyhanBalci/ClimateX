@@ -11,7 +11,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/calculator`, priority: 0.8, changeFrequency: "monthly" },
     { url: `${BASE_URL}/diensten`, priority: 0.7, changeFrequency: "monthly" },
     { url: `${BASE_URL}/projecten`, priority: 0.7, changeFrequency: "monthly" },
-    { url: `${BASE_URL}/reviews`, priority: 0.6, changeFrequency: "monthly" },
     { url: `${BASE_URL}/over-ons`, priority: 0.5, changeFrequency: "yearly" },
     { url: `${BASE_URL}/waarom-climatex`, priority: 0.5, changeFrequency: "yearly" },
   ];

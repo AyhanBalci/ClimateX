@@ -18,23 +18,12 @@ const kernwaarden = [
   { icon: Zap, titel: "Innovatie", tekst: "Wij volgen de nieuwste ontwikkelingen in laadtechnologie, energiemanagement en slim laden op de voet." },
 ];
 
-const tijdlijn = [
-  { jaar: "2019", titel: "Oprichting ClimateX", omschrijving: "ClimateX is opgericht met als missie het toegankelijk maken van thuisladen voor iedere autorijder in Nederland." },
-  { jaar: "2020", titel: "Eerste 100 installaties", omschrijving: "Na een vliegende start bereiken we de eerste 100 gerealiseerde laadpalen, voornamelijk in de regio Utrecht en Amsterdam." },
-  { jaar: "2021", titel: "Uitbreiding naar VvE-markt", omschrijving: "We starten met gespecialiseerde laadoplossingen voor VvE's en appartementencomplexen — een nieuwe groeimarkt." },
-  { jaar: "2022", titel: "Lancering zakelijke laadpalen", omschrijving: "ClimateX richt zich actief op bedrijven en wagenparken met dynamic load balancing oplossingen." },
-  { jaar: "2023", titel: "500+ installaties bereikt", omschrijving: "Een mijlpaal: meer dan 500 tevreden klanten en 1.200+ laadpunten in heel Nederland." },
-  { jaar: "2024", titel: "Premium portfolio uitgebreid", omschrijving: "Vijf topmerken in ons portfolio — Alfen, Ratio, Easee, Wallbox en Zaptec." },
-  { jaar: "2025+", titel: "Zonnepanelen & thuisbatterijen", omschrijving: "Uitbreiding naar zonnepanelen en thuisbatterijen als logische volgende stap in de energietransitie." },
-];
-
-const team = [
-  { naam: "Mark van den Berg", rol: "Oprichter & directeur", initialen: "MB", specialisme: "Strategie & klantenadvies" },
-  { naam: "Joost Vermeer", rol: "Technisch directeur", initialen: "JV", specialisme: "Installatie & engineering" },
-  { naam: "Lisa de Groot", rol: "Projectmanager", initialen: "LG", specialisme: "VvE & zakelijke projecten" },
-  { naam: "Sander Koopmans", rol: "Lead installateur", initialen: "SK", specialisme: "NEN 1010 & EVSRB" },
-  { naam: "Emma Visser", rol: "Klantadviseur", initialen: "EV", specialisme: "Particulier & advies op maat" },
-  { naam: "Tom Bakker", rol: "Service & onderhoud", initialen: "TB", specialisme: "Storingen & nazorg" },
+const specialismen = [
+  { jaar: "Thuis", titel: "Laadpaal bij de woning", omschrijving: "Installatie op oprit, in de garage of aan de gevel, inclusief beoordeling van de meterkast en de kabelroute." },
+  { jaar: "Zakelijk", titel: "Laadpunten op bedrijfsterrein", omschrijving: "Meerdere laadpunten met load balancing, RFID-autorisatie en MID-meting voor correcte kostendoorbelasting." },
+  { jaar: "VvE", titel: "Gedeelde parkeergarages", omschrijving: "Laadinfrastructuur voor appartementencomplexen, met een eerlijke verdeling van de beschikbare netcapaciteit." },
+  { jaar: "Solar", titel: "Laden op eigen zonnestroom", omschrijving: "Koppeling met zonnepanelen zodat er zoveel mogelijk op eigen opgewekte stroom geladen wordt." },
+  { jaar: "Service", titel: "Onderhoud en storingen", omschrijving: "Periodiek onderhoud, storingsdienst en ondersteuning na oplevering." },
 ];
 
 export default function OverOnsClient() {
@@ -62,7 +51,7 @@ export default function OverOnsClient() {
                 </span>
               </h1>
               <p className="max-w-2xl text-base leading-8 text-slate-400 sm:text-lg">
-                Opgericht in 2019 met een simpele missie: zorgen dat iedere elektrische automobilist thuis, op het werk of bij de VvE veilig en slim kan laden.
+Met &eacute;&eacute;n doel: zorgen dat iedere elektrische automobilist thuis, op het werk of bij de VvE veilig en slim kan laden.
               </p>
             </motion.div>
           </div>
@@ -85,13 +74,13 @@ export default function OverOnsClient() {
                 </h2>
                 <div className="space-y-4 text-sm leading-7 text-slate-400">
                   <p>
-                    ClimateX is in 2019 opgericht door Mark van den Berg, een ervaren elektrotechnicus die zag hoe moeilijk het was voor automobilisten om een betrouwbare installateur voor een laadpaal te vinden. De markt was versnipperd, prijzen waren ondoorzichtig en de kwaliteit varieerde sterk.
+                    ClimateX is ontstaan vanuit een duidelijke observatie: wie een laadpaal wil laten installeren, loopt aan tegen een versnipperde markt met ondoorzichtige prijzen en sterk wisselende kwaliteit.
                   </p>
                   <p>
-                    Met een kleine groep gecertificeerde monteurs begon ClimateX in de regio Utrecht. De nadruk lag van meet af aan op vakmanschap, transparante prijzen en persoonlijk advies — waarden die nog steeds de kern vormen van ons bedrijf.
+                    Wij werken uitsluitend met gecertificeerde monteurs en leggen de prijs vooraf vast. Vakmanschap, transparante prijzen en persoonlijk advies vormen de kern van hoe wij werken.
                   </p>
                   <p>
-                    Inmiddels hebben we meer dan 500 installaties gerealiseerd voor particulieren, bedrijven en VvE&apos;s door heel Nederland, met een gemiddelde beoordeling van 4,9/5.
+                    Wij installeren laadpalen voor particulieren, bedrijven en VvE&apos;s door heel Nederland — van &eacute;&eacute;n laadpunt thuis tot complete laadinfrastructuur op een bedrijfsterrein.
                   </p>
                 </div>
                 <Link href="/waarom-climatex" className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-400/10 px-5 py-3 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-400/15">
@@ -102,10 +91,10 @@ export default function OverOnsClient() {
               {/* Stats */}
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { value: "2019", label: "Opgericht" },
-                  { value: "500+", label: "Installaties" },
-                  { value: "4,9/5", label: "Beoordeling" },
-                  { value: "12", label: "Provincies" },
+                  { value: "NEN 1010", label: "Gecertificeerde montage" },
+                  { value: "EVSRB", label: "Erkend installateur" },
+                  { value: "Vaste prijs", label: "Vooraf vastgelegd" },
+                  { value: "Landelijk", label: "Werkgebied" },
                 ].map((stat, i) => (
                   <motion.div
                     key={stat.label}
@@ -196,52 +185,7 @@ export default function OverOnsClient() {
           </div>
         </section>
 
-        {/* Team */}
-        <section className="bg-[#070707] px-6 py-24 sm:px-10 sm:py-32 lg:px-16">
-          <div className="mx-auto max-w-7xl">
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="mb-14 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"
-            >
-              <div className="max-w-2xl">
-                <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Ons team</p>
-                <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                  De mensen achter ClimateX.
-                </h2>
-              </div>
-              <p className="max-w-xs text-sm text-slate-500">
-                Vervang de placeholders door échte teamfoto&apos;s in het TeamCard-component.
-              </p>
-            </motion.div>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {team.map((lid, i) => (
-                <motion.div
-                  key={lid.naam}
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: (i % 3) * 0.07, ease: "easeOut" }}
-                  className="flex items-center gap-5 rounded-[2rem] border border-white/10 bg-slate-950/80 p-6"
-                >
-                  {/* Avatar placeholder — vervang door <img> voor echte foto */}
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400/20 to-emerald-400/10 text-lg font-bold text-cyan-200">
-                    {lid.initialen}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-white">{lid.naam}</p>
-                    <p className="text-sm text-cyan-300/70">{lid.rol}</p>
-                    <p className="mt-1 text-xs text-slate-500">{lid.specialisme}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Tijdlijn */}
+        {/* Specialismen */}
         <section className="px-6 py-24 sm:px-10 sm:py-32 lg:px-16">
           <div className="mx-auto max-w-7xl">
             <motion.div
@@ -251,15 +195,15 @@ export default function OverOnsClient() {
               transition={{ duration: 0.6, ease: "easeOut" }}
               className="mb-14 max-w-2xl"
             >
-              <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Onze geschiedenis</p>
+              <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Onze specialismen</p>
               <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                Van startup tot marktleider.
+                Waar wij ons in specialiseren.
               </h2>
             </motion.div>
             <div className="relative pl-6 sm:pl-10">
               <div className="absolute bottom-0 left-0 top-2 w-px bg-gradient-to-b from-cyan-400/40 via-white/10 to-transparent" />
               <div className="space-y-8">
-                {tijdlijn.map((item, i) => (
+                {specialismen.map((item, i) => (
                   <motion.div
                     key={item.jaar}
                     initial={{ opacity: 0, x: -12 }}
@@ -287,7 +231,7 @@ export default function OverOnsClient() {
               {[
                 "NEN 1010 gecertificeerd",
                 "EVSRB erkend",
-                "4,9/5 beoordeling",
+                "VCA gecertificeerd",
                 "ISO 9001",
               ].map((badge) => (
                 <div key={badge} className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-slate-400">

@@ -52,7 +52,8 @@ export default function WaaromClimateX() {
           </h2>
         </div>
         <p className="max-w-xs text-sm leading-7 text-slate-400">
-          500+ succesvolle installaties voor woningen, bedrijven en VvE&apos;s door heel Nederland.
+          Laadoplossingen voor woningen, bedrijven en VvE&apos;s door heel Nederland, ge&iuml;nstalleerd door
+          gecertificeerde monteurs.
         </p>
       </motion.div>
 

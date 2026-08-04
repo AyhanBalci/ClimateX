@@ -99,8 +99,8 @@ export default function WaaromClimatexClient() {
             {/* Stat row */}
             <div className="mt-14 flex flex-wrap gap-4">
               {[
-                { value: "500+", label: "Installaties" },
-                { value: "4,9 / 5", label: "Beoordeling" },
+                { value: "NEN 1010", label: "Gecertificeerde montage" },
+                { value: "EVSRB", label: "Erkend installateur" },
                 { value: "< 3 wkn", label: "Gemiddelde wachttijd" },
                 { value: "0", label: "Verborgen kosten" },
               ].map((stat) => (

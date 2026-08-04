@@ -84,7 +84,6 @@ export default function Footer() {
                 { href: "/over-ons", label: "Over ons" },
                 { href: "/waarom-climatex", label: "Waarom ClimateX" },
                 { href: "/projecten", label: "Projecten" },
-                { href: "/reviews", label: "Reviews" },
                 { href: "/calculator", label: "Calculator" },
                 { href: "/#contact", label: "Contact" },
               ].map((link) => (

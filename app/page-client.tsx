@@ -12,7 +12,6 @@ import {
   MessageCircle,
   Phone,
   ShieldCheck,
-  Star,
   Zap,
 } from "lucide-react";
 import WhatsAppButton from "./components/WhatsAppButton";
@@ -21,7 +20,6 @@ import StickyMobileCta from "./components/marketing/StickyMobileCta";
 import WaaromClimateX from "./components/marketing/WaaromClimateX";
 import OnzeLaadpaalmerken from "./components/marketing/OnzeLaadpaalmerken";
 import InstallatieProces from "./components/marketing/InstallatieProces";
-import ReviewsSection from "./components/marketing/ReviewsSection";
 import CtaBand from "./components/marketing/CtaBand";
 import FaqSection from "./components/home/FaqSection";
 import Footer from "./components/marketing/Footer";
@@ -33,8 +31,8 @@ const housingOptions = ["Appartement", "Gezinswoning", "Vrijstaande woning", "Be
 const aansluitingOptions = ["1-fase", "3-fase", "Weet ik niet"];
 
 const kpis = [
-  { value: "500+", label: "Installaties" },
-  { value: "4,9★", label: "Beoordeling" },
+  { value: "NEN 1010", label: "Gecertificeerd" },
+  { value: "Vaste prijs", label: "Vooraf bekend" },
   { value: "< 3 wkn", label: "Levertijd" },
   { value: "Gratis", label: "Inspectie" },
 ];
@@ -250,15 +248,6 @@ export default function HomeClient() {
               </div>
               <div className="border-t border-white/10 pt-7">
                 <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-0.5">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
-                      ))}
-                    </div>
-                    <span className="text-sm font-semibold text-white">4,9</span>
-                    <span className="text-sm text-slate-500">· 200+ reviews</span>
-                  </div>
                   {kpis.map((kpi) => (
                     <div key={kpi.label}>
                       <span className="text-sm font-semibold text-white">{kpi.value}</span>
@@ -282,7 +271,7 @@ export default function HomeClient() {
               "EVSRB Erkend installateur",
               "Keurmerk Laadpalen",
               "VCA Gecertificeerd",
-              "4,9/5 gemiddelde beoordeling",
+              "Vaste prijs vooraf",
             ].map((label) => (
               <div key={label} className="flex items-center gap-2 text-xs font-medium text-slate-500">
                 <CheckCircle2 className="h-3.5 w-3.5 text-cyan-300/70" />
@@ -310,13 +299,6 @@ export default function HomeClient() {
         <section className="px-6 py-24 sm:px-10 sm:py-32 lg:px-16">
           <div className="mx-auto max-w-7xl">
             <InstallatieProces />
-          </div>
-        </section>
-
-        {/* Reviews */}
-        <section className="bg-[#070707] px-6 py-24 sm:px-10 sm:py-32 lg:px-16">
-          <div className="mx-auto max-w-7xl">
-            <ReviewsSection />
           </div>
         </section>
 
