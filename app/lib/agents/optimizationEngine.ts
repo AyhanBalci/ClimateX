@@ -6,7 +6,7 @@ import {
   Recommendation,
   AgentSettings,
 } from '@/lib/agents/types'
-import { projectCampaign } from './calculations'
+import { projectCampaign, sum } from './calculations'
 
 let counter = 0
 const id = () => `rec-${++counter}`
@@ -144,19 +144,27 @@ export function generateRecommendations(
     }
   })
 
-  // 5. Losse dienst die een eigen campagne verdient (signaal: aparte adgroup/service met eigen schaal)
-  const zakelijk = campaigns.find((c) => c.id === 'c4')
-  if (zakelijk) {
+  // 5. Structuur: een campagne met een sterk afwijkende CPC bedient feitelijk een
+  //    ander marktsegment en verdient een eigen campagne met eigen biedstrategie.
+  const actief = campaigns.filter((c) => c.status === 'Actief' && c.clicks > 0)
+  const accountCpc = sum(actief.map((c) => c.cost)) / Math.max(1, sum(actief.map((c) => c.clicks)))
+  const afwijkend = [...actief]
+    .map((c) => ({ campaign: c, cpc: c.cost / c.clicks }))
+    .filter((x) => accountCpc > 0 && x.cpc >= accountCpc * 1.5)
+    .sort((a, b) => b.cpc - a.cpc)[0]
+
+  if (afwijkend) {
+    const { campaign, cpc } = afwijkend
     recs.push({
       id: id(),
       priority: 'Laag',
       category: 'Structuur',
-      title: `Maak een aparte campagne voor "${zakelijk.service}"`,
-      problem: `${zakelijk.service} wordt nu gecombineerd met consumentenverkeer, terwijl de zoekintentie en dealwaarde sterk verschillen.`,
-      why: 'Zakelijke en consumenten-zoekopdrachten vragen andere advertentieteksten, biedstrategie en landingspagina — samenvoegen verwatert de relevantie.',
-      impact: 'Verwacht 15–25% hogere CTR en betere Quality Score door specifiekere targeting per doelgroep.',
-      action: `Splits "${zakelijk.service}" naar een eigen campagne met zakelijke landingspagina en eigen biedstrategie.`,
-      campaignId: zakelijk.id,
+      title: `Maak een aparte campagne voor "${campaign.service}"`,
+      problem: `${campaign.name} draait een gemiddelde CPC van €${cpc.toFixed(2)}, ${Math.round((cpc / accountCpc - 1) * 100)}% boven het accountgemiddelde van €${accountCpc.toFixed(2)}.`,
+      why: 'Een sterk afwijkende CPC duidt op een ander marktsegment met eigen zoekintentie en dealwaarde — samenvoegen met het overige verkeer verwatert de relevantie en drijft de kosten op.',
+      impact: 'Verwacht een hogere CTR en betere Quality Score door specifiekere advertentieteksten en landingspagina per doelgroep.',
+      action: `Splits "${campaign.service}" naar een eigen campagne met een passende landingspagina en eigen biedstrategie.`,
+      campaignId: campaign.id,
     })
   }
 

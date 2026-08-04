@@ -35,10 +35,18 @@ export function answerQuestion(
   const projection = projectAccount(campaigns, settings)
 
   if (/budget/.test(q) && /(aanraden|advies|hoeveel)/.test(q)) {
+    const actief = campaigns.filter((c) => c.status === 'Actief' && c.cost > 0)
+    const byRoas = [...actief].sort((a, b) => b.conversionValue / b.cost - a.conversionValue / a.cost)
+    const sterk = byRoas
+      .filter((c) => c.conversionValue / c.cost >= settings.targetRoas && (!c.conversions || c.cost / c.conversions <= settings.maxCpa))
+      .slice(0, 2)
+    const zwak = byRoas.filter((c) => c.conversions > 0 && c.cost / c.conversions > settings.maxCpa).slice(-1)
+    const sterkTekst = sterk.length ? ` (zoals ${sterk.map((c) => `"${c.name}"`).join(' en ')})` : ''
+    const zwakTekst = zwak.length ? ` (zoals ${zwak.map((c) => `"${c.name}"`).join(' en ')})` : ''
     return [
       `Op basis van de huidige performance raad ik een totaal maandbudget aan van ${formatCurrency(projection.totals.recommendedMonthlyBudget)} over alle actieve campagnes, tegenover ${formatCurrency(totals.cost * 30)} nu.`,
       ``,
-      `Onderbouwing: de account-brede ROAS staat op ${totals.roas.toFixed(1)}x bij een doel van ${settings.targetRoas}x, en de CPA van ${formatCurrency2(totals.cpa)} zit ${totals.cpa < settings.maxCpa ? 'onder' : 'boven'} je ingestelde maximum van ${formatCurrency(settings.maxCpa)}. Campagnes die ruim binnen deze grenzen presteren (zoals "Airco Installatie — Search Brand" en "Airco Reparatie Spoed") kunnen budget opnemen zonder de winstgevendheid aan te tasten; campagnes die eroverheen gaan (zoals "Multi-split Systemen — Zakelijk") worden juist afgeremd.`,
+      `Onderbouwing: de account-brede ROAS staat op ${totals.roas.toFixed(1)}x bij een doel van ${settings.targetRoas}x, en de CPA van ${formatCurrency2(totals.cpa)} zit ${totals.cpa < settings.maxCpa ? 'onder' : 'boven'} je ingestelde maximum van ${formatCurrency(settings.maxCpa)}. Campagnes die ruim binnen deze grenzen presteren${sterkTekst} kunnen budget opnemen zonder de winstgevendheid aan te tasten; campagnes die eroverheen gaan${zwakTekst} worden juist afgeremd.`,
       ``,
       `Zie de pagina Optimalisaties voor het budgetadvies per campagne.`,
     ].join('\n')

@@ -11,6 +11,16 @@ export default function AgentSettingsPage() {
   const [form, setForm] = useState(settings)
   const [saved, setSaved] = useState(false)
 
+  // Het formulier is een concept-kopie van de opgeslagen instellingen. Zodra de
+  // store een andere waarde levert (client-hydratie vanuit localStorage, of een
+  // wijziging in een ander tabblad) nemen we die over. Dit is React's patroon
+  // voor het bijstellen van state tijdens render.
+  const [syncedFrom, setSyncedFrom] = useState(settings)
+  if (syncedFrom !== settings) {
+    setSyncedFrom(settings)
+    setForm(settings)
+  }
+
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }))
 
@@ -64,7 +74,7 @@ export default function AgentSettingsPage() {
 
       <div className="flex items-center gap-3">
         <Button onClick={save}>Instellingen opslaan</Button>
-        <Button variant="secondary" onClick={() => { resetSettings(); setForm(settings) }}>Standaardwaarden herstellen</Button>
+        <Button variant="secondary" onClick={resetSettings}>Standaardwaarden herstellen</Button>
         {saved && (
           <span className="flex items-center gap-1.5 text-xs text-agentgood">
             <Check size={14} /> Opgeslagen
