@@ -18,6 +18,7 @@ export default function FileUpload({ werkbonId, factuurId, leadId, ticketId, cat
   const [bestanden, setBestanden] = useState<Bestand[]>([]);
   const [categorie, setCategorie] = useState(categorieen[0]);
   const [uploading, setUploading] = useState(false);
+  const [verwijderId, setVerwijderId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -40,7 +41,7 @@ export default function FileUpload({ werkbonId, factuurId, leadId, ticketId, cat
 
   const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !supabase) return;
+    if (!file || !supabase || uploading) return;
 
     setUploading(true);
     setError(null);
@@ -82,17 +83,23 @@ export default function FileUpload({ werkbonId, factuurId, leadId, ticketId, cat
   };
 
   const handleDelete = async (bestand: Bestand) => {
-    if (!supabase) return;
+    if (!supabase || verwijderId) return;
     const confirmed = window.confirm(`Bestand "${bestand.bestandsnaam}" verwijderen?`);
     if (!confirmed) return;
 
-    await supabase.storage.from(BUCKET).remove([bestand.pad]);
-    const { error: deleteError } = await supabase.from("bestanden").delete().eq("id", bestand.id);
-    if (deleteError) {
-      setError(deleteError.message);
-      return;
+    setVerwijderId(bestand.id);
+    try {
+      await supabase.storage.from(BUCKET).remove([bestand.pad]);
+      const { error: deleteError } = await supabase.from("bestanden").delete().eq("id", bestand.id);
+      if (deleteError) {
+        setError(deleteError.message);
+        return;
+      }
+      setError(null);
+      setBestanden((current) => current.filter((item) => item.id !== bestand.id));
+    } finally {
+      setVerwijderId(null);
     }
-    setBestanden((current) => current.filter((item) => item.id !== bestand.id));
   };
 
   return (
@@ -115,7 +122,11 @@ export default function FileUpload({ werkbonId, factuurId, leadId, ticketId, cat
         </label>
       </div>
 
-      {error ? <p className="mt-2 text-sm text-rose-400">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="mt-2 text-sm text-rose-400">
+          {error}
+        </p>
+      ) : null}
 
       {bestanden.length > 0 ? (
         <div className="mt-4 space-y-2">
@@ -131,9 +142,11 @@ export default function FileUpload({ werkbonId, factuurId, leadId, ticketId, cat
                 <span className="rounded-full bg-white/5 px-2 py-1 text-xs text-slate-400">{bestand.categorie}</span>
                 <button
                   onClick={() => handleDelete(bestand)}
-                  className="rounded-full bg-rose-500/10 px-2 py-1 text-xs text-rose-300 transition hover:bg-rose-500/20"
+                  disabled={verwijderId === bestand.id}
+                  aria-label={`${bestand.bestandsnaam} verwijderen`}
+                  className="rounded-full bg-rose-500/10 px-2 py-1 text-xs text-rose-300 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  ✕
+                  <span aria-hidden="true">{verwijderId === bestand.id ? "…" : "✕"}</span>
                 </button>
               </div>
             </div>

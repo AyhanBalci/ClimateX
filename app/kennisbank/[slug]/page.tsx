@@ -12,6 +12,7 @@ import JsonLd from "../../components/seo/JsonLd";
 import { breadcrumbJsonLd, faqJsonLd, artikelJsonLd } from "../../lib/seo";
 import { ARTIKELEN, getArtikel, getGerelateerdeArtikelen } from "../../lib/kennisbank/artikelen";
 import type { Blok } from "../../lib/kennisbank/types";
+import { formatDutchDate } from "../../lib/dateUtils";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -31,7 +32,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 }
 
 function datumNl(iso: string): string {
-  return new Date(iso).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
+  return formatDutchDate(new Date(iso));
 }
 
 function BlokWeergave({ blok }: { blok: Blok }) {

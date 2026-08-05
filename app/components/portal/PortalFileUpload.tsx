@@ -35,7 +35,7 @@ export default function PortalFileUpload({ userId, categorieen, leadId, ticketId
 
   const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !supabase) return;
+    if (!file || !supabase || uploading) return;
 
     setUploading(true);
     setError(null);
@@ -95,7 +95,11 @@ export default function PortalFileUpload({ userId, categorieen, leadId, ticketId
         </label>
       </div>
 
-      {error ? <p className="mt-2 text-sm text-rose-400">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="mt-2 text-sm text-rose-400">
+          {error}
+        </p>
+      ) : null}
 
       {bestanden.length > 0 ? (
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">

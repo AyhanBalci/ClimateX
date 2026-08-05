@@ -44,6 +44,7 @@ export default function MeterkastCheck() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (submitting) return;
     setError(null);
 
     if (!naam.trim() || !telefoon.trim() || !email.trim() || !postcode.trim()) {

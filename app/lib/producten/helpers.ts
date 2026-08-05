@@ -1,6 +1,7 @@
 import { BRANDS, getBrand } from "./brands";
 import { PRODUCTS } from "./products";
 import { Doelgroep, ImageVariant, Product, ProductWithBrand } from "./types";
+import { formatBedragRond } from "../formatters";
 
 export function withBrand(product: Product): ProductWithBrand {
   const brand = getBrand(product.merkSlug);
@@ -27,8 +28,13 @@ export function productDisplayName(product: Product): string {
   return product.model.toLowerCase().startsWith(merkNaam.toLowerCase()) ? product.model : `${merkNaam} ${product.model}`;
 }
 
+/**
+ * Catalogusprijs ("vanaf"-bedrag). Gebruikt bewust dezelfde afgeronde opmaak als
+ * de rest van de applicatie, zodat een prijs op een productpagina er nooit anders
+ * uitziet dan diezelfde prijs in een offerte of calculator.
+ */
 export function formatPrijs(waarde: number): string {
-  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(waarde);
+  return formatBedragRond(waarde);
 }
 
 export interface ProductFilters {
