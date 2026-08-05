@@ -5,10 +5,8 @@ import { Vastgoedticket } from "../../lib/types";
 import { VASTGOEDTICKET_PRIORITEIT_OPTIONS, VASTGOEDTICKET_STATUS_OPTIONS } from "../../lib/constants";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
 import { createTicket } from "../../lib/ticketActions";
+import { formatBedragRond, formatDatum } from "../../lib/formatters";
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString("nl-NL");
-}
 
 function startOfWeek() {
   const now = new Date();
@@ -42,6 +40,7 @@ export default function VastgoedticketenOverview({ onSelectTicket }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [omzetUitTickets, setOmzetUitTickets] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     async function fetchTickets() {
@@ -102,36 +101,42 @@ export default function VastgoedticketenOverview({ onSelectTicket }: Props) {
     { label: "Afgeronde tickets", value: afgerondeTickets },
     {
       label: "Omzet uit tickets",
-      value: new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(omzetUitTickets),
+      value: formatBedragRond(omzetUitTickets),
     },
   ];
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (submitting) return;
     if (!form.klant.trim() || !form.locatie.trim()) {
       setError("Vul minimaal klant en locatie in.");
       return;
     }
 
-    const { data, error: createError } = await createTicket({
-      klant: form.klant.trim(),
-      locatie: form.locatie.trim(),
-      contactpersoon: form.contactpersoon.trim(),
-      telefoonnummer: form.telefoonnummer.trim(),
-      type_melding: form.type_melding.trim(),
-      prioriteit: form.prioriteit,
-      omschrijving: form.omschrijving.trim(),
-    });
+    setSubmitting(true);
+    try {
+      const { data, error: createError } = await createTicket({
+        klant: form.klant.trim(),
+        locatie: form.locatie.trim(),
+        contactpersoon: form.contactpersoon.trim(),
+        telefoonnummer: form.telefoonnummer.trim(),
+        type_melding: form.type_melding.trim(),
+        prioriteit: form.prioriteit,
+        omschrijving: form.omschrijving.trim(),
+      });
 
-    if (createError || !data) {
-      setError(createError || "Ticket aanmaken is mislukt.");
-      return;
+      if (createError || !data) {
+        setError(createError || "Ticket aanmaken is mislukt.");
+        return;
+      }
+
+      setError(null);
+      setTickets((current) => [data as Vastgoedticket, ...current]);
+      setForm(emptyForm);
+      setShowForm(false);
+    } finally {
+      setSubmitting(false);
     }
-
-    setError(null);
-    setTickets((current) => [data as Vastgoedticket, ...current]);
-    setForm(emptyForm);
-    setShowForm(false);
   };
 
   return (
@@ -212,8 +217,12 @@ export default function VastgoedticketenOverview({ onSelectTicket }: Props) {
             onChange={(event) => setForm((current) => ({ ...current, omschrijving: event.target.value }))}
             className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300 sm:col-span-2"
           />
-          <button type="submit" className="rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 sm:col-span-2">
-            Ticket aanmaken
+          <button
+            type="submit"
+            disabled={submitting}
+            className="rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2"
+          >
+            {submitting ? "Bezig met aanmaken…" : "Ticket aanmaken"}
           </button>
         </form>
       ) : null}
@@ -263,7 +272,7 @@ export default function VastgoedticketenOverview({ onSelectTicket }: Props) {
                 {filtered.map((ticket) => (
                   <tr key={ticket.id} className="border-b border-white/5 text-slate-300">
                     <td className="whitespace-nowrap px-4 py-3 text-white">{ticket.ticketnummer}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-400">{formatDate(ticket.datum)}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-400">{formatDatum(ticket.datum)}</td>
                     <td className="px-4 py-3">{ticket.klant}</td>
                     <td className="px-4 py-3">{ticket.locatie}</td>
                     <td className="px-4 py-3">

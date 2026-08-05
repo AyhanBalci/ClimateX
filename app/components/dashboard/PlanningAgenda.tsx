@@ -45,6 +45,7 @@ export default function PlanningAgenda({ onSelectPlanning }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [submitting, setSubmitting] = useState(false);
 
   const range = useMemo(() => {
     if (viewMode === "dag") {
@@ -101,35 +102,41 @@ export default function PlanningAgenda({ onSelectPlanning }: Props) {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (submitting) return;
     if (!form.titel.trim() || !form.medewerker.trim() || !form.datum) {
       setError("Vul minimaal titel, medewerker en datum in.");
       return;
     }
 
-    const { data, error: createError } = await createPlanning({
-      titel: form.titel.trim(),
-      klantnaam: form.klantnaam.trim(),
-      medewerker: form.medewerker.trim(),
-      datum: form.datum,
-      starttijd: form.starttijd,
-      eindtijd: form.eindtijd,
-      adres: form.adres.trim(),
-      telefoon: form.telefoon.trim(),
-      omschrijving: form.omschrijving.trim(),
-    });
+    setSubmitting(true);
+    try {
+      const { data, error: createError } = await createPlanning({
+        titel: form.titel.trim(),
+        klantnaam: form.klantnaam.trim(),
+        medewerker: form.medewerker.trim(),
+        datum: form.datum,
+        starttijd: form.starttijd,
+        eindtijd: form.eindtijd,
+        adres: form.adres.trim(),
+        telefoon: form.telefoon.trim(),
+        omschrijving: form.omschrijving.trim(),
+      });
 
-    if (createError || !data) {
-      setError(createError || "Afspraak aanmaken is mislukt.");
-      return;
-    }
+      if (createError || !data) {
+        setError(createError || "Afspraak aanmaken is mislukt.");
+        return;
+      }
 
-    setError(null);
-    setAfspraken((current) => [...current, data as Planning].sort((a, b) => a.starttijd.localeCompare(b.starttijd)));
-    if (!medewerkers.includes(form.medewerker.trim())) {
-      setMedewerkers((current) => [...current, form.medewerker.trim()].sort());
+      setError(null);
+      setAfspraken((current) => [...current, data as Planning].sort((a, b) => a.starttijd.localeCompare(b.starttijd)));
+      if (!medewerkers.includes(form.medewerker.trim())) {
+        setMedewerkers((current) => [...current, form.medewerker.trim()].sort());
+      }
+      setForm(emptyForm);
+      setShowForm(false);
+    } finally {
+      setSubmitting(false);
     }
-    setForm(emptyForm);
-    setShowForm(false);
   };
 
   const goToday = () => setCurrentDate(new Date());
@@ -241,8 +248,12 @@ export default function PlanningAgenda({ onSelectPlanning }: Props) {
             onChange={(event) => setForm((current) => ({ ...current, omschrijving: event.target.value }))}
             className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300 sm:col-span-2"
           />
-          <button type="submit" className="rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 sm:col-span-2">
-            Afspraak inplannen
+          <button
+            type="submit"
+            disabled={submitting}
+            className="rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2"
+          >
+            {submitting ? "Bezig met inplannen…" : "Afspraak inplannen"}
           </button>
         </form>
       ) : null}

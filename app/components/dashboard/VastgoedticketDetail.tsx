@@ -28,14 +28,9 @@ import FileUpload from "./FileUpload";
 import KlantAccountKoppeling from "./KlantAccountKoppeling";
 import OfferteActieKnoppen from "./OfferteActieKnoppen";
 import OfferteKoppelingen from "./OfferteKoppelingen";
+import { formatBedragRond, formatDatumTijd } from "../../lib/formatters";
 
-function formatDateTime(value: string) {
-  return new Date(value).toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" });
-}
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
-}
 
 type Props = {
   ticket: Vastgoedticket;
@@ -71,6 +66,16 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
     geplande_datum: ticket.geplande_datum || "",
     geplande_tijd: ticket.geplande_tijd || "",
   });
+
+  const [savingPlanning, setSavingPlanning] = useState(false);
+  const [savingStatus, setSavingStatus] = useState(false);
+  const [savingToewijzing, setSavingToewijzing] = useState(false);
+  const [savingNote, setSavingNote] = useState(false);
+  const [savingOfferte, setSavingOfferte] = useState(false);
+  const [offerteActionId, setOfferteActionId] = useState<string | null>(null);
+  const [werkbonActionId, setWerkbonActionId] = useState<string | null>(null);
+  const [factuurActionId, setFactuurActionId] = useState<string | null>(null);
+  const [savingAfgerond, setSavingAfgerond] = useState(false);
 
   const [offerteForm, setOfferteForm] = useState({
     productId: "",
@@ -158,30 +163,36 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
 
   const handlePlanAfspraak = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (savingPlanning) return;
     if (!planningForm.medewerker.trim()) {
       setError("Vul een medewerker in om de afspraak in te plannen.");
       return;
     }
 
-    const { data, error: createError } = await createPlanning({
-      titel: `Ticket ${currentTicket.ticketnummer}`,
-      klantnaam: currentTicket.klant,
-      ticket_id: currentTicket.id,
-      medewerker: planningForm.medewerker.trim(),
-      datum: planningForm.datum,
-      starttijd: planningForm.starttijd,
-      eindtijd: planningForm.eindtijd,
-      adres: currentTicket.locatie,
-      telefoon: currentTicket.telefoonnummer || "",
-    });
+    setSavingPlanning(true);
+    try {
+      const { data, error: createError } = await createPlanning({
+        titel: `Ticket ${currentTicket.ticketnummer}`,
+        klantnaam: currentTicket.klant,
+        ticket_id: currentTicket.id,
+        medewerker: planningForm.medewerker.trim(),
+        datum: planningForm.datum,
+        starttijd: planningForm.starttijd,
+        eindtijd: planningForm.eindtijd,
+        adres: currentTicket.locatie,
+        telefoon: currentTicket.telefoonnummer || "",
+      });
 
-    if (createError || !data) {
-      setError(createError || "Afspraak inplannen is mislukt.");
-      return;
+      if (createError || !data) {
+        setError(createError || "Afspraak inplannen is mislukt.");
+        return;
+      }
+      setError(null);
+      setAfspraken((current) => [data as Planning, ...current]);
+      setShowPlanningForm(false);
+    } finally {
+      setSavingPlanning(false);
     }
-    setError(null);
-    setAfspraken((current) => [data as Planning, ...current]);
-    setShowPlanningForm(false);
   };
 
   const timeline = useMemo(() => {
@@ -203,64 +214,81 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
 
   const handleStatusChange = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const { error: statusError } = await updateTicketStatus(ticket.id, newStatus);
-    if (statusError) {
-      setError(statusError);
-      return;
+    if (savingStatus) return;
+
+    setSavingStatus(true);
+    try {
+      const { error: statusError } = await updateTicketStatus(ticket.id, newStatus);
+      if (statusError) {
+        setError(statusError);
+        return;
+      }
+      setError(null);
+      setCurrentTicket((current) => ({ ...current, status: newStatus }));
+      setHistorie((current) => [
+        { id: `local-${Date.now()}`, ticket_id: ticket.id, status: newStatus, created_at: new Date().toISOString() },
+        ...current,
+      ]);
+    } finally {
+      setSavingStatus(false);
     }
-    setError(null);
-    setCurrentTicket((current) => ({ ...current, status: newStatus }));
-    setHistorie((current) => [
-      { id: `local-${Date.now()}`, ticket_id: ticket.id, status: newStatus, created_at: new Date().toISOString() },
-      ...current,
-    ]);
   };
 
   const handleToewijzingSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!supabase) return;
+    if (!supabase || savingToewijzing) return;
 
-    const { error: updateError } = await supabase
-      .from("vastgoedtickets")
-      .update({
+    setSavingToewijzing(true);
+    try {
+      const { error: updateError } = await supabase
+        .from("vastgoedtickets")
+        .update({
+          medewerker: toewijzing.medewerker.trim(),
+          monteur: toewijzing.monteur.trim(),
+          geplande_datum: toewijzing.geplande_datum || null,
+          geplande_tijd: toewijzing.geplande_tijd.trim(),
+        })
+        .eq("id", ticket.id);
+
+      if (updateError) {
+        setError(updateError.message);
+        return;
+      }
+      setError(null);
+      setCurrentTicket((current) => ({
+        ...current,
         medewerker: toewijzing.medewerker.trim(),
         monteur: toewijzing.monteur.trim(),
         geplande_datum: toewijzing.geplande_datum || null,
         geplande_tijd: toewijzing.geplande_tijd.trim(),
-      })
-      .eq("id", ticket.id);
-
-    if (updateError) {
-      setError(updateError.message);
-      return;
+      }));
+    } finally {
+      setSavingToewijzing(false);
     }
-    setError(null);
-    setCurrentTicket((current) => ({
-      ...current,
-      medewerker: toewijzing.medewerker.trim(),
-      monteur: toewijzing.monteur.trim(),
-      geplande_datum: toewijzing.geplande_datum || null,
-      geplande_tijd: toewijzing.geplande_tijd.trim(),
-    }));
   };
 
   const handleAddNote = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!newNote.trim() || !supabase) return;
+    if (!newNote.trim() || !supabase || savingNote) return;
 
-    const { data, error: insertError } = await supabase
-      .from("ticket_notities")
-      .insert({ ticket_id: ticket.id, tekst: newNote.trim() })
-      .select()
-      .single();
+    setSavingNote(true);
+    try {
+      const { data, error: insertError } = await supabase
+        .from("ticket_notities")
+        .insert({ ticket_id: ticket.id, tekst: newNote.trim() })
+        .select()
+        .single();
 
-    if (insertError) {
-      setError(insertError.message);
-      return;
+      if (insertError) {
+        setError(insertError.message);
+        return;
+      }
+      setNotities((current) => [data as TicketNotitie, ...current]);
+      setNewNote("");
+      setError(null);
+    } finally {
+      setSavingNote(false);
     }
-    setNotities((current) => [data as TicketNotitie, ...current]);
-    setNewNote("");
-    setError(null);
   };
 
   const handleProductSelect = (productId: string) => {
@@ -276,7 +304,7 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
 
   const handleAddOfferte = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!supabase) return;
+    if (!supabase || savingOfferte) return;
 
     const prijsValue = Number(offerteForm.prijs);
     if (!offerteForm.merk.trim() || !offerteForm.model.trim() || !prijsValue) {
@@ -284,99 +312,139 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
       return;
     }
 
-    const offertenummer = await getNextOfferteNummer();
+    setSavingOfferte(true);
+    try {
+      const offertenummer = await getNextOfferteNummer();
 
-    const { data, error: insertError } = await supabase
-      .from("offertes")
-      .insert({
-        ticket_id: ticket.id,
-        offertenummer,
-        merk: offerteForm.merk.trim(),
-        model: offerteForm.model.trim(),
-        prijs: prijsValue,
-        werkzaamheden: offerteForm.werkzaamheden.trim(),
-        opmerkingen: offerteForm.opmerkingen.trim(),
-        status: "Concept",
-        datum: new Date().toISOString(),
-      })
-      .select()
-      .single();
+      const { data, error: insertError } = await supabase
+        .from("offertes")
+        .insert({
+          ticket_id: ticket.id,
+          offertenummer,
+          merk: offerteForm.merk.trim(),
+          model: offerteForm.model.trim(),
+          prijs: prijsValue,
+          werkzaamheden: offerteForm.werkzaamheden.trim(),
+          opmerkingen: offerteForm.opmerkingen.trim(),
+          status: "Concept",
+          datum: new Date().toISOString(),
+        })
+        .select()
+        .single();
 
-    if (insertError) {
-      setError(insertError.message);
-      return;
+      if (insertError) {
+        setError(insertError.message);
+        return;
+      }
+
+      setOffertes((current) => [data as Offerte, ...current]);
+      setOfferteForm({ productId: "", merk: "", model: "", prijs: "", werkzaamheden: "", opmerkingen: "" });
+      setError(null);
+    } finally {
+      setSavingOfferte(false);
     }
-
-    setOffertes((current) => [data as Offerte, ...current]);
-    setOfferteForm({ productId: "", merk: "", model: "", prijs: "", werkzaamheden: "", opmerkingen: "" });
-    setError(null);
   };
 
   const handleMarkVerstuurd = async (offerte: Offerte) => {
-    const { error: markError } = await markTicketOfferteVerstuurd(offerte.id, ticket.id);
-    if (markError) {
-      setError(markError);
-      return;
+    if (offerteActionId) return;
+
+    setOfferteActionId(offerte.id);
+    try {
+      const { error: markError } = await markTicketOfferteVerstuurd(offerte.id, ticket.id);
+      if (markError) {
+        setError(markError);
+        return;
+      }
+      setError(null);
+      setOffertes((current) => current.map((item) => (item.id === offerte.id ? { ...item, status: "Verstuurd" } : item)));
+      setCurrentTicket((current) => ({ ...current, status: "Offerte verstuurd" }));
+    } finally {
+      setOfferteActionId(null);
     }
-    setError(null);
-    setOffertes((current) => current.map((item) => (item.id === offerte.id ? { ...item, status: "Verstuurd" } : item)));
-    setCurrentTicket((current) => ({ ...current, status: "Offerte verstuurd" }));
   };
 
   const handleStatusBeslissing = async (offerte: Offerte, status: "Geaccepteerd" | "Afgewezen") => {
-    const { error: statusError } = await updateTicketOfferteStatus(offerte.id, ticket.id, status);
-    if (statusError) {
-      setError(statusError);
-      return;
-    }
-    setError(null);
-    setOffertes((current) => current.map((item) => (item.id === offerte.id ? { ...item, status } : item)));
-    if (status === "Geaccepteerd") {
-      setCurrentTicket((current) => ({ ...current, status: "Offerte akkoord" }));
+    if (offerteActionId) return;
+
+    setOfferteActionId(offerte.id);
+    try {
+      const { error: statusError } = await updateTicketOfferteStatus(offerte.id, ticket.id, status);
+      if (statusError) {
+        setError(statusError);
+        return;
+      }
+      setError(null);
+      setOffertes((current) => current.map((item) => (item.id === offerte.id ? { ...item, status } : item)));
+      if (status === "Geaccepteerd") {
+        setCurrentTicket((current) => ({ ...current, status: "Offerte akkoord" }));
+      }
+    } finally {
+      setOfferteActionId(null);
     }
   };
 
   const handleCreateFactuur = async (werkbon: Werkbon) => {
-    const offerte = offertes.find((item) => item.id === werkbon.offerte_id) || null;
-    const { data, error: createError } = await createFactuurFromWerkbon(werkbon, offerte, ticket.id);
-    if (createError || !data) {
-      setError(createError || "Factuur aanmaken is mislukt.");
-      return;
-    }
-    setError(null);
-    setFacturen((current) => [data as Factuur, ...current]);
-    setWerkbonnen((current) => current.map((item) => (item.id === werkbon.id ? { ...item, status: "Gefactureerd" } : item)));
-    const { error: statusError } = await updateTicketStatus(ticket.id, "Factuur verstuurd");
-    if (!statusError) {
-      setCurrentTicket((current) => ({ ...current, status: "Factuur verstuurd" }));
+    if (werkbonActionId) return;
+
+    setWerkbonActionId(werkbon.id);
+    try {
+      const offerte = offertes.find((item) => item.id === werkbon.offerte_id) || null;
+      const { data, error: createError } = await createFactuurFromWerkbon(werkbon, offerte, ticket.id);
+      if (createError || !data) {
+        setError(createError || "Factuur aanmaken is mislukt.");
+        return;
+      }
+      setError(null);
+      setFacturen((current) => [data as Factuur, ...current]);
+      setWerkbonnen((current) => current.map((item) => (item.id === werkbon.id ? { ...item, status: "Gefactureerd" } : item)));
+      const { error: statusError } = await updateTicketStatus(ticket.id, "Factuur verstuurd");
+      if (!statusError) {
+        setCurrentTicket((current) => ({ ...current, status: "Factuur verstuurd" }));
+      }
+    } finally {
+      setWerkbonActionId(null);
     }
   };
 
   const handleMarkBetaald = async (factuur: Factuur) => {
-    const { error: markError } = await markFactuurBetaald(factuur.id);
-    if (markError) {
-      setError(markError);
-      return;
+    if (factuurActionId) return;
+
+    setFactuurActionId(factuur.id);
+    try {
+      const { error: markError } = await markFactuurBetaald(factuur.id);
+      if (markError) {
+        setError(markError);
+        return;
+      }
+      setError(null);
+      setFacturen((current) =>
+        current.map((item) => (item.id === factuur.id ? { ...item, status: "Betaald", betaaldatum: new Date().toISOString() } : item))
+      );
+    } finally {
+      setFactuurActionId(null);
     }
-    setError(null);
-    setFacturen((current) =>
-      current.map((item) => (item.id === factuur.id ? { ...item, status: "Betaald", betaaldatum: new Date().toISOString() } : item))
-    );
   };
 
   const handleMarkAfgerond = async () => {
-    const { error: afgerondError } = await markTicketAfgerond(ticket.id);
-    if (afgerondError) {
-      setError(afgerondError);
-      return;
+    if (savingAfgerond) return;
+
+    setSavingAfgerond(true);
+    try {
+      const { error: afgerondError } = await markTicketAfgerond(ticket.id);
+      if (afgerondError) {
+        setError(afgerondError);
+        return;
+      }
+      setError(null);
+      setCurrentTicket((current) => ({ ...current, status: "Afgerond" }));
+      setNewStatus("Afgerond");
+      setHistorie((current) => [
+        { id: `local-${Date.now()}`, ticket_id: ticket.id, status: "Afgerond", created_at: new Date().toISOString() },
+        ...current,
+      ]);
+    } finally {
+      setSavingAfgerond(false);
     }
-    setError(null);
-    setCurrentTicket((current) => ({ ...current, status: "Afgerond" }));
-    setNewStatus("Afgerond");
-    setHistorie((current) => [
-      { id: `local-${Date.now()}`, ticket_id: ticket.id, status: "Afgerond", created_at: new Date().toISOString() },
-      ...current,
-    ]);
   };
 
   return (
@@ -398,9 +466,10 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
             {currentTicket.status !== "Afgerond" ? (
               <button
                 onClick={handleMarkAfgerond}
-                className="rounded-full bg-emerald-400/10 px-4 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-400/20"
+                disabled={savingAfgerond}
+                className="rounded-full bg-emerald-400/10 px-4 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Markeer als afgerond
+                {savingAfgerond ? "Bezig…" : "Markeer als afgerond"}
               </button>
             ) : null}
           </div>
@@ -414,7 +483,7 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
             { label: "Telefoonnummer", value: currentTicket.telefoonnummer || "—" },
             { label: "Type melding", value: currentTicket.type_melding || "—" },
             { label: "Prioriteit", value: currentTicket.prioriteit },
-            { label: "Datum", value: formatDateTime(currentTicket.datum) },
+            { label: "Datum", value: formatDatumTijd(currentTicket.datum) },
             { label: "Omschrijving", value: currentTicket.omschrijving || "—" },
           ].map((item) => (
             <div key={item.label} className="rounded-3xl border border-white/10 bg-[#090909] p-4">
@@ -452,8 +521,12 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
                 </option>
               ))}
             </select>
-            <button type="submit" className="shrink-0 rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300">
-              Opslaan
+            <button
+              type="submit"
+              disabled={savingStatus}
+              className="shrink-0 rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {savingStatus ? "Bezig met opslaan…" : "Opslaan"}
             </button>
           </form>
 
@@ -485,8 +558,12 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
               onChange={(event) => setToewijzing((current) => ({ ...current, geplande_tijd: event.target.value }))}
               className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
             />
-            <button type="submit" className="rounded-full bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20 sm:col-span-2">
-              Toewijzing opslaan
+            <button
+              type="submit"
+              disabled={savingToewijzing}
+              className="rounded-full bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2"
+            >
+              {savingToewijzing ? "Bezig met opslaan…" : "Toewijzing opslaan"}
             </button>
           </form>
 
@@ -499,8 +576,12 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
               placeholder="Schrijf een notitie over dit ticket"
               className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
             />
-            <button type="submit" className="w-full rounded-full bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20 sm:w-auto">
-              Notitie opslaan
+            <button
+              type="submit"
+              disabled={savingNote}
+              className="w-full rounded-full bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+            >
+              {savingNote ? "Bezig met opslaan…" : "Notitie opslaan"}
             </button>
           </form>
         </section>
@@ -510,7 +591,7 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
           <div className="mt-4 space-y-4">
             {timeline.map((item) => (
               <div key={item.id} className="rounded-3xl border border-white/10 bg-[#090909] p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{formatDateTime(item.created_at)}</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{formatDatumTijd(item.created_at)}</p>
                 <p className="mt-2 text-sm text-slate-200">{item.label}</p>
               </div>
             ))}
@@ -555,8 +636,12 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
             onChange={(event) => setOfferteForm((current) => ({ ...current, opmerkingen: event.target.value }))}
             className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300 sm:col-span-2"
           />
-          <button type="submit" className="rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 sm:col-span-2">
-            Offerte genereren
+          <button
+            type="submit"
+            disabled={savingOfferte}
+            className="rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2"
+          >
+            {savingOfferte ? "Bezig met genereren…" : "Offerte genereren"}
           </button>
         </form>
 
@@ -574,7 +659,7 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
                     {offerte.status}
                   </span>
                 </div>
-                <p className="mt-2 text-slate-400">{formatCurrency(offerte.prijs)} · {formatDateTime(offerte.datum)}</p>
+                <p className="mt-2 text-slate-400">{formatBedragRond(offerte.prijs)} · {formatDatumTijd(offerte.datum)}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <OfferteActieKnoppen
                     offerte={offerte}
@@ -589,22 +674,25 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
                   {offerte.status === "Concept" ? (
                     <button
                       onClick={() => handleMarkVerstuurd(offerte)}
-                      className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white transition hover:bg-white/10"
+                      disabled={offerteActionId === offerte.id}
+                      className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      Markeer als verstuurd
+                      {offerteActionId === offerte.id ? "Bezig…" : "Markeer als verstuurd"}
                     </button>
                   ) : null}
                   {offerte.status === "Verstuurd" ? (
                     <>
                       <button
                         onClick={() => handleStatusBeslissing(offerte, "Geaccepteerd")}
-                        className="rounded-full bg-emerald-400/10 px-4 py-2 text-xs text-emerald-300 transition hover:bg-emerald-400/20"
+                        disabled={offerteActionId === offerte.id}
+                        className="rounded-full bg-emerald-400/10 px-4 py-2 text-xs text-emerald-300 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         Geaccepteerd
                       </button>
                       <button
                         onClick={() => handleStatusBeslissing(offerte, "Afgewezen")}
-                        className="rounded-full bg-rose-500/10 px-4 py-2 text-xs text-rose-300 transition hover:bg-rose-500/20"
+                        disabled={offerteActionId === offerte.id}
+                        className="rounded-full bg-rose-500/10 px-4 py-2 text-xs text-rose-300 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         Afgewezen
                       </button>
@@ -654,9 +742,10 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
                   {werkbon.status === "Gereed" ? (
                     <button
                       onClick={() => handleCreateFactuur(werkbon)}
-                      className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white transition hover:bg-white/10"
+                      disabled={werkbonActionId === werkbon.id}
+                      className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      Maak factuur
+                      {werkbonActionId === werkbon.id ? "Bezig…" : "Maak factuur"}
                     </button>
                   ) : null}
                 </div>
@@ -680,7 +769,7 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
                     {factuur.status}
                   </span>
                 </div>
-                <p className="mt-2 text-slate-400">{formatCurrency(factuur.totaal)}</p>
+                <p className="mt-2 text-slate-400">{formatBedragRond(factuur.totaal)}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
                     onClick={() => downloadFactuurPdf(factuur)}
@@ -691,9 +780,10 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
                   {factuur.status !== "Betaald" ? (
                     <button
                       onClick={() => handleMarkBetaald(factuur)}
-                      className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white transition hover:bg-white/10"
+                      disabled={factuurActionId === factuur.id}
+                      className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      Markeer betaald
+                      {factuurActionId === factuur.id ? "Bezig…" : "Markeer betaald"}
                     </button>
                   ) : null}
                 </div>
@@ -741,8 +831,12 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
               onChange={(event) => setPlanningForm((current) => ({ ...current, eindtijd: event.target.value }))}
               className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
             />
-            <button type="submit" className="rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 sm:col-span-2">
-              Inplannen
+            <button
+              type="submit"
+              disabled={savingPlanning}
+              className="rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2"
+            >
+              {savingPlanning ? "Bezig met inplannen…" : "Inplannen"}
             </button>
           </form>
         ) : null}

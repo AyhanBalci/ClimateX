@@ -5,10 +5,8 @@ import { Planning, Vastgoedticket, Werkbon } from "../../lib/types";
 import { PLANNING_STATUS_OPTIONS } from "../../lib/constants";
 import { supabase } from "../../lib/supabase";
 import { deletePlanning, updatePlanningStatus } from "../../lib/planningActions";
+import { formatDatumMetTijd } from "../../lib/formatters";
 
-function formatDateTime(datum: string, tijd: string) {
-  return `${new Date(datum).toLocaleDateString("nl-NL")} ${tijd.slice(0, 5)}`;
-}
 
 type Props = {
   planning: Planning;
@@ -24,6 +22,8 @@ export default function PlanningDetail({ planning, onBack, onPlanningUpdated, on
   const [werkbon, setWerkbon] = useState<Werkbon | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [savingForm, setSavingForm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [form, setForm] = useState({
     titel: planning.titel,
@@ -53,60 +53,75 @@ export default function PlanningDetail({ planning, onBack, onPlanningUpdated, on
   }, [planning.ticket_id, planning.werkbon_id]);
 
   const handleStatusChange = async (status: string) => {
-    setUpdatingStatus(true);
-    const { error: statusError } = await updatePlanningStatus(current, status);
-    setUpdatingStatus(false);
+    if (updatingStatus) return;
 
-    if (statusError) {
-      setError(statusError);
-      return;
+    setUpdatingStatus(true);
+    try {
+      const { error: statusError } = await updatePlanningStatus(current, status);
+      if (statusError) {
+        setError(statusError);
+        return;
+      }
+      setError(null);
+      const updated = { ...current, status };
+      setCurrent(updated);
+      onPlanningUpdated(updated);
+    } finally {
+      setUpdatingStatus(false);
     }
-    setError(null);
-    const updated = { ...current, status };
-    setCurrent(updated);
-    onPlanningUpdated(updated);
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!supabase) return;
+    if (!supabase || savingForm) return;
 
-    const { data, error: updateError } = await supabase
-      .from("planning")
-      .update({
-        titel: form.titel.trim(),
-        klantnaam: form.klantnaam.trim(),
-        medewerker: form.medewerker.trim(),
-        datum: form.datum,
-        starttijd: form.starttijd,
-        eindtijd: form.eindtijd,
-        adres: form.adres.trim(),
-        telefoon: form.telefoon.trim(),
-        omschrijving: form.omschrijving.trim(),
-      })
-      .eq("id", current.id)
-      .select()
-      .single();
+    setSavingForm(true);
+    try {
+      const { data, error: updateError } = await supabase
+        .from("planning")
+        .update({
+          titel: form.titel.trim(),
+          klantnaam: form.klantnaam.trim(),
+          medewerker: form.medewerker.trim(),
+          datum: form.datum,
+          starttijd: form.starttijd,
+          eindtijd: form.eindtijd,
+          adres: form.adres.trim(),
+          telefoon: form.telefoon.trim(),
+          omschrijving: form.omschrijving.trim(),
+        })
+        .eq("id", current.id)
+        .select()
+        .single();
 
-    if (updateError) {
-      setError(updateError.message);
-      return;
+      if (updateError) {
+        setError(updateError.message);
+        return;
+      }
+      setError(null);
+      setCurrent(data as Planning);
+      onPlanningUpdated(data as Planning);
+    } finally {
+      setSavingForm(false);
     }
-    setError(null);
-    setCurrent(data as Planning);
-    onPlanningUpdated(data as Planning);
   };
 
   const handleDelete = async () => {
+    if (deleting) return;
     const confirmed = window.confirm(`Afspraak "${current.titel}" verwijderen?`);
     if (!confirmed) return;
 
-    const { error: deleteError } = await deletePlanning(current.id);
-    if (deleteError) {
-      setError(deleteError);
-      return;
+    setDeleting(true);
+    try {
+      const { error: deleteError } = await deletePlanning(current.id);
+      if (deleteError) {
+        setError(deleteError);
+        return;
+      }
+      onPlanningDeleted();
+    } finally {
+      setDeleting(false);
     }
-    onPlanningDeleted();
   };
 
   const mapsUrl = current.adres ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(current.adres)}` : null;
@@ -123,7 +138,7 @@ export default function PlanningDetail({ planning, onBack, onPlanningUpdated, on
           <div>
             <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">{current.planning_nummer}</p>
             <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">{current.titel}</h2>
-            <p className="mt-1 text-sm text-slate-400">{formatDateTime(current.datum, current.starttijd)} - {current.eindtijd.slice(0, 5)}</p>
+            <p className="mt-1 text-sm text-slate-400">{formatDatumMetTijd(current.datum, current.starttijd)} - {current.eindtijd.slice(0, 5)}</p>
           </div>
           <span className="rounded-full bg-cyan-400/10 px-4 py-2 text-xs uppercase tracking-[0.2em] text-cyan-300">{current.status}</span>
         </div>
@@ -281,7 +296,8 @@ export default function PlanningDetail({ planning, onBack, onPlanningUpdated, on
           <select
             value={current.status}
             onChange={(event) => handleStatusChange(event.target.value)}
-            className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300 sm:col-span-2"
+            disabled={updatingStatus}
+            className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2"
           >
             {PLANNING_STATUS_OPTIONS.map((option) => (
               <option key={option} value={option}>
@@ -290,11 +306,20 @@ export default function PlanningDetail({ planning, onBack, onPlanningUpdated, on
             ))}
           </select>
           <div className="flex flex-wrap gap-3 sm:col-span-2">
-            <button type="submit" className="rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300">
-              Opslaan
+            <button
+              type="submit"
+              disabled={savingForm}
+              className="rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {savingForm ? "Bezig met opslaan…" : "Opslaan"}
             </button>
-            <button type="button" onClick={handleDelete} className="rounded-full bg-rose-500/10 px-6 py-3 text-sm text-rose-300 transition hover:bg-rose-500/20">
-              Afspraak verwijderen
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="rounded-full bg-rose-500/10 px-6 py-3 text-sm text-rose-300 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {deleting ? "Bezig met verwijderen…" : "Afspraak verwijderen"}
             </button>
           </div>
         </form>

@@ -4,10 +4,8 @@ import { useMemo, useState } from "react";
 import { Lead } from "../../lib/types";
 import { STATUS_OPTIONS, HOUSING_OPTIONS } from "../../lib/constants";
 import { updateLeadStatus } from "../../lib/leadActions";
+import { formatDatum } from "../../lib/formatters";
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" });
-}
 
 type Props = {
   leads: Lead[];
@@ -23,6 +21,7 @@ export default function LeadsTable({ leads, onSelectLead, onLeadUpdated }: Props
   const [dateTo, setDateTo] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+  const [updatingLeadId, setUpdatingLeadId] = useState<string | null>(null);
 
   const filteredLeads = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -48,15 +47,20 @@ export default function LeadsTable({ leads, onSelectLead, onLeadUpdated }: Props
 
   const handleStatusUpdate = async (leadId: string) => {
     const newStatus = selectedStatus[leadId];
-    if (!newStatus) return;
+    if (!newStatus || updatingLeadId) return;
 
-    const { error: updateError } = await updateLeadStatus(leadId, newStatus);
-    if (updateError) {
-      setError(updateError);
-      return;
+    setUpdatingLeadId(leadId);
+    try {
+      const { error: updateError } = await updateLeadStatus(leadId, newStatus);
+      if (updateError) {
+        setError(updateError);
+        return;
+      }
+      setError(null);
+      onLeadUpdated(leadId, newStatus);
+    } finally {
+      setUpdatingLeadId(null);
     }
-    setError(null);
-    onLeadUpdated(leadId, newStatus);
   };
 
   return (
@@ -138,7 +142,7 @@ export default function LeadsTable({ leads, onSelectLead, onLeadUpdated }: Props
               <tbody>
                 {filteredLeads.map((lead) => (
                   <tr key={lead.id} className="border-b border-white/5 text-slate-300">
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-400">{formatDate(lead.created_at)}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-400">{formatDatum(lead.created_at)}</td>
                     <td className="px-4 py-3">
                       <button
                         onClick={() => onSelectLead(lead)}
@@ -169,9 +173,10 @@ export default function LeadsTable({ leads, onSelectLead, onLeadUpdated }: Props
                         </select>
                         <button
                           onClick={() => handleStatusUpdate(lead.id)}
-                          className="rounded-full bg-cyan-400 px-3 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300"
+                          disabled={updatingLeadId === lead.id}
+                          className="rounded-full bg-cyan-400 px-3 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                          Wijzigen
+                          {updatingLeadId === lead.id ? "Bezig…" : "Wijzigen"}
                         </button>
                       </div>
                     </td>
@@ -196,7 +201,7 @@ export default function LeadsTable({ leads, onSelectLead, onLeadUpdated }: Props
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-base font-semibold text-white">{lead.naam}</p>
-                    <p className="mt-1 text-xs text-slate-400">{formatDate(lead.created_at)}</p>
+                    <p className="mt-1 text-xs text-slate-400">{formatDatum(lead.created_at)}</p>
                   </div>
                   <span className="rounded-full bg-cyan-400/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-cyan-300">
                     {lead.status}
@@ -227,9 +232,10 @@ export default function LeadsTable({ leads, onSelectLead, onLeadUpdated }: Props
                   </select>
                   <button
                     onClick={() => handleStatusUpdate(lead.id)}
-                    className="shrink-0 rounded-full bg-cyan-400 px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300"
+                    disabled={updatingLeadId === lead.id}
+                    className="shrink-0 rounded-full bg-cyan-400 px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    Wijzigen
+                    {updatingLeadId === lead.id ? "Bezig…" : "Wijzigen"}
                   </button>
                 </div>
               </div>

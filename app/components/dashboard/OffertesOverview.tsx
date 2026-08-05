@@ -6,14 +6,9 @@ import { isSupabaseConfigured, supabase } from "../../lib/supabase";
 import { markOfferteVerstuurd, updateOfferteStatus } from "../../lib/offerteActions";
 import OfferteActieKnoppen from "./OfferteActieKnoppen";
 import OfferteKoppelingen from "./OfferteKoppelingen";
+import { formatBedragRond, formatDatumTijd } from "../../lib/formatters";
 
-function formatDateTime(value: string) {
-  return new Date(value).toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" });
-}
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
-}
 
 type Props = {
   onOpenWerkbon: (werkbon: Werkbon) => void;
@@ -26,6 +21,7 @@ export default function OffertesOverview({ onOpenWerkbon, onOpenPlanning }: Prop
   const [planningen, setPlanningen] = useState<Planning[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [offerteActionId, setOfferteActionId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchOffertes() {
@@ -77,23 +73,37 @@ export default function OffertesOverview({ onOpenWerkbon, onOpenPlanning }: Prop
   }, [planningen]);
 
   const handleMarkVerstuurd = async (offerte: Offerte) => {
-    const { error: markError } = await markOfferteVerstuurd(offerte.id, offerte.lead_id);
-    if (markError) {
-      setError(markError);
-      return;
+    if (offerteActionId) return;
+
+    setOfferteActionId(offerte.id);
+    try {
+      const { error: markError } = await markOfferteVerstuurd(offerte.id, offerte.lead_id);
+      if (markError) {
+        setError(markError);
+        return;
+      }
+      setError(null);
+      setOffertes((current) => current.map((item) => (item.id === offerte.id ? { ...item, status: "Verstuurd" } : item)));
+    } finally {
+      setOfferteActionId(null);
     }
-    setError(null);
-    setOffertes((current) => current.map((item) => (item.id === offerte.id ? { ...item, status: "Verstuurd" } : item)));
   };
 
   const handleStatusBeslissing = async (offerte: Offerte, status: "Geaccepteerd" | "Afgewezen") => {
-    const { error: statusError } = await updateOfferteStatus(offerte.id, offerte.lead_id, status);
-    if (statusError) {
-      setError(statusError);
-      return;
+    if (offerteActionId) return;
+
+    setOfferteActionId(offerte.id);
+    try {
+      const { error: statusError } = await updateOfferteStatus(offerte.id, offerte.lead_id, status);
+      if (statusError) {
+        setError(statusError);
+        return;
+      }
+      setError(null);
+      setOffertes((current) => current.map((item) => (item.id === offerte.id ? { ...item, status } : item)));
+    } finally {
+      setOfferteActionId(null);
     }
-    setError(null);
-    setOffertes((current) => current.map((item) => (item.id === offerte.id ? { ...item, status } : item)));
   };
 
   const totaalWaarde = offertes.reduce((sum, offerte) => sum + (offerte.prijs || 0), 0);
@@ -102,7 +112,7 @@ export default function OffertesOverview({ onOpenWerkbon, onOpenPlanning }: Prop
     <section className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-xl shadow-black/20 sm:p-8">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-xl font-semibold text-white">Offertes</h2>
-        <p className="text-sm text-slate-400">{offertes.length} offertes · totaal {formatCurrency(totaalWaarde)}</p>
+        <p className="text-sm text-slate-400">{offertes.length} offertes · totaal {formatBedragRond(totaalWaarde)}</p>
       </div>
 
       {loading ? <p className="mt-6 text-sm text-slate-400">Bezig met laden...</p> : null}
@@ -132,11 +142,11 @@ export default function OffertesOverview({ onOpenWerkbon, onOpenPlanning }: Prop
                 {offertes.map((offerte) => (
                   <tr key={offerte.id} className="border-b border-white/5 text-slate-300">
                     <td className="whitespace-nowrap px-4 py-3 text-white">{offerte.offertenummer}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-400">{formatDateTime(offerte.datum)}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-400">{formatDatumTijd(offerte.datum)}</td>
                     <td className="px-4 py-3">{offerte.leads?.naam || offerte.vastgoedtickets?.klant || "—"}</td>
                     <td className="px-4 py-3">{offerte.merk}</td>
                     <td className="px-4 py-3">{offerte.model}</td>
-                    <td className="px-4 py-3">{formatCurrency(offerte.prijs)}</td>
+                    <td className="px-4 py-3">{formatBedragRond(offerte.prijs)}</td>
                     <td className="px-4 py-3">{offerte.status}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap items-center gap-2">
@@ -153,22 +163,25 @@ export default function OffertesOverview({ onOpenWerkbon, onOpenPlanning }: Prop
                         {offerte.status === "Concept" ? (
                           <button
                             onClick={() => handleMarkVerstuurd(offerte)}
-                            className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10"
+                            disabled={offerteActionId === offerte.id}
+                            className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
                           >
-                            Verstuurd
+                            {offerteActionId === offerte.id ? "Bezig…" : "Verstuurd"}
                           </button>
                         ) : null}
                         {offerte.status === "Verstuurd" ? (
                           <>
                             <button
                               onClick={() => handleStatusBeslissing(offerte, "Geaccepteerd")}
-                              className="rounded-full bg-emerald-400/10 px-3 py-2 text-xs text-emerald-300 transition hover:bg-emerald-400/20"
+                              disabled={offerteActionId === offerte.id}
+                              className="rounded-full bg-emerald-400/10 px-3 py-2 text-xs text-emerald-300 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                               Geaccepteerd
                             </button>
                             <button
                               onClick={() => handleStatusBeslissing(offerte, "Afgewezen")}
-                              className="rounded-full bg-rose-500/10 px-3 py-2 text-xs text-rose-300 transition hover:bg-rose-500/20"
+                              disabled={offerteActionId === offerte.id}
+                              className="rounded-full bg-rose-500/10 px-3 py-2 text-xs text-rose-300 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                               Afgewezen
                             </button>
@@ -199,8 +212,8 @@ export default function OffertesOverview({ onOpenWerkbon, onOpenPlanning }: Prop
               <div key={offerte.id} className="rounded-3xl border border-white/10 bg-[#090909] p-4">
                 <p className="font-semibold text-white">{offerte.offertenummer}</p>
                 <p className="mt-1 text-sm text-slate-400">{offerte.merk} {offerte.model}</p>
-                <p className="mt-1 text-sm text-slate-400">{offerte.leads?.naam || offerte.vastgoedtickets?.klant || "—"} · {formatDateTime(offerte.datum)}</p>
-                <p className="mt-2 text-sm text-slate-200">{formatCurrency(offerte.prijs)} · {offerte.status}</p>
+                <p className="mt-1 text-sm text-slate-400">{offerte.leads?.naam || offerte.vastgoedtickets?.klant || "—"} · {formatDatumTijd(offerte.datum)}</p>
+                <p className="mt-2 text-sm text-slate-200">{formatBedragRond(offerte.prijs)} · {offerte.status}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <OfferteActieKnoppen
                     offerte={offerte}
@@ -215,22 +228,25 @@ export default function OffertesOverview({ onOpenWerkbon, onOpenPlanning }: Prop
                   {offerte.status === "Concept" ? (
                     <button
                       onClick={() => handleMarkVerstuurd(offerte)}
-                      className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10"
+                      disabled={offerteActionId === offerte.id}
+                      className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      Markeer als verstuurd
+                      {offerteActionId === offerte.id ? "Bezig…" : "Markeer als verstuurd"}
                     </button>
                   ) : null}
                   {offerte.status === "Verstuurd" ? (
                     <>
                       <button
                         onClick={() => handleStatusBeslissing(offerte, "Geaccepteerd")}
-                        className="rounded-full bg-emerald-400/10 px-3 py-2 text-xs text-emerald-300 transition hover:bg-emerald-400/20"
+                        disabled={offerteActionId === offerte.id}
+                        className="rounded-full bg-emerald-400/10 px-3 py-2 text-xs text-emerald-300 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         Geaccepteerd
                       </button>
                       <button
                         onClick={() => handleStatusBeslissing(offerte, "Afgewezen")}
-                        className="rounded-full bg-rose-500/10 px-3 py-2 text-xs text-rose-300 transition hover:bg-rose-500/20"
+                        disabled={offerteActionId === offerte.id}
+                        className="rounded-full bg-rose-500/10 px-3 py-2 text-xs text-rose-300 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         Afgewezen
                       </button>

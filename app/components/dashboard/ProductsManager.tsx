@@ -3,10 +3,8 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Product } from "../../lib/types";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
+import { formatBedragRond } from "../../lib/formatters";
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
-}
 
 const emptyForm = {
   merk: "",
@@ -26,6 +24,7 @@ export default function ProductsManager() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [bezig, setBezig] = useState(false);
 
   const [formMode, setFormMode] = useState<"closed" | "new" | string>("closed");
   const [formState, setFormState] = useState<FormState>(emptyForm);
@@ -87,46 +86,56 @@ export default function ProductsManager() {
     event.preventDefault();
     if (!supabase) return;
 
+    // Tweede klik tijdens het opslaan negeren, anders ontstaat een dubbel product.
+    if (bezig) return;
+
     if (!formState.merk.trim() || !formState.model.trim()) {
       setError("Vul minimaal merk en model in.");
       return;
     }
 
-    const payload = {
-      merk: formState.merk.trim(),
-      model: formState.model.trim(),
-      beschrijving: formState.beschrijving.trim(),
-      koelvermogen: formState.koelvermogen.trim(),
-      verwarmvermogen: formState.verwarmvermogen.trim(),
-      energieklasse: formState.energieklasse.trim(),
-      prijs: Number(formState.prijs) || 0,
-      afbeelding_url: formState.afbeelding_url.trim() || null,
-      handleiding_url: formState.handleiding_url.trim() || null,
-    };
+    setBezig(true);
+    try {
+      const payload = {
+        merk: formState.merk.trim(),
+        model: formState.model.trim(),
+        beschrijving: formState.beschrijving.trim(),
+        koelvermogen: formState.koelvermogen.trim(),
+        verwarmvermogen: formState.verwarmvermogen.trim(),
+        energieklasse: formState.energieklasse.trim(),
+        prijs: Number(formState.prijs) || 0,
+        afbeelding_url: formState.afbeelding_url.trim() || null,
+        handleiding_url: formState.handleiding_url.trim() || null,
+      };
 
-    if (formMode === "new") {
-      const { data, error: insertError } = await supabase.from("producten").insert(payload).select().single();
-      if (insertError) {
-        setError(insertError.message);
-        return;
+      if (formMode === "new") {
+        const { data, error: insertError } = await supabase.from("producten").insert(payload).select().single();
+        if (insertError) {
+          setError(insertError.message);
+          return;
+        }
+        setProducts((current) =>
+          [...current, data as Product].sort((a, b) => a.merk.localeCompare(b.merk) || a.model.localeCompare(b.model)),
+        );
+      } else {
+        const { data, error: updateError } = await supabase
+          .from("producten")
+          .update(payload)
+          .eq("id", formMode)
+          .select()
+          .single();
+        if (updateError) {
+          setError(updateError.message);
+          return;
+        }
+        setProducts((current) => current.map((product) => (product.id === formMode ? (data as Product) : product)));
       }
-      setProducts((current) => [...current, data as Product].sort((a, b) => a.merk.localeCompare(b.merk) || a.model.localeCompare(b.model)));
-    } else {
-      const { data, error: updateError } = await supabase
-        .from("producten")
-        .update(payload)
-        .eq("id", formMode)
-        .select()
-        .single();
-      if (updateError) {
-        setError(updateError.message);
-        return;
-      }
-      setProducts((current) => current.map((product) => (product.id === formMode ? (data as Product) : product)));
+
+      setError(null);
+      closeForm();
+    } finally {
+      setBezig(false);
     }
-
-    setError(null);
-    closeForm();
   };
 
   const handleDelete = async (product: Product) => {
@@ -243,8 +252,12 @@ export default function ProductsManager() {
             />
           </div>
           <div className="mt-4 flex flex-wrap gap-3">
-            <button type="submit" className="rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300">
-              Opslaan
+            <button
+              type="submit"
+              disabled={bezig}
+              className="rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {bezig ? "Bezig met opslaan…" : "Opslaan"}
             </button>
             <button type="button" onClick={closeForm} className="rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm text-white transition hover:bg-white/10">
               Annuleren
@@ -277,7 +290,7 @@ export default function ProductsManager() {
                     <td className="px-4 py-3">{product.merk}</td>
                     <td className="px-4 py-3">{product.model}</td>
                     <td className="px-4 py-3">{product.energieklasse}</td>
-                    <td className="px-4 py-3">{formatCurrency(product.prijs)}</td>
+                    <td className="px-4 py-3">{formatBedragRond(product.prijs)}</td>
                     <td className="px-4 py-3">
                       <span className={`rounded-full px-3 py-1 text-xs uppercase tracking-[0.18em] ${product.actief ? "bg-emerald-400/10 text-emerald-300" : "bg-rose-400/10 text-rose-300"}`}>
                         {product.actief ? "Actief" : "Inactief"}
@@ -308,7 +321,7 @@ export default function ProductsManager() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold text-white">{product.merk} {product.model}</p>
-                    <p className="mt-1 text-sm text-slate-400">{product.energieklasse} · {formatCurrency(product.prijs)}</p>
+                    <p className="mt-1 text-sm text-slate-400">{product.energieklasse} · {formatBedragRond(product.prijs)}</p>
                   </div>
                   <span className={`rounded-full px-3 py-1 text-xs uppercase tracking-[0.18em] ${product.actief ? "bg-emerald-400/10 text-emerald-300" : "bg-rose-400/10 text-rose-300"}`}>
                     {product.actief ? "Actief" : "Inactief"}

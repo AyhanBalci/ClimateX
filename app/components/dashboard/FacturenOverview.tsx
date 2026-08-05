@@ -6,20 +6,16 @@ import { FACTUUR_STATUS_OPTIONS } from "../../lib/constants";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
 import { markFactuurBetaald } from "../../lib/factuurActions";
 import { downloadFactuurPdf } from "../../lib/generateFactuurPdf";
+import { formatBedrag, formatDatum } from "../../lib/formatters";
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(value);
-}
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString("nl-NL");
-}
 
 export default function FacturenOverview() {
   const [facturen, setFacturen] = useState<Factuur[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("Alle");
+  const [updatingFactuurId, setUpdatingFactuurId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchFacturen() {
@@ -53,17 +49,24 @@ export default function FacturenOverview() {
   }, [facturen, statusFilter]);
 
   const handleMarkBetaald = async (factuur: Factuur) => {
-    const { error: markError } = await markFactuurBetaald(factuur.id);
-    if (markError) {
-      setError(markError);
-      return;
+    if (updatingFactuurId) return;
+
+    setUpdatingFactuurId(factuur.id);
+    try {
+      const { error: markError } = await markFactuurBetaald(factuur.id);
+      if (markError) {
+        setError(markError);
+        return;
+      }
+      setError(null);
+      setFacturen((current) =>
+        current.map((item) =>
+          item.id === factuur.id ? { ...item, status: "Betaald", betaaldatum: new Date().toISOString() } : item
+        )
+      );
+    } finally {
+      setUpdatingFactuurId(null);
     }
-    setError(null);
-    setFacturen((current) =>
-      current.map((item) =>
-        item.id === factuur.id ? { ...item, status: "Betaald", betaaldatum: new Date().toISOString() } : item
-      )
-    );
   };
 
   const totaalOpenstaand = facturen
@@ -75,7 +78,7 @@ export default function FacturenOverview() {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-xl font-semibold text-white">Facturen</h2>
         <p className="text-sm text-slate-400">
-          {facturen.length} facturen · {formatCurrency(totaalOpenstaand)} openstaand
+          {facturen.length} facturen · {formatBedrag(totaalOpenstaand)} openstaand
         </p>
       </div>
 
@@ -120,16 +123,16 @@ export default function FacturenOverview() {
                 {filtered.map((factuur) => (
                   <tr key={factuur.id} className="border-b border-white/5 text-slate-300">
                     <td className="whitespace-nowrap px-4 py-3 text-white">{factuur.factuurnummer}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-400">{formatDate(factuur.created_at)}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-400">{formatDatum(factuur.created_at)}</td>
                     <td className="px-4 py-3">{factuur.klant}</td>
-                    <td className="px-4 py-3">{formatCurrency(factuur.totaal)}</td>
+                    <td className="px-4 py-3">{formatBedrag(factuur.totaal)}</td>
                     <td className="px-4 py-3">
                       <span className="rounded-full bg-cyan-400/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-cyan-300">
                         {factuur.status}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-slate-400">
-                      {factuur.betaaldatum ? formatDate(factuur.betaaldatum) : "—"}
+                      {factuur.betaaldatum ? formatDatum(factuur.betaaldatum) : "—"}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap items-center gap-2">
@@ -142,9 +145,10 @@ export default function FacturenOverview() {
                         {factuur.status !== "Betaald" ? (
                           <button
                             onClick={() => handleMarkBetaald(factuur)}
-                            className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10"
+                            disabled={updatingFactuurId === factuur.id}
+                            className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
                           >
-                            Markeer betaald
+                            {updatingFactuurId === factuur.id ? "Bezig…" : "Markeer betaald"}
                           </button>
                         ) : null}
                       </div>
@@ -168,7 +172,7 @@ export default function FacturenOverview() {
                   </span>
                 </div>
                 <p className="mt-2 text-sm text-slate-200">
-                  {formatCurrency(factuur.totaal)} · {formatDate(factuur.created_at)}
+                  {formatBedrag(factuur.totaal)} · {formatDatum(factuur.created_at)}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
@@ -180,9 +184,10 @@ export default function FacturenOverview() {
                   {factuur.status !== "Betaald" ? (
                     <button
                       onClick={() => handleMarkBetaald(factuur)}
-                      className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10"
+                      disabled={updatingFactuurId === factuur.id}
+                      className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      Markeer betaald
+                      {updatingFactuurId === factuur.id ? "Bezig…" : "Markeer betaald"}
                     </button>
                   ) : null}
                 </div>

@@ -10,14 +10,9 @@ import { getNextOfferteNummer } from "../../lib/offerteNummer";
 import KlantAccountKoppeling from "./KlantAccountKoppeling";
 import OfferteActieKnoppen from "./OfferteActieKnoppen";
 import OfferteKoppelingen from "./OfferteKoppelingen";
+import { formatBedragRond, formatDatumTijd } from "../../lib/formatters";
 
-function formatDateTime(value: string) {
-  return new Date(value).toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" });
-}
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
-}
 
 type Props = {
   lead: Lead;
@@ -39,6 +34,10 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated, onOpenWerkbon,
 
   const [newNote, setNewNote] = useState("");
   const [newStatus, setNewStatus] = useState(lead.status);
+  const [savingStatus, setSavingStatus] = useState(false);
+  const [savingNote, setSavingNote] = useState(false);
+  const [savingOfferte, setSavingOfferte] = useState(false);
+  const [offerteActionId, setOfferteActionId] = useState<string | null>(null);
 
   const [offerteForm, setOfferteForm] = useState({
     productId: "",
@@ -130,36 +129,48 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated, onOpenWerkbon,
 
   const handleAddNote = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!newNote.trim() || !supabase) return;
+    if (!newNote.trim() || !supabase || savingNote) return;
 
-    const { data, error: insertError } = await supabase
-      .from("lead_notities")
-      .insert({ lead_id: lead.id, tekst: newNote.trim() })
-      .select()
-      .single();
+    setSavingNote(true);
+    try {
+      const { data, error: insertError } = await supabase
+        .from("lead_notities")
+        .insert({ lead_id: lead.id, tekst: newNote.trim() })
+        .select()
+        .single();
 
-    if (insertError) {
-      setError(insertError.message);
-      return;
+      if (insertError) {
+        setError(insertError.message);
+        return;
+      }
+      setNotities((current) => [data as LeadNotitie, ...current]);
+      setNewNote("");
+      setError(null);
+    } finally {
+      setSavingNote(false);
     }
-    setNotities((current) => [data as LeadNotitie, ...current]);
-    setNewNote("");
-    setError(null);
   };
 
   const handleStatusChange = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const { error: statusError } = await updateLeadStatus(lead.id, newStatus);
-    if (statusError) {
-      setError(statusError);
-      return;
+    if (savingStatus) return;
+
+    setSavingStatus(true);
+    try {
+      const { error: statusError } = await updateLeadStatus(lead.id, newStatus);
+      if (statusError) {
+        setError(statusError);
+        return;
+      }
+      setError(null);
+      setHistorie((current) => [
+        { id: `local-${Date.now()}`, lead_id: lead.id, status: newStatus, created_at: new Date().toISOString() },
+        ...current,
+      ]);
+      onLeadUpdated(lead.id, newStatus);
+    } finally {
+      setSavingStatus(false);
     }
-    setError(null);
-    setHistorie((current) => [
-      { id: `local-${Date.now()}`, lead_id: lead.id, status: newStatus, created_at: new Date().toISOString() },
-      ...current,
-    ]);
-    onLeadUpdated(lead.id, newStatus);
   };
 
   const handleProductSelect = (productId: string) => {
@@ -175,7 +186,7 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated, onOpenWerkbon,
 
   const handleAddOfferte = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!supabase) return;
+    if (!supabase || savingOfferte) return;
 
     const prijsValue = Number(offerteForm.prijs);
     if (!offerteForm.merk.trim() || !offerteForm.model.trim() || !prijsValue) {
@@ -183,63 +194,82 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated, onOpenWerkbon,
       return;
     }
 
-    const offertenummer = await getNextOfferteNummer();
+    setSavingOfferte(true);
+    try {
+      const offertenummer = await getNextOfferteNummer();
 
-    const { data, error: insertError } = await supabase
-      .from("offertes")
-      .insert({
-        lead_id: lead.id,
-        offertenummer,
-        merk: offerteForm.merk.trim(),
-        model: offerteForm.model.trim(),
-        prijs: prijsValue,
-        werkzaamheden: offerteForm.werkzaamheden.trim(),
-        opmerkingen: offerteForm.opmerkingen.trim(),
-        status: "Concept",
-        datum: new Date().toISOString(),
-      })
-      .select()
-      .single();
+      const { data, error: insertError } = await supabase
+        .from("offertes")
+        .insert({
+          lead_id: lead.id,
+          offertenummer,
+          merk: offerteForm.merk.trim(),
+          model: offerteForm.model.trim(),
+          prijs: prijsValue,
+          werkzaamheden: offerteForm.werkzaamheden.trim(),
+          opmerkingen: offerteForm.opmerkingen.trim(),
+          status: "Concept",
+          datum: new Date().toISOString(),
+        })
+        .select()
+        .single();
 
-    if (insertError) {
-      setError(insertError.message);
-      return;
+      if (insertError) {
+        setError(insertError.message);
+        return;
+      }
+
+      setOffertes((current) => [data as Offerte, ...current]);
+      setOfferteForm({ productId: "", merk: "", model: "", prijs: "", werkzaamheden: "", opmerkingen: "" });
+      setError(null);
+    } finally {
+      setSavingOfferte(false);
     }
-
-    setOffertes((current) => [data as Offerte, ...current]);
-    setOfferteForm({ productId: "", merk: "", model: "", prijs: "", werkzaamheden: "", opmerkingen: "" });
-    setError(null);
   };
 
   const handleMarkVerstuurd = async (offerte: Offerte) => {
-    const { error: markError } = await markOfferteVerstuurd(offerte.id, lead.id);
-    if (markError) {
-      setError(markError);
-      return;
+    if (offerteActionId) return;
+
+    setOfferteActionId(offerte.id);
+    try {
+      const { error: markError } = await markOfferteVerstuurd(offerte.id, lead.id);
+      if (markError) {
+        setError(markError);
+        return;
+      }
+      setError(null);
+      setOffertes((current) => current.map((item) => (item.id === offerte.id ? { ...item, status: "Verstuurd" } : item)));
+      setHistorie((current) => [
+        { id: `local-${Date.now()}`, lead_id: lead.id, status: "Offerte verstuurd", created_at: new Date().toISOString() },
+        ...current,
+      ]);
+      onLeadUpdated(lead.id, "Offerte verstuurd");
+    } finally {
+      setOfferteActionId(null);
     }
-    setError(null);
-    setOffertes((current) => current.map((item) => (item.id === offerte.id ? { ...item, status: "Verstuurd" } : item)));
-    setHistorie((current) => [
-      { id: `local-${Date.now()}`, lead_id: lead.id, status: "Offerte verstuurd", created_at: new Date().toISOString() },
-      ...current,
-    ]);
-    onLeadUpdated(lead.id, "Offerte verstuurd");
   };
 
   const handleStatusBeslissing = async (offerte: Offerte, status: "Geaccepteerd" | "Afgewezen") => {
-    const { error: statusError } = await updateOfferteStatus(offerte.id, lead.id, status);
-    if (statusError) {
-      setError(statusError);
-      return;
+    if (offerteActionId) return;
+
+    setOfferteActionId(offerte.id);
+    try {
+      const { error: statusError } = await updateOfferteStatus(offerte.id, lead.id, status);
+      if (statusError) {
+        setError(statusError);
+        return;
+      }
+      setError(null);
+      setOffertes((current) => current.map((item) => (item.id === offerte.id ? { ...item, status } : item)));
+      const leadStatus = status === "Geaccepteerd" ? "Gewonnen" : "Verloren";
+      setHistorie((current) => [
+        { id: `local-${Date.now()}`, lead_id: lead.id, status: leadStatus, created_at: new Date().toISOString() },
+        ...current,
+      ]);
+      onLeadUpdated(lead.id, leadStatus);
+    } finally {
+      setOfferteActionId(null);
     }
-    setError(null);
-    setOffertes((current) => current.map((item) => (item.id === offerte.id ? { ...item, status } : item)));
-    const leadStatus = status === "Geaccepteerd" ? "Gewonnen" : "Verloren";
-    setHistorie((current) => [
-      { id: `local-${Date.now()}`, lead_id: lead.id, status: leadStatus, created_at: new Date().toISOString() },
-      ...current,
-    ]);
-    onLeadUpdated(lead.id, leadStatus);
   };
 
   return (
@@ -265,7 +295,7 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated, onOpenWerkbon,
             { label: "Email", value: lead.email },
             { label: "Plaats", value: lead.plaats },
             { label: "Type woning", value: lead.type_woning },
-            { label: "Aangemaakt op", value: formatDateTime(lead.created_at) },
+            { label: "Aangemaakt op", value: formatDatumTijd(lead.created_at) },
             { label: "Opmerkingen", value: lead.opmerkingen || "—" },
           ].map((item) => (
             <div key={item.label} className="rounded-3xl border border-white/10 bg-[#090909] p-4">
@@ -319,8 +349,12 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated, onOpenWerkbon,
                 </option>
               ))}
             </select>
-            <button type="submit" className="shrink-0 rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300">
-              Opslaan
+            <button
+              type="submit"
+              disabled={savingStatus}
+              className="shrink-0 rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {savingStatus ? "Bezig met opslaan…" : "Opslaan"}
             </button>
           </form>
 
@@ -333,8 +367,12 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated, onOpenWerkbon,
               placeholder="Schrijf een notitie over deze lead"
               className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
             />
-            <button type="submit" className="w-full rounded-full bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20 sm:w-auto">
-              Notitie opslaan
+            <button
+              type="submit"
+              disabled={savingNote}
+              className="w-full rounded-full bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+            >
+              {savingNote ? "Bezig met opslaan…" : "Notitie opslaan"}
             </button>
           </form>
 
@@ -374,8 +412,12 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated, onOpenWerkbon,
               onChange={(event) => setOfferteForm((current) => ({ ...current, opmerkingen: event.target.value }))}
               className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300 sm:col-span-2"
             />
-            <button type="submit" className="rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 sm:col-span-2">
-              Offerte genereren
+            <button
+              type="submit"
+              disabled={savingOfferte}
+              className="rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2"
+            >
+              {savingOfferte ? "Bezig met genereren…" : "Offerte genereren"}
             </button>
           </form>
 
@@ -393,7 +435,7 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated, onOpenWerkbon,
                       {offerte.status}
                     </span>
                   </div>
-                  <p className="mt-2 text-slate-400">{formatCurrency(offerte.prijs)} · {formatDateTime(offerte.datum)}</p>
+                  <p className="mt-2 text-slate-400">{formatBedragRond(offerte.prijs)} · {formatDatumTijd(offerte.datum)}</p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <OfferteActieKnoppen offerte={offerte} klant={lead} />
                     {offerte.status === "Concept" ? (
@@ -444,7 +486,7 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated, onOpenWerkbon,
           <div className="mt-4 space-y-4">
             {timeline.map((item) => (
               <div key={item.id} className="rounded-3xl border border-white/10 bg-[#090909] p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{formatDateTime(item.created_at)}</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{formatDatumTijd(item.created_at)}</p>
                 <p className="mt-2 text-sm text-slate-200">{item.label}</p>
               </div>
             ))}
