@@ -112,8 +112,10 @@ export function buildOffertePdfDocument(offerte: Offerte, klant: KlantGegevens):
       .map((item) => item.trim())
       .filter(Boolean)
       .forEach((item) => {
-        doc.text(`• ${item}`, margin, y);
-        y += 6;
+        const lines = doc.splitTextToSize(`• ${item}`, pageWidth - margin * 2);
+        ensureSpace(lines.length * 6);
+        doc.text(lines, margin, y);
+        y += lines.length * 6;
       });
     divider();
   }
@@ -147,6 +149,7 @@ export function buildOffertePdfDocument(offerte: Offerte, klant: KlantGegevens):
   doc.setTextColor(90, 90, 90);
   ALGEMENE_VOORWAARDEN.forEach((regel) => {
     const lines = doc.splitTextToSize(`• ${regel}`, pageWidth - margin * 2);
+    ensureSpace(lines.length * 4.5);
     doc.text(lines, margin, y);
     y += lines.length * 4.5;
   });

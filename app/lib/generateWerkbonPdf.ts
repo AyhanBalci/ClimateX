@@ -5,6 +5,7 @@ import { formatDatum } from "./formatters";
 export function downloadWerkbonPdf(werkbon: Werkbon) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 14;
 
   doc.setFillColor(10, 10, 10);
@@ -48,6 +49,13 @@ export function downloadWerkbonPdf(werkbon: Werkbon) {
     y += 9;
   };
 
+  const ensureSpace = (needed: number) => {
+    if (y + needed > pageHeight - 24) {
+      doc.addPage();
+      y = 20;
+    }
+  };
+
   section("Klantgegevens");
   [
     `Naam: ${werkbon.klantnaam}`,
@@ -62,37 +70,42 @@ export function downloadWerkbonPdf(werkbon: Werkbon) {
   divider();
 
   if (werkbon.testresultaten && werkbon.testresultaten.trim()) {
-    section("Testresultaten");
     const lines = doc.splitTextToSize(werkbon.testresultaten, pageWidth - margin * 2);
+    ensureSpace(10 + lines.length * 6);
+    section("Testresultaten");
     doc.text(lines, margin, y);
     y += lines.length * 6;
     divider();
   }
 
   if (werkbon.werkzaamheden && werkbon.werkzaamheden.trim()) {
-    section("Werkzaamheden");
     const lines = doc.splitTextToSize(werkbon.werkzaamheden, pageWidth - margin * 2);
+    ensureSpace(10 + lines.length * 6);
+    section("Werkzaamheden");
     doc.text(lines, margin, y);
     y += lines.length * 6;
     divider();
   }
 
   if (werkbon.materialen && werkbon.materialen.trim()) {
-    section("Materialen");
     const lines = doc.splitTextToSize(werkbon.materialen, pageWidth - margin * 2);
+    ensureSpace(10 + lines.length * 6);
+    section("Materialen");
     doc.text(lines, margin, y);
     y += lines.length * 6;
     divider();
   }
 
   if (werkbon.opmerkingen && werkbon.opmerkingen.trim()) {
-    section("Opmerkingen");
     const lines = doc.splitTextToSize(werkbon.opmerkingen, pageWidth - margin * 2);
+    ensureSpace(10 + lines.length * 6);
+    section("Opmerkingen");
     doc.text(lines, margin, y);
     y += lines.length * 6;
     divider();
   }
 
+  ensureSpace(40);
   y += 4;
   section("Handtekeningen");
   const colWidth = (pageWidth - margin * 2 - 10) / 2;
@@ -104,7 +117,6 @@ export function downloadWerkbonPdf(werkbon: Werkbon) {
   doc.text(`Klant: ${werkbon.handtekening_klant || ""}`, margin, y + 19);
   doc.text(`Installateur: ${werkbon.handtekening_monteur || ""}`, margin + colWidth + 10, y + 19);
 
-  const pageHeight = doc.internal.pageSize.getHeight();
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(140, 140, 140);
