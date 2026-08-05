@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import { Werkbon } from "./types";
+import { formatDatum } from "./formatters";
 
 export function downloadWerkbonPdf(werkbon: Werkbon) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -25,7 +26,7 @@ export function downloadWerkbonPdf(werkbon: Werkbon) {
 
   doc.setFontSize(10);
   doc.text(`Werkbonnummer: ${werkbon.werkbonnummer}`, pageWidth - margin, 16, { align: "right" });
-  doc.text(`Datum: ${new Date(werkbon.datum).toLocaleDateString("nl-NL")}`, pageWidth - margin, 22, { align: "right" });
+  doc.text(`Datum: ${formatDatum(werkbon.datum)}`, pageWidth - margin, 22, { align: "right" });
 
   let y = 50;
   doc.setTextColor(20, 20, 20);

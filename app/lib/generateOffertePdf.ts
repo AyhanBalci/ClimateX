@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import { Offerte } from "./types";
+import { formatBedragRond, formatDatum } from "./formatters";
 
 export type KlantGegevens = {
   naam: string;
@@ -20,14 +21,10 @@ const ALGEMENE_VOORWAARDEN = [
   "Eventuele meerwerkzaamheden, zoals het uitbreiden van de meterkast, worden vooraf met de klant afgestemd en apart in rekening gebracht.",
 ];
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
-}
-
 function addGeldigheidsdatum(datum: string) {
   const date = new Date(datum);
   date.setDate(date.getDate() + OFFERTE_GELDIGHEID_DAGEN);
-  return date.toLocaleDateString("nl-NL");
+  return formatDatum(date);
 }
 
 export function buildOffertePdfDocument(offerte: Offerte, klant: KlantGegevens): jsPDF {
@@ -56,7 +53,7 @@ export function buildOffertePdfDocument(offerte: Offerte, klant: KlantGegevens):
 
   doc.setFontSize(10);
   doc.text(`Offertenummer: ${offerte.offertenummer}`, pageWidth - margin, 14, { align: "right" });
-  doc.text(`Datum: ${new Date(offerte.datum).toLocaleDateString("nl-NL")}`, pageWidth - margin, 20, { align: "right" });
+  doc.text(`Datum: ${formatDatum(offerte.datum)}`, pageWidth - margin, 20, { align: "right" });
   doc.text(`Geldig tot: ${addGeldigheidsdatum(offerte.datum)}`, pageWidth - margin, 26, { align: "right" });
 
   let y = 50;
@@ -139,7 +136,7 @@ export function buildOffertePdfDocument(offerte: Offerte, klant: KlantGegevens):
   doc.setTextColor(10, 10, 10);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13);
-  doc.text(`Totaalbedrag: ${formatCurrency(offerte.prijs)}`, pageWidth / 2, y + 10.5, { align: "center" });
+  doc.text(`Totaalbedrag: ${formatBedragRond(offerte.prijs)}`, pageWidth / 2, y + 10.5, { align: "center" });
   y += 26;
   doc.setTextColor(20, 20, 20);
 
