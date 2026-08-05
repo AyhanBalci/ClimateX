@@ -138,34 +138,54 @@ export default function MeterkastCheck() {
 
       <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-2">
         <div className="grid gap-4">
-          <input
-            type="text"
-            placeholder="Naam"
-            value={naam}
-            onChange={(e) => setNaam(e.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
-          />
-          <input
-            type="tel"
-            placeholder="Telefoonnummer"
-            value={telefoon}
-            onChange={(e) => setTelefoon(e.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
-          />
-          <input
-            type="email"
-            placeholder="E-mailadres"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
-          />
-          <input
-            type="text"
-            placeholder="Postcode"
-            value={postcode}
-            onChange={(e) => setPostcode(e.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
-          />
+          <label className="block text-sm text-slate-300">
+            <span className="mb-2 block">Naam *</span>
+            <input
+              type="text"
+              required
+              autoComplete="name"
+              placeholder="Naam"
+              value={naam}
+              onChange={(e) => setNaam(e.target.value)}
+              className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
+            />
+          </label>
+          <label className="block text-sm text-slate-300">
+            <span className="mb-2 block">Telefoonnummer *</span>
+            <input
+              type="tel"
+              required
+              autoComplete="tel"
+              placeholder="Telefoonnummer"
+              value={telefoon}
+              onChange={(e) => setTelefoon(e.target.value)}
+              className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
+            />
+          </label>
+          <label className="block text-sm text-slate-300">
+            <span className="mb-2 block">E-mailadres *</span>
+            <input
+              type="email"
+              required
+              autoComplete="email"
+              placeholder="E-mailadres"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
+            />
+          </label>
+          <label className="block text-sm text-slate-300">
+            <span className="mb-2 block">Postcode *</span>
+            <input
+              type="text"
+              required
+              autoComplete="postal-code"
+              placeholder="Postcode"
+              value={postcode}
+              onChange={(e) => setPostcode(e.target.value)}
+              className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-cyan-300"
+            />
+          </label>
         </div>
 
         <div className="grid gap-4">
@@ -187,7 +207,11 @@ export default function MeterkastCheck() {
           ))}
         </div>
 
-        {error ? <p className="lg:col-span-2 text-sm text-rose-400">{error}</p> : null}
+        {error ? (
+          <p role="alert" className="lg:col-span-2 text-sm text-rose-400">
+            {error}
+          </p>
+        ) : null}
 
         <button
           type="submit"

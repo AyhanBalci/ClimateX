@@ -70,6 +70,12 @@ export default function PlanningAgenda({ onSelectPlanning }: Props) {
   }, []);
 
   useEffect(() => {
+    // De periode verandert bij elke klik op vorige/volgende. Zonder deze vlag kan
+    // een trager verzoek van een eerdere periode later binnenkomen dan het verzoek
+    // van de periode die nu in beeld staat, waardoor de agenda de afspraken van de
+    // verkeerde week toont onder de juiste datumkoppen.
+    let verouderd = false;
+
     async function fetchAfspraken() {
       setLoading(true);
       setError(null);
@@ -92,12 +98,18 @@ export default function PlanningAgenda({ onSelectPlanning }: Props) {
       if (statusFilter !== "Alle") query = query.eq("status", statusFilter);
 
       const { data, error: fetchError } = await query;
+      if (verouderd) return;
+
       if (fetchError) setError(fetchError.message);
       else setAfspraken((data as Planning[]) || []);
       setLoading(false);
     }
 
     fetchAfspraken();
+
+    return () => {
+      verouderd = true;
+    };
   }, [range, medewerkerFilter, statusFilter]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
