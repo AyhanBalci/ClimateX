@@ -21,7 +21,10 @@ export default function ProductCard({ product }: { product: ProductWithBrand }) 
         <img
           src={productImagePath(product, "hero")}
           alt={productDisplayName(product)}
+          width={1000}
+          height={750}
           loading="lazy"
+          decoding="async"
           className="h-52 w-full bg-slate-900 object-cover transition-transform duration-500 group-hover:scale-[1.03]"
         />
       </Link>
