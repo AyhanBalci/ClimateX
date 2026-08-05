@@ -23,6 +23,7 @@ import InstallatieProces from "./components/marketing/InstallatieProces";
 import CtaBand from "./components/marketing/CtaBand";
 import FaqSection from "./components/home/FaqSection";
 import Footer from "./components/marketing/Footer";
+import { validateLead } from "./lib/validateLead";
 
 const contactNumber = "06 1400 4488";
 const whatsappLink = "https://wa.me/31614004488";
@@ -150,6 +151,7 @@ export default function HomeClient() {
     bericht: "",
   });
   const [formMessage, setFormMessage] = useState<string | null>(null);
+  const [status, setStatus] = useState<"idle" | "verzenden" | "fout" | "verzonden">("idle");
 
   const handleFormChange = (field: string, value: string | boolean) => {
     setFormState((current) => ({ ...current, [field]: value }));
@@ -157,7 +159,28 @@ export default function HomeClient() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setFormMessage("Verzenden...");
+
+    // Voorkomt dubbele leads bij een tweede klik tijdens het verzenden.
+    if (status === "verzenden") return;
+
+    const validatiefout = validateLead(
+      {
+        naam: formState.name,
+        telefoon: formState.phone,
+        email: formState.email,
+        plaats: formState.postcode,
+        type_woning: formState.woningType,
+      },
+      { locatieLabel: "postcode" },
+    );
+    if (validatiefout) {
+      setStatus("fout");
+      setFormMessage(validatiefout);
+      return;
+    }
+
+    setStatus("verzenden");
+    setFormMessage("Verzenden…");
     try {
       const response = await fetch("/api/contact", {
         method: "POST",
@@ -166,6 +189,7 @@ export default function HomeClient() {
       });
       const result = await response.json();
       if (response.ok) {
+        setStatus("verzonden");
         setFormMessage(result.message || "Bedankt. Wij nemen binnen 24 uur contact met u op.");
         setFormState({
           name: "",
@@ -184,10 +208,12 @@ export default function HomeClient() {
           bericht: "",
         });
       } else {
+        setStatus("fout");
         setFormMessage(result.error || "Er is iets misgegaan. Probeer het later opnieuw.");
       }
     } catch {
-      setFormMessage("Er is iets misgegaan. Probeer het later opnieuw.");
+      setStatus("fout");
+      setFormMessage("Er is iets misgegaan. Probeer het later opnieuw of bel ons op 06 1400 4488.");
     }
   };
 
@@ -403,18 +429,22 @@ export default function HomeClient() {
                 <p className="mb-6 text-xs uppercase tracking-[0.2em] text-slate-500">Gratis offerte aanvragen</p>
                 <div className="grid gap-5">
                   {[
-                    { name: "name", label: "Naam", type: "text", placeholder: "Jouw naam" },
-                    { name: "phone", label: "Telefoonnummer", type: "tel", placeholder: "06 1400 4488" },
-                    { name: "email", label: "E-mailadres", type: "email", placeholder: "naam@voorbeeld.nl" },
-                    { name: "postcode", label: "Postcode", type: "text", placeholder: "1234 AB" },
+                    { name: "name", label: "Naam", type: "text", placeholder: "Uw naam", autoComplete: "name" },
+                    { name: "phone", label: "Telefoonnummer", type: "tel", placeholder: "06 1400 4488", autoComplete: "tel" },
+                    { name: "email", label: "E-mailadres", type: "email", placeholder: "naam@voorbeeld.nl", autoComplete: "email" },
+                    { name: "postcode", label: "Postcode", type: "text", placeholder: "1234 AB", autoComplete: "postal-code" },
                   ].map((field) => (
                     <label key={field.name} className="space-y-2 text-sm text-slate-300">
-                      <span>{field.label}</span>
+                      <span>
+                        {field.label} <span className="text-cyan-300/70">*</span>
+                      </span>
                       <input
                         type={field.type}
                         value={formState[field.name as keyof typeof formState] as string}
                         placeholder={field.placeholder}
                         onChange={(e) => handleFormChange(field.name, e.target.value)}
+                        required
+                        autoComplete={field.autoComplete}
                         className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/15"
                       />
                     </label>
@@ -509,11 +539,20 @@ export default function HomeClient() {
                 </div>
                 <button
                   type="submit"
-                  className="mt-7 w-full rounded-full bg-white px-6 py-4 text-sm font-semibold text-black shadow-lg transition hover:bg-slate-100 active:scale-[0.98]"
+                  disabled={status === "verzenden"}
+                  className="mt-7 w-full rounded-full bg-white px-6 py-4 text-sm font-semibold text-black shadow-lg transition hover:bg-slate-100 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Gratis offerte aanvragen
+                  {status === "verzenden" ? "Bezig met verzenden…" : "Gratis offerte aanvragen"}
                 </button>
-                {formMessage ? <p className="mt-4 text-sm text-slate-300">{formMessage}</p> : null}
+                <p
+                  role={status === "fout" ? "alert" : "status"}
+                  aria-live={status === "fout" ? "assertive" : "polite"}
+                  className={`mt-4 text-sm ${
+                    status === "fout" ? "text-rose-300" : status === "verzonden" ? "text-emerald-300" : "text-slate-300"
+                  }`}
+                >
+                  {formMessage}
+                </p>
                 <p className="mt-4 text-center text-xs text-slate-600">Vrijblijvend · Binnen 24 uur reactie · Geen spam</p>
               </form>
             </div>
