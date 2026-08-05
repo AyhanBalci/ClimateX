@@ -37,7 +37,11 @@ export default function PortalTicketsPage() {
         <p className="mt-2 text-sm text-slate-400">Bekijk de status van uw meldingen, foto&apos;s en berichten.</p>
 
         {loading ? <p className="mt-6 text-sm text-slate-400">Bezig met laden...</p> : null}
-        {error ? <p className="mt-6 text-sm text-rose-400">{error}</p> : null}
+        {error ? (
+          <p role="alert" className="mt-6 text-sm text-rose-400">
+            {error}
+          </p>
+        ) : null}
         {!loading && tickets.length === 0 ? (
           <p className="mt-6 text-sm text-slate-400">U heeft nog geen meldingen.</p>
         ) : null}

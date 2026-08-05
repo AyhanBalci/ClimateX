@@ -493,7 +493,11 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
           ))}
         </dl>
 
-        {error ? <p className="mt-6 text-sm text-rose-400">{error}</p> : null}
+        {error ? (
+          <p role="alert" className="mt-6 text-sm text-rose-400">
+            {error}
+          </p>
+        ) : null}
         {loading ? <p className="mt-6 text-sm text-slate-400">Bezig met laden...</p> : null}
 
         <div className="mt-6">

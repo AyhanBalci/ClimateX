@@ -160,7 +160,11 @@ export default function VastgoedticketenOverview({ onSelectTicket }: Props) {
         ))}
       </div>
 
-      {error ? <p className="mt-4 text-sm text-rose-400">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="mt-4 text-sm text-rose-400">
+          {error}
+        </p>
+      ) : null}
 
       {showForm ? (
         <form onSubmit={handleSubmit} className="mt-6 grid gap-3 rounded-3xl border border-white/10 bg-[#090909] p-5 sm:grid-cols-2 sm:p-6">

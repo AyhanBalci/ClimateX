@@ -81,7 +81,9 @@ export default function PortalTicketDetailPage() {
   if (!ticket) {
     return (
       <PortalShell>
-        <p className="text-sm text-rose-400">Deze melding is niet gevonden.</p>
+        <p role="alert" className="text-sm text-rose-400">
+          Deze melding is niet gevonden.
+        </p>
       </PortalShell>
     );
   }
@@ -95,7 +97,11 @@ export default function PortalTicketDetailPage() {
         <p className="mt-4 inline-block rounded-full bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-300">
           Status: {ticket.status}
         </p>
-        {error ? <p className="mt-4 text-sm text-rose-400">{error}</p> : null}
+        {error ? (
+          <p role="alert" className="mt-4 text-sm text-rose-400">
+            {error}
+          </p>
+        ) : null}
       </section>
 
       <section className="mt-6 rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-xl shadow-black/20 sm:p-8">
