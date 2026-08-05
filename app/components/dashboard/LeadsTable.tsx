@@ -121,7 +121,11 @@ export default function LeadsTable({ leads, onSelectLead, onLeadUpdated }: Props
       </p>
 
       {filteredLeads.length === 0 ? (
-        <p className="mt-6 text-sm text-slate-400">Geen leads gevonden voor deze zoekopdracht of filters.</p>
+        <p className="mt-6 text-sm text-slate-400">
+          {leads.length === 0
+            ? "Er zijn nog geen leads binnengekomen."
+            : "Geen leads gevonden voor deze zoekopdracht of filters."}
+        </p>
       ) : (
         <>
           {/* Tabelweergave vanaf tablet/desktop */}

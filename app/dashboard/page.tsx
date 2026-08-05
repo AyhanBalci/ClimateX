@@ -110,12 +110,19 @@ export default function DashboardPage() {
               Wachtwoord
               <input
                 type="password"
+                required
+                autoComplete="current-password"
+                aria-invalid={loginError ? true : undefined}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 className="mt-3 w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
               />
             </label>
-            {loginError ? <p className="text-sm text-rose-400">{loginError}</p> : null}
+            {loginError ? (
+              <p role="alert" className="text-sm text-rose-400">
+                {loginError}
+              </p>
+            ) : null}
             <button type="submit" className="w-full rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300">
               Inloggen
             </button>
@@ -149,7 +156,7 @@ export default function DashboardPage() {
           <DashboardKpis />
         </div>
 
-        <div className="mb-6 flex gap-2 overflow-x-auto">
+        <div role="tablist" aria-label="Dashboardonderdelen" className="mb-6 flex gap-2 overflow-x-auto">
           {(
             [
               { key: "leads", label: "Leads" },
@@ -163,6 +170,8 @@ export default function DashboardPage() {
           ).map((tab) => (
             <button
               key={tab.key}
+              role="tab"
+              aria-selected={view === tab.key}
               onClick={() => {
                 setView(tab.key);
                 setSelectedLead(null);

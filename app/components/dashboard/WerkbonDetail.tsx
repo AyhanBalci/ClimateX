@@ -45,6 +45,7 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [creatingFactuur, setCreatingFactuur] = useState(false);
+  const [savingPlanning, setSavingPlanning] = useState(false);
 
   useEffect(() => {
     async function fetchOfferte() {
@@ -66,32 +67,38 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
 
   const handlePlanAfspraak = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (savingPlanning) return;
     if (!planningForm.medewerker.trim()) {
       setError("Vul een medewerker in om de afspraak in te plannen.");
       return;
     }
 
-    const { data, error: createError } = await createPlanning({
-      titel: `Werkbon ${werkbon.werkbonnummer}`,
-      klantnaam: werkbon.klantnaam,
-      werkbon_id: werkbon.id,
-      lead_id: werkbon.lead_id,
-      ticket_id: werkbon.ticket_id,
-      medewerker: planningForm.medewerker.trim(),
-      datum: planningForm.datum,
-      starttijd: planningForm.starttijd,
-      eindtijd: planningForm.eindtijd,
-      adres: werkbon.adres || "",
-      telefoon: werkbon.telefoon || "",
-    });
+    setSavingPlanning(true);
+    try {
+      const { data, error: createError } = await createPlanning({
+        titel: `Werkbon ${werkbon.werkbonnummer}`,
+        klantnaam: werkbon.klantnaam,
+        werkbon_id: werkbon.id,
+        lead_id: werkbon.lead_id,
+        ticket_id: werkbon.ticket_id,
+        medewerker: planningForm.medewerker.trim(),
+        datum: planningForm.datum,
+        starttijd: planningForm.starttijd,
+        eindtijd: planningForm.eindtijd,
+        adres: werkbon.adres || "",
+        telefoon: werkbon.telefoon || "",
+      });
 
-    if (createError || !data) {
-      setError(createError || "Afspraak inplannen is mislukt.");
-      return;
+      if (createError || !data) {
+        setError(createError || "Afspraak inplannen is mislukt.");
+        return;
+      }
+      setError(null);
+      setAfspraken((current) => [data as Planning, ...current]);
+      setShowPlanningForm(false);
+    } finally {
+      setSavingPlanning(false);
     }
-    setError(null);
-    setAfspraken((current) => [data as Planning, ...current]);
-    setShowPlanningForm(false);
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -317,8 +324,12 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
               onChange={(event) => setPlanningForm((current) => ({ ...current, eindtijd: event.target.value }))}
               className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
             />
-            <button type="submit" className="rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 sm:col-span-2">
-              Inplannen
+            <button
+              type="submit"
+              disabled={savingPlanning}
+              className="rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2"
+            >
+              {savingPlanning ? "Bezig met inplannen…" : "Inplannen"}
             </button>
           </form>
         ) : null}

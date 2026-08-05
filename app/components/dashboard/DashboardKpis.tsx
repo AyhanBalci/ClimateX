@@ -75,9 +75,10 @@ export default function DashboardKpis() {
         <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Bedrijfscijfers</p>
         <button
           onClick={() => setRefreshKey((current) => current + 1)}
-          className="text-xs text-cyan-300 transition hover:text-cyan-200"
+          disabled={loading}
+          className="-m-2 rounded-full p-2 text-xs text-cyan-300 transition hover:text-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          ↻ Vernieuwen
+          ↻ {loading ? "Bezig..." : "Vernieuwen"}
         </button>
       </div>
       {error ? <p className="mt-2 text-sm text-rose-400">{error}</p> : null}
