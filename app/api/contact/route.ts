@@ -4,8 +4,29 @@ import { validateLead } from "../../lib/validateLead";
 import { STATUS_OPTIONS } from "../../lib/constants";
 import { sendOfferteEmails } from "../../lib/sendOfferteEmails";
 
+/**
+ * Welke velden zijn aangeleverd, zonder de inhoud zelf te loggen. Naam, telefoon
+ * en e-mailadres zijn persoonsgegevens en horen niet in de serverlogs; voor
+ * diagnose is genoeg om te weten of een veld gevuld was.
+ */
+function veldOverzicht(lead: Record<string, unknown>): string {
+  return ["naam", "telefoon", "email", "plaats", "type_woning"]
+    .map((veld) => {
+      const waarde = lead[veld];
+      return `${veld}=${typeof waarde === "string" && waarde.trim() ? "gevuld" : "LEEG"}`;
+    })
+    .join(" ");
+}
+
 export async function POST(request: Request) {
-  const data = await request.json();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let data: any;
+  try {
+    data = await request.json();
+  } catch {
+    console.warn("[contact] 400 — body is geen geldige JSON.");
+    return NextResponse.json({ error: "Ongeldige aanvraag." }, { status: 400 });
+  }
 
   const lead = {
     naam: data.name,
@@ -27,10 +48,14 @@ export async function POST(request: Request) {
 
   const validationError = validateLead(lead);
   if (validationError) {
+    // Deze regel maakt in Vercel direct zichtbaar waaróm een aanvraag is
+    // afgekeurd, zonder persoonsgegevens vast te leggen.
+    console.warn(`[contact] 400 — validatie afgekeurd: "${validationError}" | ${veldOverzicht(lead)}`);
     return NextResponse.json({ error: validationError }, { status: 400 });
   }
 
   if (!isSupabaseConfigured || !supabase) {
+    console.error("[contact] 500 — Supabase is niet geconfigureerd; aanvraag niet opgeslagen.");
     return NextResponse.json(
       {
         error:
@@ -43,8 +68,11 @@ export async function POST(request: Request) {
   const { data: insertedLead, error } = await supabase.from("leads").insert(lead).select().single();
 
   if (error) {
+    console.error("[contact] 500 — opslaan van de lead is mislukt:", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  console.log(`[contact] Lead ${insertedLead.id} opgeslagen; e-mails worden nu verstuurd.`);
 
   await supabase.from("lead_status_historie").insert({ lead_id: insertedLead.id, status: insertedLead.status });
 
