@@ -7,14 +7,9 @@ import { getMyFacturen, getMyLeadAndTicketIds } from "../../lib/portalData";
 import { downloadFactuurPdf } from "../../lib/generateFactuurPdf";
 import { FACTUUR_STATUS_LABELS } from "../../lib/constants";
 import { Factuur } from "../../lib/types";
+import { formatBedrag, formatDatum } from "../../lib/formatters";
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(value);
-}
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString("nl-NL");
-}
 
 export default function PortalFacturenPage() {
   const { session } = usePortalSession();
@@ -56,10 +51,10 @@ export default function PortalFacturenPage() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-semibold text-white">{factuur.factuurnummer}</p>
-                  <p className="text-sm text-slate-400">{formatDate(factuur.created_at)}</p>
+                  <p className="text-sm text-slate-400">{formatDatum(factuur.created_at)}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-semibold text-cyan-300">{formatCurrency(factuur.totaal)}</p>
+                  <p className="text-lg font-semibold text-cyan-300">{formatBedrag(factuur.totaal)}</p>
                   <p className="text-xs text-slate-400">{FACTUUR_STATUS_LABELS[factuur.status] || factuur.status}</p>
                 </div>
               </div>

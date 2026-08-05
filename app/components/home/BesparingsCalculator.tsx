@@ -5,10 +5,8 @@ import Link from "next/link";
 import { TrendingDown } from "lucide-react";
 import AnimatedNumber from "./AnimatedNumber";
 import { PRICE_RANGE } from "../../lib/producten/helpers";
+import { formatBedrag } from "../../lib/formatters";
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(value);
-}
 
 /**
  * De terugverdientijd rekent met de laagste catalogusprijs (inclusief installatie),
@@ -56,11 +54,11 @@ export default function BesparingsCalculator() {
             <input type="range" min={12} max={28} step={0.5} value={verbruik} onChange={(e) => setVerbruik(Number(e.target.value))} className="w-full accent-emerald-400" />
           </label>
           <label className="space-y-2 text-sm text-slate-300">
-            <span>Huidige openbare laadprijs: {formatCurrency(openbaarPrijs)} / kWh</span>
+            <span>Huidige openbare laadprijs: {formatBedrag(openbaarPrijs)} / kWh</span>
             <input type="range" min={0.3} max={0.9} step={0.01} value={openbaarPrijs} onChange={(e) => setOpenbaarPrijs(Number(e.target.value))} className="w-full accent-emerald-400" />
           </label>
           <label className="space-y-2 text-sm text-slate-300">
-            <span>Thuis stroomprijs: {formatCurrency(thuisPrijs)} / kWh</span>
+            <span>Thuis stroomprijs: {formatBedrag(thuisPrijs)} / kWh</span>
             <input type="range" min={0.15} max={0.5} step={0.01} value={thuisPrijs} onChange={(e) => setThuisPrijs(Number(e.target.value))} className="w-full accent-emerald-400" />
           </label>
         </div>
@@ -71,13 +69,13 @@ export default function BesparingsCalculator() {
             <div>
               <p className="text-sm text-slate-400">Per maand</p>
               <p className="text-2xl font-semibold text-emerald-300">
-                <AnimatedNumber value={resultaat.besparingPerMaand} format={(n) => formatCurrency(n)} />
+                <AnimatedNumber value={resultaat.besparingPerMaand} format={(n) => formatBedrag(n)} />
               </p>
             </div>
             <div>
               <p className="text-sm text-slate-400">Per jaar</p>
               <p className="text-2xl font-semibold text-white">
-                <AnimatedNumber value={resultaat.besparingPerJaar} format={(n) => formatCurrency(n)} />
+                <AnimatedNumber value={resultaat.besparingPerJaar} format={(n) => formatBedrag(n)} />
               </p>
             </div>
             <div>
@@ -103,7 +101,7 @@ export default function BesparingsCalculator() {
           </Link>
           <p className="mt-4 text-xs leading-5 text-slate-500">
             Dit is een indicatie op basis van uw invoer. De terugverdientijd rekent met onze laagste
-            laadpaalprijs inclusief installatie ({formatCurrency(INSTAPINVESTERING)}); bij een ander model of extra
+            laadpaalprijs inclusief installatie ({formatBedrag(INSTAPINVESTERING)}); bij een ander model of extra
             werk aan de meterkast valt die anders uit. De werkelijke besparing hangt af van uw energiecontract en
             laadgedrag.
           </p>

@@ -6,10 +6,8 @@ import { usePortalSession } from "../../lib/portalAuth";
 import { getMyLeadAndTicketIds, getMyWerkbonnen } from "../../lib/portalData";
 import { downloadWerkbonPdf } from "../../lib/generateWerkbonPdf";
 import { Werkbon } from "../../lib/types";
+import { formatDatum } from "../../lib/formatters";
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString("nl-NL");
-}
 
 const STATUS_LABEL: Record<string, string> = {
   Concept: "Wordt voorbereid",
@@ -60,7 +58,7 @@ export default function PortalWerkbonnenPage() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-semibold text-white">{werkbon.werkbonnummer}</p>
-                  <p className="text-sm text-slate-400">Gepland op {formatDate(werkbon.datum)}</p>
+                  <p className="text-sm text-slate-400">Gepland op {formatDatum(werkbon.datum)}</p>
                 </div>
                 <p className="text-sm font-semibold text-cyan-300">{STATUS_LABEL[werkbon.status] || werkbon.status}</p>
               </div>

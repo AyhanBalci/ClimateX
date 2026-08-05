@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
+import { formatBedragRond } from "../../lib/formatters";
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
-}
 
 export default function DashboardKpis() {
   const [openOffertes, setOpenOffertes] = useState(0);
@@ -67,7 +65,7 @@ export default function DashboardKpis() {
     { label: "Open offertes", value: openOffertes },
     { label: "Geplande werkbonnen", value: geplandeWerkbonnen },
     { label: "Open facturen", value: openFacturen },
-    { label: "Omzet deze maand", value: formatCurrency(omzetDezeMaand) },
+    { label: "Omzet deze maand", value: formatBedragRond(omzetDezeMaand) },
     { label: "Betaalde facturen deze maand", value: betaaldeFacturenDezeMaand },
   ];
 

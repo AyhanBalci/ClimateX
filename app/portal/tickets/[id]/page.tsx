@@ -8,10 +8,8 @@ import { usePortalSession } from "../../../lib/portalAuth";
 import { addTicketBericht, getMyTicketById, getTicketBerichten } from "../../../lib/portalData";
 import { TICKET_FOTO_CATEGORIE_OPTIONS } from "../../../lib/constants";
 import { TicketKlantBericht, Vastgoedticket } from "../../../lib/types";
+import { formatDatumTijd } from "../../../lib/formatters";
 
-function formatDateTime(value: string) {
-  return new Date(value).toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" });
-}
 
 export default function PortalTicketDetailPage() {
   const params = useParams<{ id: string }>();
@@ -118,7 +116,7 @@ export default function PortalTicketDetailPage() {
           ) : (
             berichten.map((bericht) => (
               <div key={bericht.id} className="rounded-2xl border border-white/10 bg-[#090909] p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{formatDateTime(bericht.created_at)}</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{formatDatumTijd(bericht.created_at)}</p>
                 <p className="mt-2 text-sm text-slate-200">{bericht.tekst}</p>
               </div>
             ))

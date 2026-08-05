@@ -6,10 +6,8 @@ import PortalShell from "../../components/portal/PortalShell";
 import { usePortalSession } from "../../lib/portalAuth";
 import { getMyTickets } from "../../lib/portalData";
 import { Vastgoedticket } from "../../lib/types";
+import { formatDatum } from "../../lib/formatters";
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString("nl-NL");
-}
 
 export default function PortalTicketsPage() {
   const { session } = usePortalSession();
@@ -54,7 +52,7 @@ export default function PortalTicketsPage() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-semibold text-white">{ticket.ticketnummer}</p>
-                  <p className="text-sm text-slate-400">{formatDate(ticket.datum)} &middot; {ticket.locatie}</p>
+                  <p className="text-sm text-slate-400">{formatDatum(ticket.datum)} &middot; {ticket.locatie}</p>
                 </div>
                 <p className="text-sm font-semibold text-cyan-300">{ticket.status}</p>
               </div>

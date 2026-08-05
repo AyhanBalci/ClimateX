@@ -4,10 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Werkbon } from "../../lib/types";
 import { WERKBON_STATUS_OPTIONS } from "../../lib/constants";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
+import { formatDatum } from "../../lib/formatters";
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString("nl-NL");
-}
 
 type Props = {
   onSelectWerkbon: (werkbon: Werkbon) => void;
@@ -118,7 +116,7 @@ export default function WerkbonnenOverview({ onSelectWerkbon }: Props) {
                 {filtered.map((werkbon) => (
                   <tr key={werkbon.id} className="border-b border-white/5 text-slate-300">
                     <td className="whitespace-nowrap px-4 py-3 text-white">{werkbon.werkbonnummer}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-400">{formatDate(werkbon.datum)}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-400">{formatDatum(werkbon.datum)}</td>
                     <td className="px-4 py-3">{werkbon.klantnaam}</td>
                     <td className="px-4 py-3">{werkbon.adres || "—"}</td>
                     <td className="px-4 py-3">{werkbon.monteur || "—"}</td>

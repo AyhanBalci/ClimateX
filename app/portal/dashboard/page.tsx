@@ -5,14 +5,9 @@ import PortalShell from "../../components/portal/PortalShell";
 import { usePortalSession } from "../../lib/portalAuth";
 import { getMyFacturen, getMyLeadAndTicketIds, getMyOffertes, getMyPlanning, getMyTickets } from "../../lib/portalData";
 import { Factuur, Offerte, Planning, Vastgoedticket } from "../../lib/types";
+import { formatBedrag, formatDatum } from "../../lib/formatters";
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(value);
-}
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString("nl-NL");
-}
 
 export default function PortalDashboardPage() {
   const { session } = usePortalSession();
@@ -100,7 +95,7 @@ export default function PortalDashboardPage() {
           <div className="mt-4 space-y-3">
             {laatsteUpdates.map((update, index) => (
               <div key={index} className="rounded-3xl border border-white/10 bg-[#090909] p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{formatDate(update.datum)}</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{formatDatum(update.datum)}</p>
                 <p className="mt-2 text-sm text-slate-200">{update.label}</p>
               </div>
             ))}
@@ -114,7 +109,7 @@ export default function PortalDashboardPage() {
           <div className="mt-4 space-y-3">
             {geplandeAfspraken.map((afspraak) => (
               <div key={afspraak.id} className="rounded-3xl border border-white/10 bg-[#090909] p-4">
-                <p className="font-semibold text-white">{formatDate(afspraak.datum)} om {afspraak.starttijd.slice(0, 5)}</p>
+                <p className="font-semibold text-white">{formatDatum(afspraak.datum)} om {afspraak.starttijd.slice(0, 5)}</p>
                 <p className="mt-1 text-sm text-slate-400">{afspraak.titel}</p>
               </div>
             ))}
@@ -125,7 +120,7 @@ export default function PortalDashboardPage() {
       {openFacturen.length > 0 ? (
         <p className="mt-6 text-sm text-slate-400">
           U heeft {openFacturen.length} openstaande factuur/facturen ter waarde van{" "}
-          {formatCurrency(openFacturen.reduce((sum, f) => sum + (f.totaal || 0), 0))}.
+          {formatBedrag(openFacturen.reduce((sum, f) => sum + (f.totaal || 0), 0))}.
         </p>
       ) : null}
     </PortalShell>

@@ -7,14 +7,9 @@ import { getMyLeadAndTicketIds, getMyOffertes } from "../../lib/portalData";
 import { klantAccepteerOfferte } from "../../lib/klantOfferteActions";
 import { downloadOffertePdf } from "../../lib/generateOffertePdf";
 import { Offerte } from "../../lib/types";
+import { formatBedragRond, formatDatum } from "../../lib/formatters";
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
-}
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString("nl-NL");
-}
 
 const STATUS_LABEL: Record<string, string> = {
   Concept: "Wordt voorbereid",
@@ -110,10 +105,10 @@ export default function PortalOffertesPage() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-semibold text-white">{offerte.offertenummer}</p>
-                  <p className="text-sm text-slate-400">{formatDate(offerte.datum)} &middot; {offerte.merk} {offerte.model}</p>
+                  <p className="text-sm text-slate-400">{formatDatum(offerte.datum)} &middot; {offerte.merk} {offerte.model}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-semibold text-cyan-300">{formatCurrency(offerte.prijs)}</p>
+                  <p className="text-lg font-semibold text-cyan-300">{formatBedragRond(offerte.prijs)}</p>
                   <p className="text-xs text-slate-400">{STATUS_LABEL[offerte.status] || offerte.status}</p>
                 </div>
               </div>

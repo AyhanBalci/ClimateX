@@ -7,6 +7,7 @@ import { Calculator, Clock } from "lucide-react";
 import AnimatedNumber from "./AnimatedNumber";
 import { BRANDS, getBrand } from "../../lib/producten/brands";
 import { getProductByRef } from "../../lib/producten/products";
+import { formatBedragRond } from "../../lib/formatters";
 
 // Eén representatief (bestseller) model per merk voor deze snelle prijsindicatie.
 // Volledige specificaties en alle varianten staan op /producten.
@@ -19,9 +20,6 @@ const laadpalen = CALCULATOR_REFS.map((ref) => {
   return { naam: `${brand?.naam} ${product.model}`, merk: brand?.naam ?? product.merkSlug, prijs: product.vanafPrijs };
 });
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
-}
 
 export default function PrijsCalculator() {
   const [laadpaal, setLaadpaal] = useState(laadpalen[2].naam);
@@ -86,7 +84,7 @@ export default function PrijsCalculator() {
                     </span>
                     <span>
                       <span className="block font-medium text-white">{p.naam}</span>
-                      <span className="block text-xs text-slate-400">{formatCurrency(p.prijs)}</span>
+                      <span className="block text-xs text-slate-400">{formatBedragRond(p.prijs)}</span>
                     </span>
                   </button>
                 );
@@ -142,13 +140,13 @@ export default function PrijsCalculator() {
 
           <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Prijsopbouw</p>
           <div className="mt-4 space-y-2 text-sm text-slate-300">
-            <div className="flex justify-between"><span>{breakdown.product.naam}</span><span>{formatCurrency(breakdown.product.prijs)}</span></div>
-            <div className="flex justify-between text-slate-400"><span>Basisinstallatie</span><span>{formatCurrency(breakdown.basisinstallatie)}</span></div>
-            {breakdown.kabelkosten > 0 ? <div className="flex justify-between text-slate-400"><span>Extra kabellengte</span><span>{formatCurrency(breakdown.kabelkosten)}</span></div> : null}
-            {breakdown.meterkastkosten > 0 ? <div className="flex justify-between text-slate-400"><span>Meterkast uitbreiden</span><span>{formatCurrency(breakdown.meterkastkosten)}</span></div> : null}
-            {breakdown.graafkosten > 0 ? <div className="flex justify-between text-slate-400"><span>Graafwerk</span><span>{formatCurrency(breakdown.graafkosten)}</span></div> : null}
-            {breakdown.loadBalancingKosten > 0 ? <div className="flex justify-between text-slate-400"><span>Load balancing</span><span>{formatCurrency(breakdown.loadBalancingKosten)}</span></div> : null}
-            {breakdown.dynamicKosten > 0 ? <div className="flex justify-between text-slate-400"><span>Dynamic load balancing</span><span>{formatCurrency(breakdown.dynamicKosten)}</span></div> : null}
+            <div className="flex justify-between"><span>{breakdown.product.naam}</span><span>{formatBedragRond(breakdown.product.prijs)}</span></div>
+            <div className="flex justify-between text-slate-400"><span>Basisinstallatie</span><span>{formatBedragRond(breakdown.basisinstallatie)}</span></div>
+            {breakdown.kabelkosten > 0 ? <div className="flex justify-between text-slate-400"><span>Extra kabellengte</span><span>{formatBedragRond(breakdown.kabelkosten)}</span></div> : null}
+            {breakdown.meterkastkosten > 0 ? <div className="flex justify-between text-slate-400"><span>Meterkast uitbreiden</span><span>{formatBedragRond(breakdown.meterkastkosten)}</span></div> : null}
+            {breakdown.graafkosten > 0 ? <div className="flex justify-between text-slate-400"><span>Graafwerk</span><span>{formatBedragRond(breakdown.graafkosten)}</span></div> : null}
+            {breakdown.loadBalancingKosten > 0 ? <div className="flex justify-between text-slate-400"><span>Load balancing</span><span>{formatBedragRond(breakdown.loadBalancingKosten)}</span></div> : null}
+            {breakdown.dynamicKosten > 0 ? <div className="flex justify-between text-slate-400"><span>Dynamic load balancing</span><span>{formatBedragRond(breakdown.dynamicKosten)}</span></div> : null}
           </div>
 
           <div className="mt-5 flex items-center gap-2 text-xs text-slate-400">
@@ -158,7 +156,7 @@ export default function PrijsCalculator() {
           <div className="mt-5 border-t border-white/10 pt-5">
             <p className="text-sm text-slate-400">Totaalprijs (indicatie)</p>
             <p className="mt-1 text-3xl font-semibold text-white">
-              <AnimatedNumber value={breakdown.totaal} format={(n) => formatCurrency(Math.round(n))} />
+              <AnimatedNumber value={breakdown.totaal} format={(n) => formatBedragRond(Math.round(n))} />
             </p>
           </div>
           <Link
