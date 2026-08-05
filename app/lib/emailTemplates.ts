@@ -68,13 +68,21 @@ function renderEmailLayout(title: string, introHtml: string, lead: LeadEmailData
 
 export function customerConfirmationEmail(lead: LeadEmailData) {
   const subject = "Uw aanvraag bij ClimateX is ontvangen";
+  // De aanhef gebruikt alleen de voornaam als die te bepalen is; bij een leeg of
+  // onbruikbaar naamveld valt hij terug op een nette algemene aanhef.
+  const voornaam = (lead.naam || "").trim().split(/\s+/)[0];
+  const aanhef = voornaam ? `Beste ${escapeHtml(voornaam)},` : "Beste heer, mevrouw,";
+
   const html = renderEmailLayout(
     subject,
-    `<p>Bedankt voor uw aanvraag bij ClimateX.</p>
-     <p>Wij hebben uw aanvraag goed ontvangen en nemen binnen 24 uur contact met u op.</p>
-     <p style="margin-top:16px;font-weight:bold;color:#111827;">Uw gegevens:</p>`,
+    `<p>${aanhef}</p>
+     <p>Bedankt voor uw aanvraag bij ClimateX. Wij hebben uw aanvraag goed ontvangen.</p>
+     <p>Een van onze specialisten bekijkt uw situatie en neemt zo snel mogelijk contact met u op,
+        uiterlijk binnen 24 uur op werkdagen.</p>
+     <p style="margin-top:16px;font-weight:bold;color:#111827;">Samenvatting van uw aanvraag:</p>`,
     lead,
-    `<p>Met vriendelijke groet,</p><p><strong>ClimateX</strong><br/>06 1400 4488</p>`
+    `<p>Klopt er iets niet in bovenstaande gegevens? Beantwoord deze e-mail, dan passen wij het aan.</p>
+     <p>Met vriendelijke groet,</p><p><strong>ClimateX</strong><br/>06 1400 4488</p>`
   );
   return { subject, html };
 }

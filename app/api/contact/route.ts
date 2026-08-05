@@ -48,8 +48,11 @@ export async function POST(request: Request) {
 
   await supabase.from("lead_status_historie").insert({ lead_id: insertedLead.id, status: insertedLead.status });
 
+  // De lead staat op dit punt veilig in de database. Een mislukte e-mail mag de
+  // aanvraag dus niet laten mislukken, maar moet wel opvallen in de serverlogs:
+  // zonder bevestigingsmail weet de klant niet dat de aanvraag is aangekomen.
   try {
-    const { error: emailError } = await sendOfferteEmails({
+    const { error: emailError, klantMailVerstuurd } = await sendOfferteEmails({
       naam: lead.naam,
       telefoon: lead.telefoon,
       email: lead.email,
@@ -58,10 +61,19 @@ export async function POST(request: Request) {
       opmerkingen: lead.opmerkingen,
     });
     if (emailError) {
-      console.error("E-mail verzenden mislukt:", emailError);
+      console.error(`[contact] Lead ${insertedLead.id} is opgeslagen, maar e-mail verzenden gaf fouten:`, emailError);
+    }
+    if (!klantMailVerstuurd) {
+      console.error(
+        `[contact] LET OP: lead ${insertedLead.id} heeft GEEN bevestigingsmail ontvangen. ` +
+          `Neem handmatig contact op met de klant.`
+      );
     }
   } catch (emailException) {
-    console.error("E-mail verzenden mislukt (onverwachte fout):", emailException);
+    console.error(
+      `[contact] Lead ${insertedLead.id} is opgeslagen, maar e-mail verzenden gaf een onverwachte fout:`,
+      emailException
+    );
   }
 
   return NextResponse.json({ message: "Bedankt. Wij nemen binnen 24 uur contact met u op." });
