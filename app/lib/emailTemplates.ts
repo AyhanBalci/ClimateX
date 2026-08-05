@@ -67,7 +67,7 @@ function renderEmailLayout(title: string, introHtml: string, lead: LeadEmailData
 }
 
 export function customerConfirmationEmail(lead: LeadEmailData) {
-  const subject = "Uw aanvraag bij ClimateX is ontvangen";
+  const subject = "Bevestiging van uw offerteaanvraag bij ClimateX";
   // De aanhef gebruikt alleen de voornaam als die te bepalen is; bij een leeg of
   // onbruikbaar naamveld valt hij terug op een nette algemene aanhef.
   const voornaam = (lead.naam || "").trim().split(/\s+/)[0];
