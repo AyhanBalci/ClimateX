@@ -94,7 +94,11 @@ export default function WerkbonnenOverview({ onSelectWerkbon }: Props) {
       {error ? <p className="mt-6 text-sm text-rose-400">{error}</p> : null}
 
       {!loading && !error && filtered.length === 0 ? (
-        <p className="mt-6 text-sm text-slate-400">Geen werkbonnen gevonden.</p>
+        <p className="mt-6 text-sm text-slate-400">
+          {werkbonnen.length === 0
+            ? "Er zijn nog geen werkbonnen aangemaakt."
+            : "Geen werkbonnen gevonden voor deze zoekopdracht of filters."}
+        </p>
       ) : null}
 
       {!loading && !error && filtered.length > 0 ? (

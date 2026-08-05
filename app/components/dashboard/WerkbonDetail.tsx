@@ -8,6 +8,7 @@ import { downloadWerkbonPdf } from "../../lib/generateWerkbonPdf";
 import { createFactuurFromWerkbon } from "../../lib/factuurActions";
 import { createPlanning } from "../../lib/planningActions";
 import { toDateKey } from "../../lib/dateUtils";
+import { formatDatum } from "../../lib/formatters";
 import FileUpload from "./FileUpload";
 
 type Props = {
@@ -103,7 +104,7 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!supabase) return;
+    if (!supabase || saving) return;
 
     setSaving(true);
     const { data, error: updateError } = await supabase
@@ -137,6 +138,7 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
   };
 
   const handleCreateFactuur = async () => {
+    if (creatingFactuur) return;
     setCreatingFactuur(true);
     const { data, error: createError } = await createFactuurFromWerkbon(
       { ...werkbon, status: form.status },
@@ -341,7 +343,7 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
             {afspraken.map((afspraak) => (
               <div key={afspraak.id} className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#090909] p-3 text-sm">
                 <div>
-                  <p className="font-semibold text-white">{new Date(afspraak.datum).toLocaleDateString("nl-NL")} {afspraak.starttijd.slice(0, 5)}</p>
+                  <p className="font-semibold text-white">{formatDatum(afspraak.datum)} {afspraak.starttijd.slice(0, 5)}</p>
                   <p className="text-slate-400">{afspraak.medewerker} · {afspraak.status}</p>
                 </div>
                 <button

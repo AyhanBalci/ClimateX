@@ -28,7 +28,7 @@ import FileUpload from "./FileUpload";
 import KlantAccountKoppeling from "./KlantAccountKoppeling";
 import OfferteActieKnoppen from "./OfferteActieKnoppen";
 import OfferteKoppelingen from "./OfferteKoppelingen";
-import { formatBedragRond, formatDatumTijd } from "../../lib/formatters";
+import { formatBedragRond, formatDatum, formatDatumTijd } from "../../lib/formatters";
 
 
 
@@ -848,7 +848,7 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
             {afspraken.map((afspraak) => (
               <div key={afspraak.id} className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#090909] p-3 text-sm">
                 <div>
-                  <p className="font-semibold text-white">{new Date(afspraak.datum).toLocaleDateString("nl-NL")} {afspraak.starttijd.slice(0, 5)}</p>
+                  <p className="font-semibold text-white">{formatDatum(afspraak.datum)} {afspraak.starttijd.slice(0, 5)}</p>
                   <p className="text-slate-400">{afspraak.medewerker} · {afspraak.status}</p>
                 </div>
                 <button

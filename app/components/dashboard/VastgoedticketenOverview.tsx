@@ -251,7 +251,13 @@ export default function VastgoedticketenOverview({ onSelectTicket }: Props) {
 
       {loading ? <p className="mt-6 text-sm text-slate-400">Bezig met laden...</p> : null}
 
-      {!loading && filtered.length === 0 ? <p className="mt-6 text-sm text-slate-400">Geen tickets gevonden.</p> : null}
+      {!loading && filtered.length === 0 ? (
+        <p className="mt-6 text-sm text-slate-400">
+          {tickets.length === 0
+            ? "Er zijn nog geen vastgoedtickets aangemaakt."
+            : "Geen tickets gevonden voor deze zoekopdracht of filters."}
+        </p>
+      ) : null}
 
       {!loading && filtered.length > 0 ? (
         <>
