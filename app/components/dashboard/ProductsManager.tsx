@@ -25,6 +25,7 @@ export default function ProductsManager() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bezig, setBezig] = useState(false);
+  const [actionId, setActionId] = useState<string | null>(null);
 
   const [formMode, setFormMode] = useState<"closed" | "new" | string>("closed");
   const [formState, setFormState] = useState<FormState>(emptyForm);
@@ -139,32 +140,45 @@ export default function ProductsManager() {
   };
 
   const handleDelete = async (product: Product) => {
-    if (!supabase) return;
+    if (!supabase || actionId) return;
     const confirmed = window.confirm(`Weet u zeker dat u "${product.merk} ${product.model}" wilt verwijderen?`);
     if (!confirmed) return;
 
-    const { error: deleteError } = await supabase.from("producten").delete().eq("id", product.id);
-    if (deleteError) {
-      setError(deleteError.message);
-      return;
+    setActionId(product.id);
+    try {
+      const { error: deleteError } = await supabase.from("producten").delete().eq("id", product.id);
+      if (deleteError) {
+        setError(deleteError.message);
+        return;
+      }
+      setError(null);
+      setProducts((current) => current.filter((item) => item.id !== product.id));
+    } finally {
+      setActionId(null);
     }
-    setProducts((current) => current.filter((item) => item.id !== product.id));
   };
 
   const handleToggleActief = async (product: Product) => {
-    if (!supabase) return;
-    const { data, error: updateError } = await supabase
-      .from("producten")
-      .update({ actief: !product.actief })
-      .eq("id", product.id)
-      .select()
-      .single();
+    if (!supabase || actionId) return;
 
-    if (updateError) {
-      setError(updateError.message);
-      return;
+    setActionId(product.id);
+    try {
+      const { data, error: updateError } = await supabase
+        .from("producten")
+        .update({ actief: !product.actief })
+        .eq("id", product.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        setError(updateError.message);
+        return;
+      }
+      setError(null);
+      setProducts((current) => current.map((item) => (item.id === product.id ? (data as Product) : item)));
+    } finally {
+      setActionId(null);
     }
-    setProducts((current) => current.map((item) => (item.id === product.id ? (data as Product) : item)));
   };
 
   return (
@@ -179,7 +193,11 @@ export default function ProductsManager() {
         </button>
       </div>
 
-      {error ? <p className="mt-4 text-sm text-rose-400">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="mt-4 text-sm text-rose-400">
+          {error}
+        </p>
+      ) : null}
       {loading ? <p className="mt-6 text-sm text-slate-400">Bezig met laden...</p> : null}
 
       {formMode !== "closed" ? (
@@ -298,14 +316,26 @@ export default function ProductsManager() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap items-center gap-2">
-                        <button onClick={() => openEditForm(product)} className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10">
+                        <button
+                          onClick={() => openEditForm(product)}
+                          disabled={actionId === product.id}
+                          className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
                           Wijzigen
                         </button>
-                        <button onClick={() => handleToggleActief(product)} className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10">
-                          {product.actief ? "Deactiveren" : "Activeren"}
+                        <button
+                          onClick={() => handleToggleActief(product)}
+                          disabled={actionId === product.id}
+                          className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {actionId === product.id ? "Bezig…" : product.actief ? "Deactiveren" : "Activeren"}
                         </button>
-                        <button onClick={() => handleDelete(product)} className="rounded-full bg-rose-500/10 px-3 py-2 text-xs text-rose-300 transition hover:bg-rose-500/20">
-                          Verwijderen
+                        <button
+                          onClick={() => handleDelete(product)}
+                          disabled={actionId === product.id}
+                          className="rounded-full bg-rose-500/10 px-3 py-2 text-xs text-rose-300 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {actionId === product.id ? "Bezig…" : "Verwijderen"}
                         </button>
                       </div>
                     </td>
@@ -328,14 +358,26 @@ export default function ProductsManager() {
                   </span>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <button onClick={() => openEditForm(product)} className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10">
+                  <button
+                    onClick={() => openEditForm(product)}
+                    disabled={actionId === product.id}
+                    className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
                     Wijzigen
                   </button>
-                  <button onClick={() => handleToggleActief(product)} className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10">
-                    {product.actief ? "Deactiveren" : "Activeren"}
+                  <button
+                    onClick={() => handleToggleActief(product)}
+                    disabled={actionId === product.id}
+                    className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {actionId === product.id ? "Bezig…" : product.actief ? "Deactiveren" : "Activeren"}
                   </button>
-                  <button onClick={() => handleDelete(product)} className="rounded-full bg-rose-500/10 px-3 py-2 text-xs text-rose-300 transition hover:bg-rose-500/20">
-                    Verwijderen
+                  <button
+                    onClick={() => handleDelete(product)}
+                    disabled={actionId === product.id}
+                    className="rounded-full bg-rose-500/10 px-3 py-2 text-xs text-rose-300 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {actionId === product.id ? "Bezig…" : "Verwijderen"}
                   </button>
                 </div>
               </div>
