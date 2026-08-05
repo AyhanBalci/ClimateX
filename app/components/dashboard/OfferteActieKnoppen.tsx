@@ -48,7 +48,11 @@ export default function OfferteActieKnoppen({ offerte, klant, className }: Props
           {busy ? "Bezig met versturen..." : "Verstuur PDF per e-mail"}
         </button>
       </div>
-      {feedback ? <p className="mt-1 text-xs text-slate-400">{feedback}</p> : null}
+      {feedback ? (
+        <p role="status" aria-live="polite" className="mt-1 text-xs text-slate-400">
+          {feedback}
+        </p>
+      ) : null}
     </div>
   );
 }
