@@ -4,10 +4,18 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { TrendingDown } from "lucide-react";
 import AnimatedNumber from "./AnimatedNumber";
+import { PRICE_RANGE } from "../../lib/producten/helpers";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(value);
 }
+
+/**
+ * De terugverdientijd rekent met de laagste catalogusprijs (inclusief installatie),
+ * zodat de aanname meebeweegt met de productcatalogus in plaats van hier apart
+ * te verouderen.
+ */
+const INSTAPINVESTERING = PRICE_RANGE.min;
 
 export default function BesparingsCalculator() {
   const [kmPerJaar, setKmPerJaar] = useState(15000);
@@ -21,8 +29,7 @@ export default function BesparingsCalculator() {
     const kostenThuis = kwhPerJaar * thuisPrijs;
     const besparingPerJaar = Math.max(0, kostenOpenbaar - kostenThuis);
     const besparingPerMaand = besparingPerJaar / 12;
-    const investering = 1295 + 350;
-    const terugverdientijdMaanden = besparingPerMaand > 0 ? investering / besparingPerMaand : null;
+    const terugverdientijdMaanden = besparingPerMaand > 0 ? INSTAPINVESTERING / besparingPerMaand : null;
     return { besparingPerJaar, besparingPerMaand, terugverdientijdMaanden };
   }, [kmPerJaar, verbruik, openbaarPrijs, thuisPrijs]);
 
@@ -95,7 +102,10 @@ export default function BesparingsCalculator() {
             Start met besparen
           </Link>
           <p className="mt-4 text-xs leading-5 text-slate-500">
-            Dit is een indicatie op basis van uw invoer en gemiddelde marktprijzen. Werkelijke besparing is afhankelijk van uw energiecontract en laadgedrag.
+            Dit is een indicatie op basis van uw invoer. De terugverdientijd rekent met onze laagste
+            laadpaalprijs inclusief installatie ({formatCurrency(INSTAPINVESTERING)}); bij een ander model of extra
+            werk aan de meterkast valt die anders uit. De werkelijke besparing hangt af van uw energiecontract en
+            laadgedrag.
           </p>
         </div>
       </div>

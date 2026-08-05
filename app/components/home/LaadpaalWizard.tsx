@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, Zap } from "lucide-react";
+import { getProductByRef } from "../../lib/producten/products";
+import { formatPrijs, productDisplayName, productHref } from "../../lib/producten/helpers";
 
 type Answers = {
   segment: "particulier" | "zakelijk";
@@ -27,34 +29,37 @@ const initialAnswers: Answers = {
   dynamicLoadBalancing: false,
 };
 
+/**
+ * Het advies verwijst naar een product in de catalogus; naam, prijs en link
+ * komen uit `products.ts`, zodat er geen tweede plek is waar prijzen kunnen
+ * verouderen. De uitleg beschrijft waaróm dit model bij de antwoorden past.
+ */
 function recommend(answers: Answers) {
   if (answers.segment === "zakelijk" || Number(answers.aantalAutos) >= 3 || answers.dynamicLoadBalancing) {
     return {
-      naam: "Zaptec Pro",
+      ref: "zaptec/pro",
       uitleg:
-        "Voor zakelijk gebruik of meerdere voertuigen adviseren wij een robuuste laadpaal met dynamic load balancing, zodat uw hoofdaansluiting nooit overbelast raakt.",
-      prijs: "vanaf €1.795",
+        "Voor zakelijk gebruik of meerdere voertuigen adviseren wij een laadpaal met dynamic load balancing en MID-meting, zodat uw hoofdaansluiting niet overbelast raakt en het verbruik per gebruiker geregistreerd wordt.",
     };
   }
   if (answers.loadBalancing || Number(answers.aantalAutos) === 2) {
     return {
-      naam: "Easee Charge Up",
+      ref: "easee/charge-up",
       uitleg:
-        "Met twee auto's of de wens voor load balancing is de Easee Charge Up een uitstekende keuze: compact, slim en tot drie laders koppelbaar.",
-      prijs: "vanaf €1.195",
+        "Met twee auto's of de wens voor load balancing is dit een uitstekende keuze: dynamic load balancing zit standaard ingebouwd en het systeem is later eenvoudig uit te breiden.",
     };
   }
   if (answers.aansluiting === "3-fase") {
     return {
-      naam: "Zaptec Go",
-      uitleg: "Op een 3-fase aansluiting laadt u met Zaptec Go snel en slim, met ingebouwde load balancing.",
-      prijs: "vanaf €1.095",
+      ref: "zaptec/go",
+      uitleg:
+        "Op een 3-fase aansluiting laadt u hiermee snel en slim, met ingebouwde load balancing en een lange fabrieksgarantie.",
     };
   }
   return {
-    naam: "Wallbox Pulsar Plus",
-    uitleg: "Voor thuisgebruik op een 1-fase aansluiting is de Wallbox Pulsar Plus compact, betaalbaar en slim.",
-    prijs: "vanaf €999",
+    ref: "wallbox/pulsar-plus",
+    uitleg:
+      "Voor thuisgebruik op een 1-fase aansluiting is dit een compacte en scherp geprijsde laadpaal, met een goede app voor inzicht in uw laadsessies.",
   };
 }
 
@@ -66,6 +71,7 @@ export default function LaadpaalWizard() {
   const [finished, setFinished] = useState(false);
 
   const result = useMemo(() => recommend(answers), [answers]);
+  const aanbevolenProduct = useMemo(() => getProductByRef(result.ref), [result.ref]);
   const step = steps[stepIndex];
   const progress = ((stepIndex + (finished ? 1 : 0)) / steps.length) * 100;
 
@@ -111,13 +117,18 @@ export default function LaadpaalWizard() {
         />
       </div>
 
-      <AnimatePresence mode="wait">
+      {/*
+        Bewust geen AnimatePresence met exit-animatie: bij het wisselen tussen de
+        stapweergave en het resultaat bleef de oude stap hangen, waardoor de
+        keuzehulp op stap 1 bleef staan en het advies nooit verscheen. De
+        binnenkomst-animatie per stap volstaat en kan niet vastlopen.
+      */}
+      <div>
         {!finished ? (
           <motion.div
             key={step}
             initial={{ opacity: 0, x: 24 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -24 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
           >
             {step === "segment" ? (
@@ -268,10 +279,25 @@ export default function LaadpaalWizard() {
               <Check className="h-7 w-7" />
             </span>
             <p className="mt-4 text-sm uppercase tracking-[0.24em] text-emerald-300/80">Aanbevolen voor u</p>
-            <h3 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">{result.naam}</h3>
+            <h3 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
+              {aanbevolenProduct ? productDisplayName(aanbevolenProduct) : "Persoonlijk advies"}
+            </h3>
             <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-slate-400">{result.uitleg}</p>
-            <p className="mt-4 text-lg font-semibold text-cyan-300">{result.prijs}</p>
+            {aanbevolenProduct ? (
+              <p className="mt-4 text-lg font-semibold text-cyan-300">
+                vanaf {formatPrijs(aanbevolenProduct.vanafPrijs)}
+                <span className="ml-1.5 text-sm font-normal text-slate-500">incl. installatie</span>
+              </p>
+            ) : null}
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              {aanbevolenProduct ? (
+                <Link
+                  href={productHref(aanbevolenProduct)}
+                  className="inline-flex items-center justify-center rounded-full border border-cyan-300/25 bg-cyan-400/10 px-7 py-3 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-400/15"
+                >
+                  Bekijk deze laadpaal
+                </Link>
+              ) : null}
               <Link
                 href="/#contact"
                 className="inline-flex items-center justify-center rounded-full bg-white px-7 py-3 text-sm font-semibold text-black transition hover:bg-slate-100"
@@ -287,7 +313,7 @@ export default function LaadpaalWizard() {
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </div>
 
       {!finished ? (
         <div className="mt-8 flex items-center justify-between">
