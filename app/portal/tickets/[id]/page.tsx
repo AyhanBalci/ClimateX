@@ -58,7 +58,7 @@ export default function PortalTicketDetailPage() {
 
   const handleBerichtVersturen = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!nieuwBericht.trim() || !session?.user.id) return;
+    if (!nieuwBericht.trim() || !session?.user.id || versturen) return;
     setVersturen(true);
     const { error: berichtError } = await addTicketBericht(ticketId, session.user.id, nieuwBericht.trim());
     if (berichtError) {

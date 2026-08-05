@@ -40,7 +40,7 @@ export default function PortalStoringPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!session?.user.id) return;
+    if (!session?.user.id || submitting) return;
 
     if (!form.locatie.trim() || !form.omschrijving.trim()) {
       setError("Vul minimaal de locatie en een omschrijving van de storing in.");

@@ -11,6 +11,7 @@ export default function PortalLoginPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (loading) return;
     if (!email.trim()) {
       setError("Vul uw e-mailadres in.");
       return;
@@ -61,13 +62,20 @@ export default function PortalLoginPage() {
               E-mailadres
               <input
                 type="email"
+                required
+                autoComplete="email"
+                aria-invalid={error ? true : undefined}
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="naam@voorbeeld.nl"
                 className="mt-3 w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
               />
             </label>
-            {error ? <p className="text-sm text-rose-400">{error}</p> : null}
+            {error ? (
+              <p role="alert" className="text-sm text-rose-400">
+                {error}
+              </p>
+            ) : null}
             <button
               type="submit"
               disabled={loading}

@@ -47,6 +47,7 @@ export default function PortalShell({ children }: { children: ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={pathname === item.href ? "page" : undefined}
                 className={`shrink-0 rounded-full px-5 py-3 text-sm font-semibold transition ${
                   pathname === item.href
                     ? "bg-cyan-400 text-slate-950"

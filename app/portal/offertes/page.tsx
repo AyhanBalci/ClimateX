@@ -55,6 +55,7 @@ export default function PortalOffertesPage() {
   }, [session?.user.id]);
 
   const handleAkkoord = async (offerteId: string) => {
+    if (busyId) return;
     setBusyId(offerteId);
     setError(null);
     const { error: akkoordError } = await klantAccepteerOfferte(offerteId);
