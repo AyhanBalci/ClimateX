@@ -6,6 +6,7 @@ import { isSupabaseConfigured, supabase } from "../../lib/supabase";
 import { markOfferteVerstuurd, updateOfferteStatus } from "../../lib/offerteActions";
 import OfferteActieKnoppen from "./OfferteActieKnoppen";
 import OfferteKoppelingen from "./OfferteKoppelingen";
+import OfferteStatusHistorie from "./OfferteStatusHistorie";
 import { formatBedragRond, formatDatumTijd } from "../../lib/formatters";
 import { offerteStatusWeergave } from "../../lib/offerteStatus";
 
@@ -206,6 +207,11 @@ export default function OffertesOverview({ onOpenWerkbon, onOpenPlanning }: Prop
                             onOpenPlanning={onOpenPlanning}
                           />
                         ) : null}
+                        <OfferteStatusHistorie
+                          offerteId={offerte.id}
+                          offerteDatum={offerte.datum}
+                          status={offerte.status}
+                        />
                       </div>
                     </td>
                   </tr>
@@ -272,6 +278,11 @@ export default function OffertesOverview({ onOpenWerkbon, onOpenPlanning }: Prop
                       onOpenPlanning={onOpenPlanning}
                     />
                   ) : null}
+                  <OfferteStatusHistorie
+                    offerteId={offerte.id}
+                    offerteDatum={offerte.datum}
+                    status={offerte.status}
+                  />
                 </div>
               </div>
             ))}

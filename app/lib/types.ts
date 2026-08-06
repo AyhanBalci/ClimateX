@@ -52,6 +52,14 @@ export type Offerte = {
   vastgoedtickets?: { klant: string; locatie: string; contactpersoon: string | null; telefoonnummer: string | null } | null;
 };
 
+export type OfferteStatusHistorieRegel = {
+  id: string;
+  created_at: string;
+  offerte_id: string;
+  status: string;
+  bron: string | null;
+};
+
 export type Product = {
   id: string;
   created_at: string;
