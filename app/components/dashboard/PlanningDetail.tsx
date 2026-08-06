@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { Planning, Vastgoedticket, Werkbon } from "../../lib/types";
 import { PLANNING_STATUS_OPTIONS } from "../../lib/constants";
 import { supabase } from "../../lib/supabase";
-import { deletePlanning, updatePlanningStatus } from "../../lib/planningActions";
+import { deletePlanning, getMedewerkerKleur, updatePlanningStatus } from "../../lib/planningActions";
 import { formatDatumMetTijd } from "../../lib/formatters";
 
 
@@ -20,6 +20,7 @@ export default function PlanningDetail({ planning, onBack, onPlanningUpdated, on
   const [current, setCurrent] = useState(planning);
   const [ticket, setTicket] = useState<Vastgoedticket | null>(null);
   const [werkbon, setWerkbon] = useState<Werkbon | null>(null);
+  const [medewerkers, setMedewerkers] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [savingForm, setSavingForm] = useState(false);
@@ -52,6 +53,18 @@ export default function PlanningDetail({ planning, onBack, onPlanningUpdated, on
     fetchLinks();
   }, [planning.ticket_id, planning.werkbon_id]);
 
+  // Bekende monteurs, zodat toewijzen een keuze uit de lijst is in plaats van
+  // elke keer de naam opnieuw intypen (en dus verkeerd kunnen spellen).
+  useEffect(() => {
+    async function fetchMedewerkers() {
+      if (!supabase) return;
+      const { data } = await supabase.from("planning").select("medewerker");
+      const unieke = Array.from(new Set((data || []).map((item) => item.medewerker).filter(Boolean)));
+      setMedewerkers(unieke.sort());
+    }
+    fetchMedewerkers();
+  }, []);
+
   const handleStatusChange = async (status: string) => {
     if (updatingStatus) return;
 
@@ -83,6 +96,9 @@ export default function PlanningDetail({ planning, onBack, onPlanningUpdated, on
           titel: form.titel.trim(),
           klantnaam: form.klantnaam.trim(),
           medewerker: form.medewerker.trim(),
+          // De kleur hoort bij de monteur. Zonder deze regel houdt de afspraak na
+          // een herverdeling de kleur van de vorige monteur in de agenda.
+          kleur: getMedewerkerKleur(form.medewerker.trim()),
           datum: form.datum,
           starttijd: form.starttijd,
           eindtijd: form.eindtijd,
@@ -247,11 +263,17 @@ export default function PlanningDetail({ planning, onBack, onPlanningUpdated, on
           />
           <input
             type="text"
-            placeholder="Medewerker"
+            placeholder="Monteur"
+            list="planning-detail-medewerkers"
             value={form.medewerker}
             onChange={(event) => setForm((c) => ({ ...c, medewerker: event.target.value }))}
             className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
           />
+          <datalist id="planning-detail-medewerkers">
+            {medewerkers.map((medewerker) => (
+              <option key={medewerker} value={medewerker} />
+            ))}
+          </datalist>
           <input
             type="date"
             value={form.datum}

@@ -115,6 +115,18 @@ export async function updatePlanningStatus(planning: Planning, status: string) {
   return { error: null };
 }
 
+/**
+ * Verplaatst een afspraak naar een andere dag. Wordt gebruikt door het slepen in
+ * de agenda; de tijden blijven staan, alleen de datum verschuift.
+ */
+export async function verplaatsPlanning(planningId: string, datum: string) {
+  if (!supabase) {
+    return { error: "Supabase is niet geconfigureerd." };
+  }
+  const { error } = await supabase.from("planning").update({ datum }).eq("id", planningId);
+  return { error: error ? error.message : null };
+}
+
 export async function deletePlanning(planningId: string) {
   if (!supabase) {
     return { error: "Supabase is niet geconfigureerd." };
