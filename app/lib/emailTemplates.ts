@@ -254,3 +254,65 @@ export function factuurHerinneringEmail(
   </div>`;
   return { subject, html };
 }
+
+const MELDING_SOORT_LABELS: Record<string, string> = {
+  offerte: "Offerte",
+  servicemelding: "Servicemelding",
+  werkbon: "Werkbon",
+  factuur: "Factuur",
+};
+
+export function meldingenSamenvattingEmail(
+  meldingen: { soort: string; titel: string; omschrijving: string | null; created_at: string }[]
+) {
+  const subject = `${meldingen.length} ${meldingen.length === 1 ? "nieuwe melding" : "nieuwe meldingen"} in ClimateX`;
+
+  const regels = meldingen
+    .map((melding) => {
+      const label = MELDING_SOORT_LABELS[melding.soort] || melding.soort;
+      const moment = new Date(melding.created_at).toLocaleString("nl-NL", {
+        dateStyle: "short",
+        timeStyle: "short",
+      });
+      return `
+        <tr>
+          <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;">
+            <p style="margin:0;font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;">
+              ${escapeHtml(label)} &middot; ${escapeHtml(moment)}
+            </p>
+            <p style="margin:4px 0 0;font-size:14px;color:#111827;font-weight:bold;">${escapeHtml(melding.titel)}</p>
+            ${melding.omschrijving ? `<p style="margin:2px 0 0;font-size:13px;color:#374151;">${escapeHtml(melding.omschrijving)}</p>` : ""}
+          </td>
+        </tr>`;
+    })
+    .join("");
+
+  const html = `
+  <div style="background-color:#f4f4f5;padding:32px 16px;font-family:Arial,Helvetica,sans-serif;">
+    <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background-color:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e5e7eb;">
+      <tr>
+        <td style="background-color:#0a0a0a;padding:24px 32px;">
+          <span style="display:inline-block;background-color:#22d3ee;color:#0a0a0a;font-weight:bold;font-size:14px;border-radius:8px;padding:6px 10px;margin-right:10px;">CX</span>
+          <span style="color:#ffffff;font-size:20px;font-weight:bold;vertical-align:middle;">ClimateX</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:32px;">
+          <h1 style="margin:0 0 16px;font-size:18px;color:#111827;">Openstaande meldingen</h1>
+          <p style="font-size:14px;line-height:1.6;color:#374151;">
+            Er ${meldingen.length === 1 ? "staat 1 melding" : `staan ${meldingen.length} meldingen`} open in het dashboard.
+          </p>
+          <table role="presentation" width="100%" style="margin-top:16px;border-collapse:collapse;">
+            ${regels}
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td style="background-color:#f9fafb;padding:16px 32px;text-align:center;color:#9ca3af;font-size:12px;">
+          ClimateX — Slimme energieoplossingen voor woningen en bedrijven — 06 1400 4488
+        </td>
+      </tr>
+    </table>
+  </div>`;
+  return { subject, html };
+}

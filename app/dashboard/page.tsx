@@ -17,6 +17,7 @@ import VastgoedticketDetail from "../components/dashboard/VastgoedticketDetail";
 import PlanningAgenda from "../components/dashboard/PlanningAgenda";
 import PlanningDetail from "../components/dashboard/PlanningDetail";
 import DashboardOverzicht from "../components/dashboard/DashboardOverzicht";
+import MeldingenPaneel from "../components/dashboard/MeldingenPaneel";
 import KlantenOverzicht from "../components/dashboard/KlantenOverzicht";
 import KlantProfiel from "../components/dashboard/KlantProfiel";
 
@@ -215,12 +216,15 @@ export default function DashboardPage() {
             <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Beheeromgeving</p>
             <h1 className="mt-3 text-2xl font-semibold sm:text-3xl">ClimateX CRM Dashboard</h1>
           </div>
-          <button
-            onClick={handleLogout}
-            className="self-start rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm text-white transition hover:border-white/20 hover:bg-white/10 sm:self-auto"
-          >
-            Uitloggen
-          </button>
+          <div className="flex flex-wrap items-center gap-3 self-start sm:self-auto">
+            <MeldingenPaneel />
+            <button
+              onClick={handleLogout}
+              className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm text-white transition hover:border-white/20 hover:bg-white/10"
+            >
+              Uitloggen
+            </button>
+          </div>
         </div>
 
         <div className="mb-6">

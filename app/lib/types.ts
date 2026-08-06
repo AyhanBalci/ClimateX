@@ -239,6 +239,21 @@ export type KlantAdres = {
   is_primair: boolean;
 };
 
+export type Melding = {
+  id: string;
+  created_at: string;
+  /** offerte, servicemelding, werkbon of factuur. */
+  soort: string;
+  titel: string;
+  omschrijving: string | null;
+  gelezen: boolean;
+  lead_id: string | null;
+  offerte_id: string | null;
+  werkbon_id: string | null;
+  factuur_id: string | null;
+  ticket_id: string | null;
+};
+
 export type Planning = {
   id: string;
   created_at: string;
