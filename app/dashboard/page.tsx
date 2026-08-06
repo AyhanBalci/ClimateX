@@ -17,8 +17,10 @@ import VastgoedticketDetail from "../components/dashboard/VastgoedticketDetail";
 import PlanningAgenda from "../components/dashboard/PlanningAgenda";
 import PlanningDetail from "../components/dashboard/PlanningDetail";
 import DashboardOverzicht from "../components/dashboard/DashboardOverzicht";
+import KlantenOverzicht from "../components/dashboard/KlantenOverzicht";
+import KlantProfiel from "../components/dashboard/KlantProfiel";
 
-type View = "overzicht" | "leads" | "offertes" | "producten" | "werkbonnen" | "facturen" | "tickets" | "planning";
+type View = "overzicht" | "klanten" | "leads" | "offertes" | "producten" | "werkbonnen" | "facturen" | "tickets" | "planning";
 
 export default function DashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -33,6 +35,7 @@ export default function DashboardPage() {
 
   const [view, setView] = useState<View>("overzicht");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [selectedKlant, setSelectedKlant] = useState<Lead | null>(null);
   const [selectedWerkbon, setSelectedWerkbon] = useState<Werkbon | null>(null);
   const [selectedTicket, setSelectedTicket] = useState<Vastgoedticket | null>(null);
   const [selectedPlanning, setSelectedPlanning] = useState<Planning | null>(null);
@@ -232,6 +235,7 @@ export default function DashboardPage() {
           {(
             [
               { key: "overzicht", label: "Overzicht" },
+              { key: "klanten", label: "Klanten" },
               { key: "leads", label: "Leads" },
               { key: "offertes", label: "Offertes" },
               { key: "producten", label: "Producten" },
@@ -248,6 +252,7 @@ export default function DashboardPage() {
               onClick={() => {
                 setView(tab.key);
                 setSelectedLead(null);
+                setSelectedKlant(null);
                 setSelectedWerkbon(null);
                 setSelectedTicket(null);
                 setSelectedPlanning(null);
@@ -263,6 +268,18 @@ export default function DashboardPage() {
 
         {view === "overzicht" ? (
           <DashboardOverzicht />
+        ) : view === "klanten" ? (
+          selectedKlant ? (
+            <KlantProfiel
+              key={selectedKlant.id}
+              lead={selectedKlant}
+              onBack={() => setSelectedKlant(null)}
+              onOpenWerkbon={handleOpenWerkbon}
+              onOpenPlanning={handleOpenPlanning}
+            />
+          ) : (
+            <KlantenOverzicht onSelectKlant={setSelectedKlant} />
+          )
         ) : view === "leads" ? (
           selectedLead ? (
             <LeadDetail

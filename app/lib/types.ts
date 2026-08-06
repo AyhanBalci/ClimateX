@@ -174,6 +174,30 @@ export type TicketKlantBericht = {
   created_at: string;
 };
 
+export type KlantContactpersoon = {
+  id: string;
+  created_at: string;
+  lead_id: string;
+  naam: string;
+  functie: string | null;
+  email: string | null;
+  telefoon: string | null;
+  is_primair: boolean;
+};
+
+export type KlantAdres = {
+  id: string;
+  created_at: string;
+  lead_id: string;
+  soort: string;
+  straat: string | null;
+  huisnummer: string | null;
+  postcode: string | null;
+  plaats: string | null;
+  land: string;
+  is_primair: boolean;
+};
+
 export type Planning = {
   id: string;
   created_at: string;

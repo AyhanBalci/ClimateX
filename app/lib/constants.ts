@@ -63,6 +63,16 @@ export const KLANT_UPLOAD_CATEGORIE_OPTIONS = [
 
 export const AANSLUITING_OPTIONS = ["1-fase", "3-fase", "Onbekend"];
 
+export const KLANT_ADRES_SOORT_OPTIONS = ["Installatie", "Facturatie", "Bezoek", "Overig"];
+
+export const KLANT_DOCUMENT_CATEGORIE_OPTIONS = [
+  "Contract",
+  "Identiteit",
+  "Technische tekening",
+  "Correspondentie",
+  "Overig",
+];
+
 export const PLANNING_TYPE_OPTIONS = ["Installatie", "Onderhoud", "Storing", "Servicebezoek"];
 
 export const FACTUUR_STATUS_LABELS: Record<string, string> = {
