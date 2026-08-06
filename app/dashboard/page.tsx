@@ -21,8 +21,10 @@ type View = "leads" | "offertes" | "producten" | "werkbonnen" | "facturen" | "ti
 
 export default function DashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [sessieGecontroleerd, setSessieGecontroleerd] = useState(false);
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
+  const [bezigMetInloggen, setBezigMetInloggen] = useState(false);
 
   const [leads, setLeads] = useState<Lead[]>([]);
   const [leadsLoading, setLeadsLoading] = useState(false);
@@ -34,13 +36,63 @@ export default function DashboardPage() {
   const [selectedTicket, setSelectedTicket] = useState<Vastgoedticket | null>(null);
   const [selectedPlanning, setSelectedPlanning] = useState<Planning | null>(null);
 
-  const handleLogin = (event: React.FormEvent<HTMLFormElement>) => {
+  // Bestaande sessie herkennen, zodat verversen niet uitlogt. Het cookie is
+  // httpOnly en dus niet uit JavaScript te lezen; alleen de server kan zeggen
+  // of het geldig is.
+  useEffect(() => {
+    let verouderd = false;
+
+    async function controleerSessie() {
+      try {
+        const response = await fetch("/api/dashboard/session");
+        const data = await response.json();
+        if (!verouderd) setIsAuthenticated(Boolean(data.ingelogd));
+      } catch {
+        if (!verouderd) setIsAuthenticated(false);
+      } finally {
+        if (!verouderd) setSessieGecontroleerd(true);
+      }
+    }
+
+    controleerSessie();
+    return () => {
+      verouderd = true;
+    };
+  }, []);
+
+  const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (password === "Aydin09!!") {
-      setIsAuthenticated(true);
-      setLoginError("");
-    } else {
-      setLoginError("Wachtwoord onjuist.");
+    if (bezigMetInloggen) return;
+
+    setBezigMetInloggen(true);
+    setLoginError("");
+    try {
+      const response = await fetch("/api/dashboard/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wachtwoord: password }),
+      });
+      const data = await response.json();
+
+      if (response.ok && data.ingelogd) {
+        setIsAuthenticated(true);
+        // Het wachtwoord niet langer dan nodig in het geheugen houden.
+        setPassword("");
+      } else {
+        setLoginError(data.error || "Wachtwoord onjuist.");
+      }
+    } catch {
+      setLoginError("Inloggen is mislukt. Controleer uw verbinding en probeer het opnieuw.");
+    } finally {
+      setBezigMetInloggen(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/dashboard/session", { method: "DELETE" });
+    } finally {
+      setIsAuthenticated(false);
     }
   };
 
@@ -104,6 +156,16 @@ export default function DashboardPage() {
     setSelectedWerkbon(null);
   };
 
+  // Voorkomt dat het inlogscherm kort opflitst terwijl de sessie nog wordt
+  // gecontroleerd bij een gebruiker die al is ingelogd.
+  if (!sessieGecontroleerd) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-zinc-950 text-white">
+        <p className="text-sm text-slate-400">Bezig met laden...</p>
+      </main>
+    );
+  }
+
   if (!isAuthenticated) {
     return (
       <main className="min-h-screen bg-zinc-950 text-white px-6 py-16 sm:px-10 lg:px-16">
@@ -128,8 +190,12 @@ export default function DashboardPage() {
                 {loginError}
               </p>
             ) : null}
-            <button type="submit" className="w-full rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300">
-              Inloggen
+            <button
+              type="submit"
+              disabled={bezigMetInloggen}
+              className="w-full rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {bezigMetInloggen ? "Bezig met inloggen…" : "Inloggen"}
             </button>
           </form>
         </div>
@@ -146,7 +212,7 @@ export default function DashboardPage() {
             <h1 className="mt-3 text-2xl font-semibold sm:text-3xl">ClimateX CRM Dashboard</h1>
           </div>
           <button
-            onClick={() => setIsAuthenticated(false)}
+            onClick={handleLogout}
             className="self-start rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm text-white transition hover:border-white/20 hover:bg-white/10 sm:self-auto"
           >
             Uitloggen
