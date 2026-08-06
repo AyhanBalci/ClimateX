@@ -5,6 +5,7 @@ import Image from "next/image";
 import { supabase } from "../../lib/supabase";
 import { Bestand } from "../../lib/types";
 import { formatDatumTijd } from "../../lib/formatters";
+import { verwijderBestand, verwijderWeesbestand } from "../../lib/bestandVerwijderen";
 import {
   ACCEPT_ATTRIBUUT,
   MAX_BESTANDSGROOTTE_MB,
@@ -105,8 +106,9 @@ export default function FileUpload({ werkbonId, factuurId, leadId, ticketId, cat
     if (insertError) {
       // Het bestand staat al in de opslag maar heeft geen regel in de database.
       // Zonder opruimen blijft het als wees achter en is het nergens meer
-      // zichtbaar of te verwijderen.
-      await supabase.storage.from(BUCKET).remove([path]);
+      // zichtbaar of te verwijderen. Opruimen loopt via de server, want de
+      // browser mag sinds de beveiligingsfix niets meer uit de opslag halen.
+      await verwijderWeesbestand(path);
       setError(insertError.message);
     } else {
       setBestanden((current) => [data as Bestand, ...current]);
@@ -122,10 +124,12 @@ export default function FileUpload({ werkbonId, factuurId, leadId, ticketId, cat
 
     setVerwijderId(bestand.id);
     try {
-      await supabase.storage.from(BUCKET).remove([bestand.pad]);
-      const { error: deleteError } = await supabase.from("bestanden").delete().eq("id", bestand.id);
-      if (deleteError) {
-        setError(deleteError.message);
+      // De server verwijdert het object en de rij in één stap, achter de
+      // dashboardsessie. Het opslagpad wordt daar uit de database gehaald en
+      // niet vanuit hier meegestuurd.
+      const { error: verwijderFout } = await verwijderBestand(bestand.id);
+      if (verwijderFout) {
+        setError(verwijderFout);
         return;
       }
       setError(null);

@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { verwijderBestanden } from "./bestandVerwijderen";
 
 export async function updateLeadStatus(leadId: string, newStatus: string) {
   if (!supabase) {
@@ -63,8 +64,31 @@ export async function deleteLead(leadId: string) {
     };
   }
 
-  // Deze records hebben zonder de lead geen betekenis meer en gaan mee.
-  for (const tabel of ["lead_notities", "lead_status_historie", "planning", "bestanden"] as const) {
+  // De opslagobjecten gaan eerst, en via de server. Eerder werden alleen de
+  // rijen uit `bestanden` verwijderd; de foto's zelf bleven dan achter in een
+  // publieke bucket, onvindbaar via het CRM maar nog wel opvraagbaar voor wie
+  // de URL ooit zag. Mislukt dit, dan stoppen we vóór het verwijderen van de
+  // rijen: zonder rij is het pad naar het object nergens meer te vinden.
+  const { data: bestanden, error: bestandenLeesFout } = await supabase
+    .from("bestanden")
+    .select("id")
+    .eq("lead_id", leadId);
+
+  if (bestandenLeesFout) {
+    return { error: `Kon de bestanden van deze lead niet opvragen: ${bestandenLeesFout.message}` };
+  }
+
+  if (bestanden && bestanden.length > 0) {
+    const { error: opslagFout } = await verwijderBestanden(bestanden.map((item) => item.id));
+    if (opslagFout) {
+      return { error: `Opruimen van de bestanden is mislukt: ${opslagFout}` };
+    }
+  }
+
+  // Deze records hebben zonder de lead geen betekenis meer en gaan mee. De
+  // tabel `bestanden` staat er niet meer bij: die rijen zijn hierboven al
+  // samen met hun opslagobject verwijderd.
+  for (const tabel of ["lead_notities", "lead_status_historie", "planning"] as const) {
     const { error } = await supabase.from(tabel).delete().eq("lead_id", leadId);
     if (error) {
       return { error: `Opruimen van ${tabel} is mislukt: ${error.message}` };
