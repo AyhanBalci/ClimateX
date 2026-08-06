@@ -56,13 +56,23 @@ export function downloadWerkbonPdf(werkbon: Werkbon) {
     }
   };
 
+  section("Werkbongegevens");
+  [
+    `Status: ${werkbon.status}`,
+    `Uitvoeringsdatum: ${formatDatum(werkbon.datum)}`,
+    `Installateur: ${werkbon.monteur || "-"}`,
+    `Serienummer laadpaal: ${werkbon.serienummer || "-"}`,
+  ].forEach((line) => {
+    doc.text(line, margin, y);
+    y += 6;
+  });
+  divider();
+
   section("Klantgegevens");
   [
     `Naam: ${werkbon.klantnaam}`,
     `Adres: ${werkbon.adres || "-"}`,
     `Telefoon: ${werkbon.telefoon || "-"}`,
-    `Installateur: ${werkbon.monteur || "-"}`,
-    `Serienummer laadpaal: ${werkbon.serienummer || "-"}`,
   ].forEach((line) => {
     doc.text(line, margin, y);
     y += 6;

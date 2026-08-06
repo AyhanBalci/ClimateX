@@ -137,6 +137,16 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
     onWerkbonUpdated(data as Werkbon);
   };
 
+  /**
+   * De PDF wordt uitgeprint en ondertekend, dus hij moet exact overeenkomen met
+   * wat er is opgeslagen. Zolang er niet-opgeslagen wijzigingen openstaan, zou
+   * een ondertekend papier iets anders vermelden dan het dossier.
+   */
+  const heeftNietOpgeslagenWijzigingen = (Object.keys(form) as (keyof typeof form)[]).some((veld) => {
+    const opgeslagen = (werkbon as unknown as Record<string, unknown>)[veld];
+    return form[veld] !== ((opgeslagen as string | null) ?? "");
+  });
+
   const handleCreateFactuur = async () => {
     if (creatingFactuur) return;
     setCreatingFactuur(true);
@@ -170,8 +180,14 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
           </div>
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => downloadWerkbonPdf({ ...werkbon, ...form })}
-              className="rounded-full bg-cyan-400 px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300"
+              onClick={() => downloadWerkbonPdf(werkbon)}
+              disabled={heeftNietOpgeslagenWijzigingen}
+              title={
+                heeftNietOpgeslagenWijzigingen
+                  ? "Sla eerst uw wijzigingen op, anders wijkt de PDF af van het dossier."
+                  : undefined
+              }
+              className="rounded-full bg-cyan-400 px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
             >
               PDF downloaden
             </button>
@@ -187,7 +203,17 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
           </div>
         </div>
 
-        {error ? <p className="mt-4 text-sm text-rose-400">{error}</p> : null}
+        {error ? (
+          <p role="alert" className="mt-4 text-sm text-rose-400">
+            {error}
+          </p>
+        ) : null}
+
+        {heeftNietOpgeslagenWijzigingen ? (
+          <p role="status" className="mt-4 text-sm text-amber-300">
+            U heeft wijzigingen die nog niet zijn opgeslagen. Sla ze eerst op; daarna kunt u de PDF downloaden.
+          </p>
+        ) : null}
 
         <form onSubmit={handleSubmit} className="mt-6 grid gap-3 sm:grid-cols-2">
           <input
