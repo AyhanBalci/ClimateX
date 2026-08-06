@@ -18,6 +18,7 @@ import { maakBerichtConcept } from './berichten'
 import { analyseerLead, prioriteerLeads } from './leadAnalyse'
 import { maakOfferteConcept } from './offerteConcept'
 import { steldPlanningVoor } from './planningAdvies'
+import { maakWerkbonConcept } from './werkbonVoorbereiding'
 import type { AgentVoorstel, LeadAnalyse, OfferteConcept, Zekerheid } from './types'
 
 /**
@@ -175,6 +176,24 @@ export async function draaiAgent(invoer: AgentInvoer, nu: Date = new Date()): Pr
     const analyse = analyseerLead(lead, nu)
     const duur = 3 + Math.max(0, (lead.aantal_laadpunten ?? 1) - 1) * 1.5
     const momenten = steldPlanningVoor(planningen, duur, { plaats: lead.plaats, aantalVoorstellen: 2 }, nu)
+
+    // De werkbon staat los van de planning: ook zonder vrij agendamoment hoort
+    // hij klaar te staan, zodat de monteur de standaardregels niet opnieuw
+    // hoeft in te typen.
+    const werkbon = maakWerkbonConcept({ lead })
+    voorstellen.push({
+      id: voorstelId('werkbon', lead.id),
+      soort: 'werkbon-concept',
+      titel: `Werkbon voorbereiden voor ${lead.naam}`,
+      onderbouwing: [
+        `Ingeschatte duur ${werkbon.geschatteUren} uur.`,
+        `${werkbon.materialen.length} materiaalregels voorgesteld.`,
+      ],
+      zekerheid: werkbon.aandachtspunten.length <= 2 ? 'hoog' : 'gemiddeld',
+      inhoud: werkbon,
+      bronnen: { leadId: lead.id },
+      controlepunten: werkbon.aandachtspunten,
+    })
 
     if (momenten.length === 0) continue
 

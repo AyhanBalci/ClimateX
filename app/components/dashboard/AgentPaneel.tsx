@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { formatBedrag } from "../../lib/formatters";
-import type { AgentVoorstel, LeadAnalyse, OfferteConcept, BerichtConcept } from "../../lib/agents/climatex/types";
+import type { AgentVoorstel, LeadAnalyse, OfferteConcept, BerichtConcept, KlantAntwoord, WerkbonConcept } from "../../lib/agents/climatex/types";
 
 type Rapport = {
   motor: string;
@@ -74,6 +74,22 @@ function VoorstelInhoud({ voorstel }: { voorstel: AgentVoorstel }) {
     );
   }
 
+  if (voorstel.soort === "werkbon-concept") {
+    const werkbon = voorstel.inhoud as WerkbonConcept;
+    return (
+      <div className="mt-3 text-sm">
+        <p className="text-slate-300">Ingeschatte duur: {werkbon.geschatteUren} uur</p>
+        <ul className="mt-2 space-y-1 text-xs text-slate-400">
+          {werkbon.materialen.map((regel, index) => (
+            <li key={index}>
+              · {regel.aantal} {regel.eenheid} — {regel.omschrijving}
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
   if (voorstel.soort === "lead-prioriteit") {
     const analyse = voorstel.inhoud as LeadAnalyse;
     return (
@@ -89,6 +105,9 @@ function VoorstelInhoud({ voorstel }: { voorstel: AgentVoorstel }) {
 
 export default function AgentPaneel() {
   const [rapport, setRapport] = useState<Rapport | null>(null);
+  const [vraag, setVraag] = useState("");
+  const [antwoord, setAntwoord] = useState<KlantAntwoord | null>(null);
+  const [vraagBezig, setVraagBezig] = useState(false);
   const [bezig, setBezig] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -109,6 +128,31 @@ export default function AgentPaneel() {
       setError(fout instanceof Error ? fout.message : "De agent kon niet draaien.");
     } finally {
       setBezig(false);
+    }
+  };
+
+  const stelVraag = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (vraagBezig || !vraag.trim()) return;
+
+    setVraagBezig(true);
+    setError(null);
+    try {
+      const respons = await fetch("/api/agent/vraag", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vraag }),
+      });
+      const data = await respons.json();
+      if (!respons.ok) {
+        setError(data.error || "De vraag kon niet beantwoord worden.");
+        return;
+      }
+      setAntwoord(data as KlantAntwoord);
+    } catch (fout) {
+      setError(fout instanceof Error ? fout.message : "De vraag kon niet beantwoord worden.");
+    } finally {
+      setVraagBezig(false);
     }
   };
 
@@ -136,6 +180,64 @@ export default function AgentPaneel() {
           {error}
         </p>
       ) : null}
+
+      <form onSubmit={stelVraag} className="mt-6 border-t border-white/10 pt-6">
+        <label htmlFor="agent-vraag" className="text-sm font-semibold text-white">
+          Klantvraag beantwoorden
+        </label>
+        <p className="mt-1 text-xs text-slate-500">
+          Antwoord komt uit de kennisbank met bronvermelding. Is er geen onderbouwing, dan zegt de agent dat.
+        </p>
+        <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+          <input
+            id="agent-vraag"
+            type="text"
+            placeholder="Bijvoorbeeld: kan ik subsidie krijgen voor een laadpaal thuis?"
+            value={vraag}
+            onChange={(event) => setVraag(event.target.value)}
+            className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
+          />
+          <button
+            type="submit"
+            disabled={vraagBezig || !vraag.trim()}
+            className="min-h-[44px] shrink-0 rounded-full border border-cyan-300/30 bg-cyan-400/10 px-5 py-3 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {vraagBezig ? "Bezig…" : "Vraag stellen"}
+          </button>
+        </div>
+
+        {antwoord ? (
+          <div className="mt-3 rounded-3xl border border-white/10 bg-[#090909] p-4">
+            <p className="text-sm text-slate-200">{antwoord.antwoord}</p>
+            {antwoord.vereistMens ? (
+              <p className="mt-2 text-xs text-amber-300">
+                De agent kon dit niet zelf onderbouwen. Laat een collega hiernaar kijken.
+              </p>
+            ) : null}
+            {antwoord.bronnen.length > 0 ? (
+              <ul className="mt-2 space-y-1 text-xs text-slate-500">
+                {antwoord.bronnen.map((bron, index) => (
+                  <li key={index}>
+                    ·{" "}
+                    {bron.verwijzing.startsWith("http") || bron.verwijzing.startsWith("/") ? (
+                      <a
+                        href={bron.verwijzing}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-cyan-300 hover:underline"
+                      >
+                        {bron.titel}
+                      </a>
+                    ) : (
+                      bron.titel
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        ) : null}
+      </form>
 
       {rapport ? (
         <>

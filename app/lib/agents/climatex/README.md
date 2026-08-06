@@ -59,9 +59,13 @@ formulering doen en nooit de feiten.
 
 ## Gebruik
 
-Vanuit het dashboard: tabblad **Agent** → *Analyseer leads*.
+Vanuit het dashboard: tabblad **Agent**.
 
-Achter de schermen loopt dat via `POST /api/agent/analyse`. Die route:
+- *Analyseer leads* draait een ronde over de openstaande leads.
+- Het vraagveld beantwoordt een klantvraag uit de kennisbank, met bronnen.
+
+Achter de schermen lopen die via `POST /api/agent/analyse` en
+`POST /api/agent/vraag`. Beide routes:
 - vereist een geldige dashboardsessie (het antwoord bevat klantgegevens, en de
   aanroep kost geld zodra er een taalmodel gekoppeld is);
 - draait uitsluitend server-side, want daar wordt de modelsleutel gelezen;
