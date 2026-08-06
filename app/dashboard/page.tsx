@@ -18,10 +18,11 @@ import PlanningAgenda from "../components/dashboard/PlanningAgenda";
 import PlanningDetail from "../components/dashboard/PlanningDetail";
 import DashboardOverzicht from "../components/dashboard/DashboardOverzicht";
 import MeldingenPaneel from "../components/dashboard/MeldingenPaneel";
+import AgentPaneel from "../components/dashboard/AgentPaneel";
 import KlantenOverzicht from "../components/dashboard/KlantenOverzicht";
 import KlantProfiel from "../components/dashboard/KlantProfiel";
 
-type View = "overzicht" | "klanten" | "leads" | "offertes" | "producten" | "werkbonnen" | "facturen" | "tickets" | "planning";
+type View = "overzicht" | "agent" | "klanten" | "leads" | "offertes" | "producten" | "werkbonnen" | "facturen" | "tickets" | "planning";
 
 export default function DashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -239,6 +240,7 @@ export default function DashboardPage() {
           {(
             [
               { key: "overzicht", label: "Overzicht" },
+              { key: "agent", label: "Agent" },
               { key: "klanten", label: "Klanten" },
               { key: "leads", label: "Leads" },
               { key: "offertes", label: "Offertes" },
@@ -272,6 +274,8 @@ export default function DashboardPage() {
 
         {view === "overzicht" ? (
           <DashboardOverzicht />
+        ) : view === "agent" ? (
+          <AgentPaneel />
         ) : view === "klanten" ? (
           selectedKlant ? (
             <KlantProfiel

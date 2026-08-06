@@ -52,13 +52,13 @@ export const AGENTS: AgentDefinition[] = [
     route: '/agents/whatsapp',
   },
   {
-    id: 'sales',
-    name: 'Sales Agent',
-    tagline: 'Lead scoring, opvolgadvies en offerte-analyse',
-    status: 'coming-soon',
+    id: 'climatex-crm',
+    name: 'ClimateX CRM Agent',
+    tagline: 'Leads prioriteren, conceptoffertes opstellen en klantcontact voorbereiden',
+    status: 'live',
     icon: 'Handshake',
     accent: 'amber',
-    route: '/agents/sales',
+    route: '/dashboard',
   },
   {
     id: 'customer-support',
