@@ -159,6 +159,8 @@ export type Bestand = {
   pad: string;
   url: string;
   zichtbaar_voor_klant?: boolean;
+  grootte?: number | null;
+  mimetype?: string | null;
 };
 
 export type Vastgoedticket = {
