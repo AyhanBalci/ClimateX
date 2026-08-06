@@ -1,43 +1,20 @@
-import { resend, isResendConfigured } from "./resend";
+import {
+  resend,
+  isResendConfigured,
+  FROM_EMAIL,
+  REPLY_TO,
+  waarschuwBijAfwijkendAfzenderdomein,
+} from "./resend";
 import { customerConfirmationEmail, adminNotificationEmail, LeadEmailData } from "./emailTemplates";
 
-/**
- * Het afzenderadres moet op een in Resend geverifieerd domein staan. Geverifieerd
- * is `send.climate-x.nl`, niet het hoofddomein: dat laatste is bij TransIP in
- * gebruik voor de gewone mailbox en heeft geen Resend-DKIM. Staat hier een adres
- * op een niet-geverifieerd domein, dan weigert Resend elke ontvanger behalve het
- * eigen accountadres — waardoor de interne melding wél aankomt en de
- * klantbevestiging stil sneuvelt.
- */
-const GEVERIFIEERD_DOMEIN = "send.climate-x.nl";
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || `ClimateX <offerte@${GEVERIFIEERD_DOMEIN}>`;
 const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL || "ayhan-b@outlook.com";
-
-/** Antwoorden van klanten komen binnen op het algemene postvak, niet op het verzendadres. */
-const REPLY_TO = process.env.RESEND_REPLY_TO_EMAIL || "info@climate-x.nl";
-
-/** Haalt het domein uit "Naam <adres@domein>" of uit een kaal e-mailadres. */
-function afzenderDomein(from: string): string {
-  const adres = from.match(/<([^>]+)>/)?.[1] ?? from;
-  return adres.split("@")[1]?.trim().toLowerCase() ?? "";
-}
 
 export async function sendOfferteEmails(lead: LeadEmailData) {
   if (!isResendConfigured || !resend) {
     return { error: "Resend is niet geconfigureerd. Stel RESEND_API_KEY in.", klantMailVerstuurd: false };
   }
 
-  // Vroegtijdige waarschuwing: op een niet-geverifieerd domein weigert Resend
-  // alle ontvangers behalve het accountadres, wat er precies uitziet als "alleen
-  // de klantmail komt niet aan".
-  const domein = afzenderDomein(FROM_EMAIL);
-  if (domein !== GEVERIFIEERD_DOMEIN) {
-    console.warn(
-      `[sendOfferteEmails] Afzenderdomein "${domein}" wijkt af van het geverifieerde domein ` +
-        `"${GEVERIFIEERD_DOMEIN}". Controleer RESEND_FROM_EMAIL in Vercel; Resend weigert dan ` +
-        `waarschijnlijk elke ontvanger behalve het eigen accountadres.`
-    );
-  }
+  waarschuwBijAfwijkendAfzenderdomein("sendOfferteEmails");
 
   const customer = customerConfirmationEmail(lead);
   const admin = adminNotificationEmail(lead);

@@ -1,7 +1,11 @@
-import { resend, isResendConfigured } from "./resend";
+import {
+  resend,
+  isResendConfigured,
+  FROM_EMAIL,
+  REPLY_TO,
+  waarschuwBijAfwijkendAfzenderdomein,
+} from "./resend";
 import { offertePdfEmail } from "./emailTemplates";
-
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "ClimateX <offerte@climate-x.nl>";
 
 export async function sendOffertePdfEmail(
   klantEmail: string,
@@ -13,11 +17,14 @@ export async function sendOffertePdfEmail(
     return { error: "Resend is niet geconfigureerd. Stel RESEND_API_KEY in." };
   }
 
+  waarschuwBijAfwijkendAfzenderdomein("sendOffertePdfEmail");
+
   const template = offertePdfEmail(klantNaam, offertenummer);
 
-  const { error } = await resend.emails.send({
+  const { data, error } = await resend.emails.send({
     from: FROM_EMAIL,
     to: klantEmail,
+    replyTo: REPLY_TO,
     subject: template.subject,
     html: template.html,
     attachments: [
@@ -29,10 +36,16 @@ export async function sendOffertePdfEmail(
   });
 
   if (error) {
-    console.error(`[sendOffertePdfEmail] Resend gaf een fout bij verzenden naar ${klantEmail}:`, error);
+    console.error(
+      `[sendOffertePdfEmail] MISLUKT van=${FROM_EMAIL} naar=${klantEmail} ` +
+        `offerte=${offertenummer} status=${error.name} fout=${error.message}`
+    );
     return { error: error.message };
   }
 
-  console.log(`[sendOffertePdfEmail] Offerte ${offertenummer} per e-mail verstuurd naar ${klantEmail}.`);
+  console.log(
+    `[sendOffertePdfEmail] VERSTUURD van=${FROM_EMAIL} naar=${klantEmail} ` +
+      `offerte=${offertenummer} message-id=${data?.id ?? "onbekend"}`
+  );
   return { error: null };
 }

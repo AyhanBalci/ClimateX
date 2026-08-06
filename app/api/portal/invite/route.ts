@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { resend, isResendConfigured } from "../../../lib/resend";
+import {
+  resend,
+  isResendConfigured,
+  FROM_EMAIL,
+  REPLY_TO,
+  waarschuwBijAfwijkendAfzenderdomein,
+} from "../../../lib/resend";
 import { portalUitnodigingEmail } from "../../../lib/emailTemplates";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ADMIN_SECRET = process.env.PORTAL_ADMIN_SECRET;
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "ClimateX <offerte@climate-x.nl>";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://climate-x.nl";
 
 export async function POST(request: NextRequest) {
@@ -70,16 +75,22 @@ export async function POST(request: NextRequest) {
   let emailError: string | null = null;
 
   if (sendEmail && inlogLink && isResendConfigured && resend) {
+    waarschuwBijAfwijkendAfzenderdomein("portal/invite");
     const template = portalUitnodigingEmail(naam, inlogLink);
-    const { error } = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
+      replyTo: REPLY_TO,
       subject: template.subject,
       html: template.html,
     });
     if (error) {
+      console.error(
+        `[portal/invite] MISLUKT van=${FROM_EMAIL} naar=${email} status=${error.name} fout=${error.message}`
+      );
       emailError = error.message;
     } else {
+      console.log(`[portal/invite] VERSTUURD van=${FROM_EMAIL} naar=${email} message-id=${data?.id ?? "onbekend"}`);
       emailVerstuurd = true;
     }
   }
