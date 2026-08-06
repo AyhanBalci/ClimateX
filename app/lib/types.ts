@@ -105,6 +105,29 @@ export type Werkbon = {
   testresultaten?: string | null;
 };
 
+export type WerkbonMateriaal = {
+  id: string;
+  created_at: string;
+  werkbon_id: string;
+  omschrijving: string;
+  aantal: number;
+  eenheid: string;
+  /** Prijs per eenheid excl. BTW. Leeg betekent: niet doorbelasten. */
+  eenheidsprijs: number | null;
+};
+
+export type WerkbonUur = {
+  id: string;
+  created_at: string;
+  werkbon_id: string;
+  monteur: string;
+  datum: string;
+  uren: number;
+  omschrijving: string | null;
+  /** Uurtarief excl. BTW. Leeg betekent: niet doorbelasten. */
+  uurtarief: number | null;
+};
+
 export type Factuur = {
   id: string;
   created_at: string;

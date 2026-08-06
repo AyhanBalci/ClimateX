@@ -7,6 +7,8 @@ import { supabase } from "../../lib/supabase";
 import { downloadWerkbonPdf } from "../../lib/generateWerkbonPdf";
 import { createFactuurFromWerkbon } from "../../lib/factuurActions";
 import { createPlanning } from "../../lib/planningActions";
+import HandtekeningPad from "./HandtekeningPad";
+import WerkbonRegels from "./WerkbonRegels";
 import { toDateKey } from "../../lib/dateUtils";
 import { formatDatum } from "../../lib/formatters";
 import FileUpload from "./FileUpload";
@@ -47,6 +49,8 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
   const [saving, setSaving] = useState(false);
   const [creatingFactuur, setCreatingFactuur] = useState(false);
   const [savingPlanning, setSavingPlanning] = useState(false);
+  const [mailBezig, setMailBezig] = useState(false);
+  const [mailFeedback, setMailFeedback] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchOfferte() {
@@ -147,6 +151,28 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
     return form[veld] !== ((opgeslagen as string | null) ?? "");
   });
 
+  const handleVerstuurPdf = async () => {
+    if (mailBezig) return;
+
+    setMailBezig(true);
+    setMailFeedback(null);
+    try {
+      const response = await fetch("/api/werkbonnen/verstuur-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ werkbonId: werkbon.id }),
+      });
+      const data = await response.json();
+      setMailFeedback(
+        response.ok ? `Werkbon is per e-mail verstuurd naar ${data.naar}.` : data.error || "Versturen is mislukt."
+      );
+    } catch (fout) {
+      setMailFeedback(fout instanceof Error ? fout.message : "Versturen is mislukt.");
+    } finally {
+      setMailBezig(false);
+    }
+  };
+
   const handleCreateFactuur = async () => {
     if (creatingFactuur) return;
     setCreatingFactuur(true);
@@ -191,6 +217,18 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
             >
               PDF downloaden
             </button>
+            <button
+              onClick={handleVerstuurPdf}
+              disabled={mailBezig || heeftNietOpgeslagenWijzigingen}
+              title={
+                heeftNietOpgeslagenWijzigingen
+                  ? "Sla eerst uw wijzigingen op, anders wijkt de verstuurde PDF af van het dossier."
+                  : undefined
+              }
+              className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {mailBezig ? "Bezig met versturen..." : "Verstuur per e-mail"}
+            </button>
             {form.status === "Gereed" ? (
               <button
                 onClick={handleCreateFactuur}
@@ -199,6 +237,11 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
               >
                 {creatingFactuur ? "Bezig..." : "Maak factuur"}
               </button>
+            ) : null}
+            {mailFeedback ? (
+              <p role="status" aria-live="polite" className="w-full text-xs text-slate-400">
+                {mailFeedback}
+              </p>
             ) : null}
           </div>
         </div>
@@ -267,7 +310,7 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
           />
           <textarea
             rows={3}
-            placeholder="Materialen"
+            placeholder="Toelichting materialen (losse regels staan hieronder)"
             value={form.materialen}
             onChange={(event) => setForm((current) => ({ ...current, materialen: event.target.value }))}
             className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300 sm:col-span-2"
@@ -279,19 +322,15 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
             onChange={(event) => setForm((current) => ({ ...current, opmerkingen: event.target.value }))}
             className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300 sm:col-span-2"
           />
-          <input
-            type="text"
-            placeholder="Handtekening klant (naam ter bevestiging)"
-            value={form.handtekening_klant}
-            onChange={(event) => setForm((current) => ({ ...current, handtekening_klant: event.target.value }))}
-            className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
+          <HandtekeningPad
+            label="Handtekening klant"
+            waarde={form.handtekening_klant}
+            onChange={(waarde) => setForm((current) => ({ ...current, handtekening_klant: waarde }))}
           />
-          <input
-            type="text"
-            placeholder="Handtekening installateur (naam ter bevestiging)"
-            value={form.handtekening_monteur}
-            onChange={(event) => setForm((current) => ({ ...current, handtekening_monteur: event.target.value }))}
-            className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
+          <HandtekeningPad
+            label="Handtekening installateur"
+            waarde={form.handtekening_monteur}
+            onChange={(waarde) => setForm((current) => ({ ...current, handtekening_monteur: waarde }))}
           />
           <select
             value={form.status}
@@ -312,6 +351,13 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
             {saving ? "Bezig met opslaan..." : "Opslaan"}
           </button>
         </form>
+      </div>
+
+      <div className="mt-6 rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-xl shadow-black/20 sm:p-8">
+        <h3 className="text-lg font-semibold text-white">Materiaal en uren</h3>
+        <div className="mt-4">
+          <WerkbonRegels werkbonId={werkbon.id} monteur={werkbon.monteur} />
+        </div>
       </div>
 
       <div className="mt-6 rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-xl shadow-black/20 sm:p-8">

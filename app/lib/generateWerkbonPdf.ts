@@ -2,7 +2,12 @@ import { jsPDF } from "jspdf";
 import { Werkbon } from "./types";
 import { formatDatum } from "./formatters";
 
-export function downloadWerkbonPdf(werkbon: Werkbon) {
+/**
+ * Bouwt het werkbondocument op. Staat los van het downloaden zodat de server
+ * dezelfde PDF kan genereren voor de e-mailbijlage; anders zou de klant per
+ * mail een ander document krijgen dan wat het CRM toont.
+ */
+export function buildWerkbonPdfDocument(werkbon: Werkbon): jsPDF {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -144,5 +149,10 @@ export function downloadWerkbonPdf(werkbon: Werkbon) {
     doc.text(`Pagina ${p} van ${paginas}`, pageWidth - margin, pageHeight - 10, { align: "right" });
   }
 
+  return doc;
+}
+
+export function downloadWerkbonPdf(werkbon: Werkbon) {
+  const doc = buildWerkbonPdfDocument(werkbon);
   doc.save(`${werkbon.werkbonnummer}.pdf`);
 }
