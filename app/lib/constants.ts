@@ -61,6 +61,16 @@ export const KLANT_UPLOAD_CATEGORIE_OPTIONS = [
   "Overig",
 ];
 
+export const PRODUCT_CATEGORIE_OPTIONS = [
+  "Laadpaal",
+  "Laadkabel",
+  "Load balancing",
+  "Installatiemateriaal",
+  "Meterkast",
+  "Accessoire",
+  "Overig",
+];
+
 export const AANSLUITING_OPTIONS = ["1-fase", "3-fase", "Onbekend"];
 
 export const KLANT_ADRES_SOORT_OPTIONS = ["Installatie", "Facturatie", "Bezoek", "Overig"];

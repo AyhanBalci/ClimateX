@@ -68,6 +68,11 @@ export type Product = {
   afbeelding_url: string | null;
   actief: boolean;
   handleiding_url?: string | null;
+  categorie?: string | null;
+  inkoopprijs?: number | null;
+  adviesprijs?: number | null;
+  installatiekosten?: number | null;
+  btw_percentage?: number | null;
 };
 
 export type Werkbon = {
