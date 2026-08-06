@@ -73,7 +73,7 @@ export default function ProductCard({ product }: { product: ProductWithBrand }) 
           </div>
           <Link
             href="/#contact"
-            className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-xs font-semibold text-black transition hover:bg-slate-100"
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-xs font-semibold text-black transition hover:bg-slate-100"
           >
             <BadgeCheck className="h-3.5 w-3.5" /> Offerte
           </Link>

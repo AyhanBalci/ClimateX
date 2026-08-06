@@ -40,7 +40,7 @@ export default function ProductenPage() {
               <Link
                 key={b.slug}
                 href={`/producten/${b.slug}`}
-                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-300 transition hover:border-cyan-300/30 hover:text-white"
+                className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-300 transition hover:border-cyan-300/30 hover:text-white"
               >
                 <span
                   className="flex h-5 w-5 items-center justify-center rounded-md text-[10px] font-bold text-slate-950"

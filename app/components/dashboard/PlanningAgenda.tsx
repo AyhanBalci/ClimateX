@@ -371,13 +371,13 @@ export default function PlanningAgenda({ onSelectPlanning }: Props) {
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
-          <button onClick={goToday} className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/10">
+          <button onClick={goToday} className="min-h-[44px] inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/10">
             Vandaag
           </button>
-          <button onClick={goPrev} className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10">
+          <button onClick={goPrev} className="min-h-[44px] inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10">
             ← Vorige
           </button>
-          <button onClick={goNext} className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10">
+          <button onClick={goNext} className="min-h-[44px] inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10">
             Volgende →
           </button>
         </div>
@@ -387,7 +387,7 @@ export default function PlanningAgenda({ onSelectPlanning }: Props) {
             <button
               key={mode}
               onClick={() => setViewMode(mode)}
-              className={`rounded-full px-4 py-2 text-xs font-semibold capitalize transition ${
+              className={`min-h-[44px] inline-flex items-center justify-center rounded-full px-4 py-2 text-xs font-semibold capitalize transition ${
                 viewMode === mode ? "bg-cyan-400 text-slate-950" : "border border-white/10 bg-white/5 text-white hover:bg-white/10"
               }`}
             >

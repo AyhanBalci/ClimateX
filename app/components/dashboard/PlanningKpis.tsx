@@ -74,7 +74,7 @@ export default function PlanningKpis() {
     <div>
       <div className="flex items-center justify-between">
         <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Planning</p>
-        <button onClick={() => setRefreshKey((current) => current + 1)} className="text-xs text-cyan-300 transition hover:text-cyan-200">
+        <button onClick={() => setRefreshKey((current) => current + 1)} className="-mr-2 min-h-[44px] inline-flex items-center justify-center rounded-full px-3 py-2 text-xs text-cyan-300 transition hover:bg-white/5 hover:text-cyan-200">
           ↻ Vernieuwen
         </button>
       </div>

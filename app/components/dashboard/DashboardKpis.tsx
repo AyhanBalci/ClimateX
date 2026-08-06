@@ -80,7 +80,7 @@ export default function DashboardKpis() {
         <button
           onClick={vernieuw}
           disabled={loading}
-          className="-m-2 rounded-full p-2 text-xs text-cyan-300 transition hover:text-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
+          className="-mr-2 min-h-[44px] inline-flex items-center justify-center rounded-full px-3 py-2 text-xs text-cyan-300 transition hover:bg-white/5 hover:text-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
         >
           ↻ {loading ? "Bezig..." : "Vernieuwen"}
         </button>

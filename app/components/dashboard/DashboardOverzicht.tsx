@@ -105,7 +105,7 @@ export default function DashboardOverzicht() {
         <button
           onClick={vernieuw}
           disabled={loading}
-          className="self-start text-xs text-cyan-300 transition hover:text-cyan-200 disabled:cursor-not-allowed disabled:opacity-60 sm:self-auto"
+          className="min-h-[44px] inline-flex items-center justify-center self-start rounded-full px-3 py-2 text-xs text-cyan-300 transition hover:bg-white/5 hover:text-cyan-200 disabled:cursor-not-allowed disabled:opacity-60 sm:self-auto"
         >
           ↻ {loading ? "Bezig..." : "Vernieuwen"}
         </button>

@@ -188,7 +188,7 @@ export default function KlantenOverzicht({ onSelectKlant }: Props) {
             type="checkbox"
             checked={alleenKlanten}
             onChange={(event) => setAlleenKlanten(event.target.checked)}
-            className="h-4 w-4 accent-cyan-400"
+            className="h-5 w-5 accent-cyan-400"
           />
           Alleen klanten met opdracht
         </label>

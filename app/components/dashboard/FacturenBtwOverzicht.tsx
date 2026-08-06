@@ -80,14 +80,14 @@ export default function FacturenBtwOverzicht() {
           <button
             onClick={() => setRefreshKey((huidig) => huidig + 1)}
             disabled={loading}
-            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+            className="min-h-[44px] inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
           >
             ↻ {loading ? "Bezig..." : "Vernieuwen"}
           </button>
           <button
             onClick={handleExport}
             disabled={loading || facturen.length === 0}
-            className="rounded-full bg-cyan-400 px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
+            className="min-h-[44px] inline-flex items-center justify-center rounded-full bg-cyan-400 px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Exporteer als CSV
           </button>
