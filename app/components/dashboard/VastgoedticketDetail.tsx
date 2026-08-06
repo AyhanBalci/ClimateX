@@ -23,12 +23,22 @@ import { createFactuurFromWerkbon, markFactuurBetaald } from "../../lib/factuurA
 import { createPlanning } from "../../lib/planningActions";
 import { toDateKey } from "../../lib/dateUtils";
 import { getNextOfferteNummer } from "../../lib/offerteNummer";
-import { downloadFactuurPdf } from "../../lib/generateFactuurPdf";
 import FileUpload from "./FileUpload";
 import KlantAccountKoppeling from "./KlantAccountKoppeling";
 import OfferteActieKnoppen from "./OfferteActieKnoppen";
 import OfferteKoppelingen from "./OfferteKoppelingen";
 import { formatBedragRond, formatDatum, formatDatumTijd } from "../../lib/formatters";
+
+/**
+ * De PDF-bibliotheek weegt ruim 400 kB en wordt pas gebruikt zodra iemand op
+ * downloaden klikt. Door haar hier op te halen in plaats van bovenaan te
+ * importeren, blijft ze buiten de bundel die bij het openen van het scherm laadt.
+ */
+async function downloadFactuurPdfLui(...argumenten: Parameters<typeof import("../../lib/generateFactuurPdf")["downloadFactuurPdf"]>) {
+  const pdfModule = await import("../../lib/generateFactuurPdf");
+  pdfModule.downloadFactuurPdf(...argumenten);
+}
+
 
 
 
@@ -776,7 +786,7 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
                 <p className="mt-2 text-slate-400">{formatBedragRond(factuur.totaal)}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
-                    onClick={() => downloadFactuurPdf(factuur)}
+                    onClick={() => downloadFactuurPdfLui(factuur)}
                     className="rounded-full bg-cyan-400 px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300"
                   >
                     PDF downloaden

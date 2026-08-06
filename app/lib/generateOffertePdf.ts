@@ -1,5 +1,5 @@
 import { jsPDF } from "jspdf";
-import { Offerte } from "./types";
+import type { Offerte } from "./types";
 import { formatBedrag, formatDatum } from "./formatters";
 import { OFFERTE_GELDIGHEID_DAGEN } from "./constants";
 

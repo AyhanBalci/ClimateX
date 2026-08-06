@@ -5,10 +5,20 @@ import { Factuur } from "../../lib/types";
 import { FACTUUR_STATUS_OPTIONS } from "../../lib/constants";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
 import { markFactuurBetaald } from "../../lib/factuurActions";
-import { downloadFactuurPdf } from "../../lib/generateFactuurPdf";
 import { formatBedrag, formatDatum } from "../../lib/formatters";
 import { dagenTeLaat, isAchterstallig, vervaldatumVan } from "../../lib/factuurOverzicht";
 import FacturenBtwOverzicht from "./FacturenBtwOverzicht";
+
+/**
+ * De PDF-bibliotheek weegt ruim 400 kB en wordt pas gebruikt zodra iemand op
+ * downloaden klikt. Door haar hier op te halen in plaats van bovenaan te
+ * importeren, blijft ze buiten de bundel die bij het openen van het scherm laadt.
+ */
+async function downloadFactuurPdfLui(...argumenten: Parameters<typeof import("../../lib/generateFactuurPdf")["downloadFactuurPdf"]>) {
+  const pdfModule = await import("../../lib/generateFactuurPdf");
+  pdfModule.downloadFactuurPdf(...argumenten);
+}
+
 
 
 
@@ -209,7 +219,7 @@ export default function FacturenOverview() {
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap items-center gap-2">
                         <button
-                          onClick={() => downloadFactuurPdf(factuur)}
+                          onClick={() => downloadFactuurPdfLui(factuur)}
                           className="rounded-full bg-cyan-400 px-3 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300"
                         >
                           PDF
@@ -290,7 +300,7 @@ export default function FacturenOverview() {
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
-                    onClick={() => downloadFactuurPdf(factuur)}
+                    onClick={() => downloadFactuurPdfLui(factuur)}
                     className="rounded-full bg-cyan-400 px-3 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300"
                   >
                     PDF downloaden

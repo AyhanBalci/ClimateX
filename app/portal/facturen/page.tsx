@@ -4,10 +4,20 @@ import { useEffect, useState } from "react";
 import PortalShell from "../../components/portal/PortalShell";
 import { usePortalSession } from "../../lib/portalAuth";
 import { getMyFacturen, getMyLeadAndTicketIds } from "../../lib/portalData";
-import { downloadFactuurPdf } from "../../lib/generateFactuurPdf";
 import { FACTUUR_STATUS_LABELS } from "../../lib/constants";
 import { Factuur } from "../../lib/types";
 import { formatBedrag, formatDatum } from "../../lib/formatters";
+
+/**
+ * De PDF-bibliotheek weegt ruim 400 kB en wordt pas gebruikt zodra iemand op
+ * downloaden klikt. Door haar hier op te halen in plaats van bovenaan te
+ * importeren, blijft ze buiten de bundel die bij het openen van het scherm laadt.
+ */
+async function downloadFactuurPdfLui(...argumenten: Parameters<typeof import("../../lib/generateFactuurPdf")["downloadFactuurPdf"]>) {
+  const pdfModule = await import("../../lib/generateFactuurPdf");
+  pdfModule.downloadFactuurPdf(...argumenten);
+}
+
 
 
 
@@ -60,7 +70,7 @@ export default function PortalFacturenPage() {
               </div>
               <div className="mt-4">
                 <button
-                  onClick={() => downloadFactuurPdf(factuur)}
+                  onClick={() => downloadFactuurPdfLui(factuur)}
                   className="rounded-full border border-white/10 bg-white/5 px-5 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
                 >
                   PDF downloaden

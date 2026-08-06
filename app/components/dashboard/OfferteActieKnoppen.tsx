@@ -2,7 +2,17 @@
 
 import { useState } from "react";
 import { Offerte } from "../../lib/types";
-import { downloadOffertePdf, KlantGegevens } from "../../lib/generateOffertePdf";
+import type { KlantGegevens } from "../../lib/generateOffertePdf";
+
+/**
+ * De PDF-bibliotheek weegt ruim 400 kB en wordt pas gebruikt zodra iemand op
+ * downloaden klikt. Door haar hier op te halen in plaats van bovenaan te
+ * importeren, blijft ze buiten de bundel die bij het openen van het scherm laadt.
+ */
+async function downloadOffertePdfLui(...argumenten: Parameters<typeof import("../../lib/generateOffertePdf")["downloadOffertePdf"]>) {
+  const pdfModule = await import("../../lib/generateOffertePdf");
+  pdfModule.downloadOffertePdf(...argumenten);
+}
 
 type Props = {
   offerte: Offerte;
@@ -47,7 +57,7 @@ export default function OfferteActieKnoppen({ offerte, klant, className, onVerst
     <div className={className}>
       <div className="flex flex-wrap items-center gap-2">
         <button
-          onClick={() => downloadOffertePdf(offerte, klant)}
+          onClick={() => downloadOffertePdfLui(offerte, klant)}
           className="rounded-full bg-cyan-400 px-3 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300"
         >
           Genereer PDF

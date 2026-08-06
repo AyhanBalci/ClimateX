@@ -4,7 +4,6 @@ import { FormEvent, useEffect, useState } from "react";
 import { Factuur, Offerte, Planning, Werkbon } from "../../lib/types";
 import { WERKBON_STATUS_OPTIONS } from "../../lib/constants";
 import { supabase } from "../../lib/supabase";
-import { downloadWerkbonPdf } from "../../lib/generateWerkbonPdf";
 import { createFactuurFromWerkbon } from "../../lib/factuurActions";
 import { createPlanning } from "../../lib/planningActions";
 import HandtekeningPad from "./HandtekeningPad";
@@ -12,6 +11,17 @@ import WerkbonRegels from "./WerkbonRegels";
 import { toDateKey } from "../../lib/dateUtils";
 import { formatDatum } from "../../lib/formatters";
 import FileUpload from "./FileUpload";
+
+/**
+ * De PDF-bibliotheek weegt ruim 400 kB en wordt pas gebruikt zodra iemand op
+ * downloaden klikt. Door haar hier op te halen in plaats van bovenaan te
+ * importeren, blijft ze buiten de bundel die bij het openen van het scherm laadt.
+ */
+async function downloadWerkbonPdfLui(...argumenten: Parameters<typeof import("../../lib/generateWerkbonPdf")["downloadWerkbonPdf"]>) {
+  const pdfModule = await import("../../lib/generateWerkbonPdf");
+  pdfModule.downloadWerkbonPdf(...argumenten);
+}
+
 
 type Props = {
   werkbon: Werkbon;
@@ -206,7 +216,7 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
           </div>
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => downloadWerkbonPdf(werkbon)}
+              onClick={() => downloadWerkbonPdfLui(werkbon)}
               disabled={heeftNietOpgeslagenWijzigingen}
               title={
                 heeftNietOpgeslagenWijzigingen

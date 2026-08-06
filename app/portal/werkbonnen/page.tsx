@@ -4,9 +4,19 @@ import { useEffect, useState } from "react";
 import PortalShell from "../../components/portal/PortalShell";
 import { usePortalSession } from "../../lib/portalAuth";
 import { getMyLeadAndTicketIds, getMyWerkbonnen } from "../../lib/portalData";
-import { downloadWerkbonPdf } from "../../lib/generateWerkbonPdf";
 import { Werkbon } from "../../lib/types";
 import { formatDatum } from "../../lib/formatters";
+
+/**
+ * De PDF-bibliotheek weegt ruim 400 kB en wordt pas gebruikt zodra iemand op
+ * downloaden klikt. Door haar hier op te halen in plaats van bovenaan te
+ * importeren, blijft ze buiten de bundel die bij het openen van het scherm laadt.
+ */
+async function downloadWerkbonPdfLui(...argumenten: Parameters<typeof import("../../lib/generateWerkbonPdf")["downloadWerkbonPdf"]>) {
+  const pdfModule = await import("../../lib/generateWerkbonPdf");
+  pdfModule.downloadWerkbonPdf(...argumenten);
+}
+
 
 
 const STATUS_LABEL: Record<string, string> = {
@@ -64,7 +74,7 @@ export default function PortalWerkbonnenPage() {
               </div>
               <div className="mt-4">
                 <button
-                  onClick={() => downloadWerkbonPdf(werkbon)}
+                  onClick={() => downloadWerkbonPdfLui(werkbon)}
                   className="rounded-full border border-white/10 bg-white/5 px-5 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
                 >
                   PDF downloaden

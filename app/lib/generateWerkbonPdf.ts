@@ -1,5 +1,5 @@
 import { jsPDF } from "jspdf";
-import { Werkbon } from "./types";
+import type { Werkbon } from "./types";
 import { formatDatum } from "./formatters";
 
 /**

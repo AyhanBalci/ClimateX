@@ -1,5 +1,5 @@
 import { jsPDF } from "jspdf";
-import { Factuur } from "./types";
+import type { Factuur } from "./types";
 import { isSupabaseConfigured, supabase } from "./supabase";
 import { formatBedrag, formatDatum } from "./formatters";
 

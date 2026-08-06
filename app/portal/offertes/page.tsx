@@ -5,10 +5,19 @@ import PortalShell from "../../components/portal/PortalShell";
 import { usePortalSession } from "../../lib/portalAuth";
 import { getMyLeadAndTicketIds, getMyOffertes } from "../../lib/portalData";
 import { klantAccepteerOfferte } from "../../lib/klantOfferteActions";
-import { downloadOffertePdf } from "../../lib/generateOffertePdf";
 import { Offerte } from "../../lib/types";
 import { formatBedragRond, formatDatum } from "../../lib/formatters";
 import { offerteStatusWeergave } from "../../lib/offerteStatus";
+
+/**
+ * De PDF-bibliotheek weegt ruim 400 kB en wordt pas gebruikt zodra iemand op
+ * downloaden klikt. Door haar hier op te halen in plaats van bovenaan te
+ * importeren, blijft ze buiten de bundel die bij het openen van het scherm laadt.
+ */
+async function downloadOffertePdfLui(...argumenten: Parameters<typeof import("../../lib/generateOffertePdf")["downloadOffertePdf"]>) {
+  const pdfModule = await import("../../lib/generateOffertePdf");
+  pdfModule.downloadOffertePdf(...argumenten);
+}
 
 
 
@@ -63,7 +72,7 @@ export default function PortalOffertesPage() {
 
   const handleDownload = (offerte: Offerte) => {
     if (offerte.leads) {
-      downloadOffertePdf(offerte, {
+      downloadOffertePdfLui(offerte, {
         naam: offerte.leads.naam,
         telefoon: offerte.leads.telefoon,
         email: offerte.leads.email,
@@ -71,7 +80,7 @@ export default function PortalOffertesPage() {
         type_woning: offerte.leads.type_woning,
       });
     } else if (offerte.vastgoedtickets) {
-      downloadOffertePdf(offerte, {
+      downloadOffertePdfLui(offerte, {
         naam: offerte.vastgoedtickets.klant,
         telefoon: offerte.vastgoedtickets.telefoonnummer || "",
         email: "",
