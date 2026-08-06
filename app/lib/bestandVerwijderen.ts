@@ -7,13 +7,15 @@
  * neemt en er geen tweede plek ontstaat die het alsnog rechtstreeks doet.
  */
 
+import { dashboardFetch } from "./dashboardFetch";
+
 const ROUTE = "/api/bestanden/verwijder";
 
 type Antwoord = { error: string | null };
 
 async function roepAan(body: Record<string, string>): Promise<Antwoord> {
   try {
-    const respons = await fetch(ROUTE, {
+    const respons = await dashboardFetch(ROUTE, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

@@ -11,6 +11,7 @@ import WerkbonRegels from "./WerkbonRegels";
 import { toDateKey } from "../../lib/dateUtils";
 import { formatDatum } from "../../lib/formatters";
 import FileUpload from "./FileUpload";
+import { dashboardFetch } from "../../lib/dashboardFetch";
 
 /**
  * De PDF-bibliotheek weegt ruim 400 kB en wordt pas gebruikt zodra iemand op
@@ -167,7 +168,7 @@ export default function WerkbonDetail({ werkbon, onBack, onWerkbonUpdated, onFac
     setMailBezig(true);
     setMailFeedback(null);
     try {
-      const response = await fetch("/api/werkbonnen/verstuur-pdf", {
+      const response = await dashboardFetch("/api/werkbonnen/verstuur-pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ werkbonId: werkbon.id }),

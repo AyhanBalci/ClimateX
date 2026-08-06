@@ -8,6 +8,7 @@ import { markFactuurBetaald } from "../../lib/factuurActions";
 import { formatBedrag, formatDatum } from "../../lib/formatters";
 import { dagenTeLaat, isAchterstallig, vervaldatumVan } from "../../lib/factuurOverzicht";
 import FacturenBtwOverzicht from "./FacturenBtwOverzicht";
+import { dashboardFetch } from "../../lib/dashboardFetch";
 
 /**
  * De PDF-bibliotheek weegt ruim 400 kB en wordt pas gebruikt zodra iemand op
@@ -70,7 +71,7 @@ export default function FacturenOverview() {
     setHerinneringId(factuur.id);
     setHerinneringFeedback(null);
     try {
-      const response = await fetch("/api/facturen/herinnering", {
+      const response = await dashboardFetch("/api/facturen/herinnering", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ factuurId: factuur.id }),

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Offerte } from "../../lib/types";
 import type { KlantGegevens } from "../../lib/generateOffertePdf";
+import { dashboardFetch } from "../../lib/dashboardFetch";
 
 /**
  * De PDF-bibliotheek weegt ruim 400 kB en wordt pas gebruikt zodra iemand op
@@ -31,7 +32,7 @@ export default function OfferteActieKnoppen({ offerte, klant, className, onVerst
     setBusy(true);
     setFeedback(null);
     try {
-      const response = await fetch("/api/offertes/verstuur-pdf", {
+      const response = await dashboardFetch("/api/offertes/verstuur-pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ offerteId: offerte.id }),

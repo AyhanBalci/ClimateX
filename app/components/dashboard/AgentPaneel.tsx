@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { formatBedrag } from "../../lib/formatters";
 import type { AgentVoorstel, LeadAnalyse, OfferteConcept, BerichtConcept, KlantAntwoord, WerkbonConcept } from "../../lib/agents/climatex/types";
+import { dashboardFetch } from "../../lib/dashboardFetch";
 
 type Rapport = {
   motor: string;
@@ -117,7 +118,7 @@ export default function AgentPaneel() {
     setError(null);
 
     try {
-      const antwoord = await fetch("/api/agent/analyse", { method: "POST" });
+      const antwoord = await dashboardFetch("/api/agent/analyse", { method: "POST" });
       const data = await antwoord.json();
       if (!antwoord.ok) {
         setError(data.error || "De agent kon niet draaien.");
@@ -138,7 +139,7 @@ export default function AgentPaneel() {
     setVraagBezig(true);
     setError(null);
     try {
-      const respons = await fetch("/api/agent/vraag", {
+      const respons = await dashboardFetch("/api/agent/vraag", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ vraag }),

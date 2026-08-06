@@ -18,6 +18,7 @@ import PlanningAgenda from "../components/dashboard/PlanningAgenda";
 import PlanningDetail from "../components/dashboard/PlanningDetail";
 import DashboardOverzicht from "../components/dashboard/DashboardOverzicht";
 import MeldingenPaneel from "../components/dashboard/MeldingenPaneel";
+import { SESSIE_VERLOPEN_EVENT } from "../lib/dashboardFetch";
 import AgentPaneel from "../components/dashboard/AgentPaneel";
 import KlantenOverzicht from "../components/dashboard/KlantenOverzicht";
 import KlantProfiel from "../components/dashboard/KlantProfiel";
@@ -30,6 +31,7 @@ export default function DashboardPage() {
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [bezigMetInloggen, setBezigMetInloggen] = useState(false);
+  const [sessieVerlopen, setSessieVerlopen] = useState(false);
 
   const [leads, setLeads] = useState<Lead[]>([]);
   const [leadsLoading, setLeadsLoading] = useState(false);
@@ -66,6 +68,41 @@ export default function DashboardPage() {
     };
   }, []);
 
+  // De sessie is acht uur geldig en kan dus verlopen terwijl dit scherm openstaat.
+  // Zonder deze twee vangnetten bleef het dashboard er ingelogd uitzien en gaf
+  // elke knop los de melding "Niet ingelogd in de beheeromgeving.", zonder dat
+  // duidelijk werd dat er opnieuw ingelogd moest worden.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    // 1. Een beveiligde route gaf 401: de sessie is voorbij.
+    function opSessieVerlopen() {
+      setIsAuthenticated(false);
+      setSessieVerlopen(true);
+    }
+
+    // 2. Terug op dit tabblad na een tijd weg te zijn geweest: even navragen,
+    //    zodat de gebruiker het merkt vóór hij iets probeert te versturen.
+    async function controleerBijTerugkeer() {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const response = await fetch("/api/dashboard/session");
+        const data = await response.json();
+        if (!data.ingelogd) opSessieVerlopen();
+      } catch {
+        // Geen verbinding is geen reden om iemand uit te loggen.
+      }
+    }
+
+    window.addEventListener(SESSIE_VERLOPEN_EVENT, opSessieVerlopen);
+    document.addEventListener("visibilitychange", controleerBijTerugkeer);
+
+    return () => {
+      window.removeEventListener(SESSIE_VERLOPEN_EVENT, opSessieVerlopen);
+      document.removeEventListener("visibilitychange", controleerBijTerugkeer);
+    };
+  }, [isAuthenticated]);
+
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (bezigMetInloggen) return;
@@ -82,6 +119,7 @@ export default function DashboardPage() {
 
       if (response.ok && data.ingelogd) {
         setIsAuthenticated(true);
+        setSessieVerlopen(false);
         // Het wachtwoord niet langer dan nodig in het geheugen houden.
         setPassword("");
       } else {
@@ -99,6 +137,7 @@ export default function DashboardPage() {
       await fetch("/api/dashboard/session", { method: "DELETE" });
     } finally {
       setIsAuthenticated(false);
+      setSessieVerlopen(false);
     }
   };
 
@@ -178,6 +217,11 @@ export default function DashboardPage() {
         <div className="mx-auto max-w-xl rounded-[2rem] border border-white/10 bg-slate-950/80 p-10 shadow-xl shadow-black/20">
           <h1 className="text-3xl font-semibold">Dashboard login</h1>
           <p className="mt-4 text-slate-400">Voer het beheerderswachtwoord in om de dashboarddemo te bekijken.</p>
+          {sessieVerlopen ? (
+            <p role="status" className="mt-4 rounded-3xl border border-amber-300/20 bg-amber-400/5 p-4 text-sm text-amber-200">
+              Uw sessie is verlopen. Log opnieuw in; uw laatste handeling is niet uitgevoerd.
+            </p>
+          ) : null}
           <form onSubmit={handleLogin} className="mt-8 space-y-5">
             <label className="block text-sm text-slate-300">
               Wachtwoord
