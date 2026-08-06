@@ -142,6 +142,9 @@ export type Factuur = {
   totaal: number;
   status: string;
   betaaldatum: string | null;
+  betaallink?: string | null;
+  vervaldatum?: string | null;
+  laatste_herinnering?: string | null;
 };
 
 export type Bestand = {

@@ -201,3 +201,56 @@ export function werkbonPdfEmail(klantNaam: string, werkbonnummer: string) {
   </div>`;
   return { subject, html };
 }
+
+export function factuurHerinneringEmail(
+  klantNaam: string,
+  factuurnummer: string,
+  bedrag: string,
+  dagenTeLaat: number,
+  betaallink: string | null
+) {
+  const subject = `Herinnering: factuur ${factuurnummer} van ClimateX`;
+  const knop = betaallink
+    ? `<p style="margin:24px 0;">
+         <a href="${escapeHtml(betaallink)}" style="display:inline-block;background-color:#22d3ee;color:#0a0a0a;font-weight:bold;font-size:14px;text-decoration:none;border-radius:9999px;padding:12px 24px;">
+           Nu betalen
+         </a>
+       </p>`
+    : "";
+
+  const html = `
+  <div style="background-color:#f4f4f5;padding:32px 16px;font-family:Arial,Helvetica,sans-serif;">
+    <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background-color:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e5e7eb;">
+      <tr>
+        <td style="background-color:#0a0a0a;padding:24px 32px;">
+          <span style="display:inline-block;background-color:#22d3ee;color:#0a0a0a;font-weight:bold;font-size:14px;border-radius:8px;padding:6px 10px;margin-right:10px;">CX</span>
+          <span style="color:#ffffff;font-size:20px;font-weight:bold;vertical-align:middle;">ClimateX</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:32px;">
+          <h1 style="margin:0 0 16px;font-size:18px;color:#111827;">Herinnering voor factuur ${escapeHtml(factuurnummer)}</h1>
+          <p style="font-size:14px;line-height:1.6;color:#374151;">Beste ${escapeHtml(klantNaam)},</p>
+          <p style="font-size:14px;line-height:1.6;color:#374151;">
+            Onze administratie laat zien dat factuur <strong>${escapeHtml(factuurnummer)}</strong> van
+            <strong>${escapeHtml(bedrag)}</strong> nog openstaat. De betaaltermijn is
+            ${dagenTeLaat} ${dagenTeLaat === 1 ? "dag" : "dagen"} verstreken.
+          </p>
+          ${knop}
+          <p style="font-size:14px;line-height:1.6;color:#374151;">
+            Heeft u de betaling inmiddels gedaan? Dan kunt u deze e-mail als niet verzonden beschouwen.
+            Klopt er iets niet aan de factuur? Laat het ons weten, dan zoeken we het samen uit.
+          </p>
+          <p style="margin-top:24px;font-size:14px;line-height:1.6;color:#374151;">Met vriendelijke groet,</p>
+          <p style="font-size:14px;line-height:1.6;color:#374151;"><strong>ClimateX</strong><br/>06 1400 4488</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="background-color:#f9fafb;padding:16px 32px;text-align:center;color:#9ca3af;font-size:12px;">
+          ClimateX — Slimme energieoplossingen voor woningen en bedrijven — 06 1400 4488
+        </td>
+      </tr>
+    </table>
+  </div>`;
+  return { subject, html };
+}

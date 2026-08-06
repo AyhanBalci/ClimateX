@@ -7,6 +7,8 @@ import { isSupabaseConfigured, supabase } from "../../lib/supabase";
 import { markFactuurBetaald } from "../../lib/factuurActions";
 import { downloadFactuurPdf } from "../../lib/generateFactuurPdf";
 import { formatBedrag, formatDatum } from "../../lib/formatters";
+import { dagenTeLaat, isAchterstallig, vervaldatumVan } from "../../lib/factuurOverzicht";
+import FacturenBtwOverzicht from "./FacturenBtwOverzicht";
 
 
 
@@ -16,6 +18,10 @@ export default function FacturenOverview() {
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("Alle");
   const [updatingFactuurId, setUpdatingFactuurId] = useState<string | null>(null);
+  const [herinneringId, setHerinneringId] = useState<string | null>(null);
+  const [herinneringFeedback, setHerinneringFeedback] = useState<string | null>(null);
+  const [linkBewerkId, setLinkBewerkId] = useState<string | null>(null);
+  const [linkWaarde, setLinkWaarde] = useState("");
 
   useEffect(() => {
     async function fetchFacturen() {
@@ -47,6 +53,58 @@ export default function FacturenOverview() {
   const filtered = useMemo(() => {
     return facturen.filter((factuur) => statusFilter === "Alle" || factuur.status === statusFilter);
   }, [facturen, statusFilter]);
+
+  const handleHerinnering = async (factuur: Factuur) => {
+    if (herinneringId) return;
+
+    setHerinneringId(factuur.id);
+    setHerinneringFeedback(null);
+    try {
+      const response = await fetch("/api/facturen/herinnering", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ factuurId: factuur.id }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setHerinneringFeedback(data.error || "Herinnering versturen is mislukt.");
+        return;
+      }
+
+      setHerinneringFeedback(`Herinnering verstuurd naar ${data.naar}.`);
+      setFacturen((huidig) =>
+        huidig.map((item) =>
+          item.id === factuur.id ? { ...item, laatste_herinnering: data.verstuurdOp } : item
+        )
+      );
+    } catch (fout) {
+      setHerinneringFeedback(fout instanceof Error ? fout.message : "Herinnering versturen is mislukt.");
+    } finally {
+      setHerinneringId(null);
+    }
+  };
+
+  const handleBetaallinkOpslaan = async (factuur: Factuur) => {
+    if (!supabase) return;
+
+    const nieuweLink = linkWaarde.trim() || null;
+    const { error: updateError } = await supabase
+      .from("facturen")
+      .update({ betaallink: nieuweLink })
+      .eq("id", factuur.id);
+
+    if (updateError) {
+      setHerinneringFeedback(updateError.message);
+      return;
+    }
+
+    setFacturen((huidig) =>
+      huidig.map((item) => (item.id === factuur.id ? { ...item, betaallink: nieuweLink } : item))
+    );
+    setLinkBewerkId(null);
+    setLinkWaarde("");
+  };
 
   const handleMarkBetaald = async (factuur: Factuur) => {
     if (updatingFactuurId) return;
@@ -119,6 +177,7 @@ export default function FacturenOverview() {
                   <th className="px-4 py-3">Klant</th>
                   <th className="px-4 py-3">Totaal</th>
                   <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Vervaldatum</th>
                   <th className="px-4 py-3">Betaaldatum</th>
                   <th className="px-4 py-3">Acties</th>
                 </tr>
@@ -134,6 +193,15 @@ export default function FacturenOverview() {
                       <span className="rounded-full bg-cyan-400/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-cyan-300">
                         {factuur.status}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {isAchterstallig(factuur) ? (
+                        <span className="text-amber-300">
+                          {formatDatum(vervaldatumVan(factuur))} · {dagenTeLaat(factuur)} dagen te laat
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">{formatDatum(vervaldatumVan(factuur))}</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-slate-400">
                       {factuur.betaaldatum ? formatDatum(factuur.betaaldatum) : "—"}
@@ -155,6 +223,43 @@ export default function FacturenOverview() {
                             {updatingFactuurId === factuur.id ? "Bezig…" : "Markeer betaald"}
                           </button>
                         ) : null}
+                        {isAchterstallig(factuur) ? (
+                          <button
+                            onClick={() => handleHerinnering(factuur)}
+                            disabled={herinneringId === factuur.id}
+                            className="rounded-full bg-amber-400/10 px-3 py-2 text-xs text-amber-300 transition hover:bg-amber-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {herinneringId === factuur.id ? "Bezig…" : "Herinnering"}
+                          </button>
+                        ) : null}
+                        {linkBewerkId === factuur.id ? (
+                          <span className="flex items-center gap-2">
+                            <input
+                              type="url"
+                              aria-label={`Betaallink voor ${factuur.factuurnummer}`}
+                              placeholder="https://..."
+                              value={linkWaarde}
+                              onChange={(event) => setLinkWaarde(event.target.value)}
+                              className="w-48 rounded-full border border-white/10 bg-black/40 px-3 py-2 text-xs text-white outline-none focus:border-cyan-300"
+                            />
+                            <button
+                              onClick={() => handleBetaallinkOpslaan(factuur)}
+                              className="rounded-full bg-cyan-400 px-3 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-300"
+                            >
+                              Opslaan
+                            </button>
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setLinkBewerkId(factuur.id);
+                              setLinkWaarde(factuur.betaallink || "");
+                            }}
+                            className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white transition hover:bg-white/10"
+                          >
+                            {factuur.betaallink ? "Betaallink wijzigen" : "Betaallink"}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -178,6 +283,11 @@ export default function FacturenOverview() {
                 <p className="mt-2 text-sm text-slate-200">
                   {formatBedrag(factuur.totaal)} · {formatDatum(factuur.created_at)}
                 </p>
+                <p className={`mt-1 text-xs ${isAchterstallig(factuur) ? "text-amber-300" : "text-slate-500"}`}>
+                  {isAchterstallig(factuur)
+                    ? `${dagenTeLaat(factuur)} dagen over de termijn`
+                    : `Vervalt ${formatDatum(vervaldatumVan(factuur))}`}
+                </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
                     onClick={() => downloadFactuurPdf(factuur)}
@@ -194,12 +304,29 @@ export default function FacturenOverview() {
                       {updatingFactuurId === factuur.id ? "Bezig…" : "Markeer betaald"}
                     </button>
                   ) : null}
+                  {isAchterstallig(factuur) ? (
+                    <button
+                      onClick={() => handleHerinnering(factuur)}
+                      disabled={herinneringId === factuur.id}
+                      className="rounded-full bg-amber-400/10 px-3 py-2 text-xs text-amber-300 transition hover:bg-amber-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {herinneringId === factuur.id ? "Bezig…" : "Stuur herinnering"}
+                    </button>
+                  ) : null}
                 </div>
               </div>
             ))}
           </div>
         </>
       ) : null}
+
+      {herinneringFeedback ? (
+        <p role="status" aria-live="polite" className="mt-4 text-sm text-slate-300">
+          {herinneringFeedback}
+        </p>
+      ) : null}
+
+      <FacturenBtwOverzicht />
     </section>
   );
 }
