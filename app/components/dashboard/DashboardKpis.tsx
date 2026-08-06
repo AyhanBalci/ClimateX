@@ -1,72 +1,76 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { isSupabaseConfigured, supabase } from "../../lib/supabase";
+import { useCallback, useEffect, useState } from "react";
+import { isSupabaseConfigured } from "../../lib/supabase";
 import { formatBedragRond } from "../../lib/formatters";
+import {
+  DashboardKpiCijfers,
+  LEGE_DASHBOARD_DATA,
+  abonneerOpDashboardWijzigingen,
+  berekenKpis,
+  fetchDashboardData,
+} from "../../lib/dashboardData";
 
+function formatPercentage(waarde: number): string {
+  return `${Math.round(waarde * 10) / 10}%`;
+}
 
 export default function DashboardKpis() {
-  const [openOffertes, setOpenOffertes] = useState(0);
-  const [geplandeWerkbonnen, setGeplandeWerkbonnen] = useState(0);
-  const [openFacturen, setOpenFacturen] = useState(0);
-  const [omzetDezeMaand, setOmzetDezeMaand] = useState(0);
-  const [betaaldeFacturenDezeMaand, setBetaaldeFacturenDezeMaand] = useState(0);
+  const [cijfers, setCijfers] = useState<DashboardKpiCijfers>(() => berekenKpis(LEGE_DASHBOARD_DATA));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const [refreshKey, setRefreshKey] = useState(0);
+  const vernieuw = useCallback(() => setRefreshKey((huidig) => huidig + 1), []);
 
   useEffect(() => {
-    async function fetchKpis() {
+    // Een trager verzoek van een vorige ronde mag een verser resultaat niet
+    // overschrijven; realtime kan meerdere ladingen kort na elkaar starten.
+    let verouderd = false;
+
+    async function laadCijfers() {
       setLoading(true);
       setError(null);
 
-      if (!isSupabaseConfigured || !supabase) {
+      if (!isSupabaseConfigured) {
         setError("Supabase is niet geconfigureerd.");
         setLoading(false);
         return;
       }
 
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const { data, error: fetchError } = await fetchDashboardData();
+      if (verouderd) return;
 
-      const [offertesRes, werkbonnenRes, facturenRes] = await Promise.all([
-        supabase.from("offertes").select("id").in("status", ["Concept", "Verstuurd"]),
-        supabase.from("werkbonnen").select("id").eq("status", "Gepland"),
-        supabase.from("facturen").select("id, status, totaal, betaaldatum"),
-      ]);
-
-      if (offertesRes.error || werkbonnenRes.error || facturenRes.error) {
-        setError(
-          offertesRes.error?.message || werkbonnenRes.error?.message || facturenRes.error?.message || "Onbekende fout."
-        );
-        setLoading(false);
-        return;
-      }
-
-      setOpenOffertes(offertesRes.data?.length || 0);
-      setGeplandeWerkbonnen(werkbonnenRes.data?.length || 0);
-
-      const facturen = facturenRes.data || [];
-      setOpenFacturen(facturen.filter((factuur) => factuur.status !== "Betaald").length);
-
-      const betaaldDezeMaand = facturen.filter(
-        (factuur) => factuur.status === "Betaald" && factuur.betaaldatum && factuur.betaaldatum >= startOfMonth
-      );
-      setBetaaldeFacturenDezeMaand(betaaldDezeMaand.length);
-      setOmzetDezeMaand(betaaldDezeMaand.reduce((sum, factuur) => sum + (factuur.totaal || 0), 0));
-
+      if (fetchError) setError(fetchError);
+      else setCijfers(berekenKpis(data));
       setLoading(false);
     }
 
-    fetchKpis();
+    laadCijfers();
+
+    return () => {
+      verouderd = true;
+    };
   }, [refreshKey]);
 
-  const kpis = [
-    { label: "Open offertes", value: openOffertes },
-    { label: "Geplande werkbonnen", value: geplandeWerkbonnen },
-    { label: "Open facturen", value: openFacturen },
-    { label: "Omzet deze maand", value: formatBedragRond(omzetDezeMaand) },
-    { label: "Betaalde facturen deze maand", value: betaaldeFacturenDezeMaand },
+  // Realtime bijwerken zodra elders een offerte, werkbon, factuur of melding
+  // verandert. Staat replicatie in Supabase uit, dan blijft "Vernieuwen" over.
+  useEffect(() => abonneerOpDashboardWijzigingen(vernieuw), [vernieuw]);
+
+  const omzet = [
+    { label: "Omzet vandaag", value: formatBedragRond(cijfers.omzetVandaag) },
+    { label: "Omzet deze week", value: formatBedragRond(cijfers.omzetDezeWeek) },
+    { label: "Omzet deze maand", value: formatBedragRond(cijfers.omzetDezeMaand) },
+    { label: "Omzet dit jaar", value: formatBedragRond(cijfers.omzetDitJaar) },
+  ];
+
+  const openstaand = [
+    { label: "Open offertes", value: cijfers.openOffertes },
+    { label: "Open werkbonnen", value: cijfers.openWerkbonnen },
+    { label: "Open facturen", value: cijfers.openFacturen },
+    { label: "Open servicemeldingen", value: cijfers.openServicemeldingen },
+    { label: "Lead → offerte", value: formatPercentage(cijfers.conversieLeadNaarOfferte) },
+    { label: "Offerte → opdracht", value: formatPercentage(cijfers.conversieOfferteNaarOpdracht) },
   ];
 
   return (
@@ -74,19 +78,34 @@ export default function DashboardKpis() {
       <div className="flex items-center justify-between">
         <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Bedrijfscijfers</p>
         <button
-          onClick={() => setRefreshKey((current) => current + 1)}
+          onClick={vernieuw}
           disabled={loading}
           className="-m-2 rounded-full p-2 text-xs text-cyan-300 transition hover:text-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
         >
           ↻ {loading ? "Bezig..." : "Vernieuwen"}
         </button>
       </div>
-      {error ? <p className="mt-2 text-sm text-rose-400">{error}</p> : null}
-      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {kpis.map((kpi) => (
+
+      {error ? (
+        <p role="alert" className="mt-2 text-sm text-rose-400">
+          {error}
+        </p>
+      ) : null}
+
+      <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {omzet.map((kpi) => (
           <div key={kpi.label} className="rounded-3xl border border-white/10 bg-[#090909] p-4 sm:p-5">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{kpi.label}</p>
             <p className="mt-2 text-2xl font-semibold text-cyan-300 sm:text-3xl">{loading ? "…" : kpi.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {openstaand.map((kpi) => (
+          <div key={kpi.label} className="rounded-3xl border border-white/10 bg-[#090909] p-4 sm:p-5">
+            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{kpi.label}</p>
+            <p className="mt-2 text-2xl font-semibold text-white sm:text-3xl">{loading ? "…" : kpi.value}</p>
           </div>
         ))}
       </div>

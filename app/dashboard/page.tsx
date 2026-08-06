@@ -16,8 +16,9 @@ import VastgoedticketenOverview from "../components/dashboard/VastgoedticketenOv
 import VastgoedticketDetail from "../components/dashboard/VastgoedticketDetail";
 import PlanningAgenda from "../components/dashboard/PlanningAgenda";
 import PlanningDetail from "../components/dashboard/PlanningDetail";
+import DashboardOverzicht from "../components/dashboard/DashboardOverzicht";
 
-type View = "leads" | "offertes" | "producten" | "werkbonnen" | "facturen" | "tickets" | "planning";
+type View = "overzicht" | "leads" | "offertes" | "producten" | "werkbonnen" | "facturen" | "tickets" | "planning";
 
 export default function DashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -30,7 +31,7 @@ export default function DashboardPage() {
   const [leadsLoading, setLeadsLoading] = useState(false);
   const [leadsError, setLeadsError] = useState<string | null>(null);
 
-  const [view, setView] = useState<View>("leads");
+  const [view, setView] = useState<View>("overzicht");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [selectedWerkbon, setSelectedWerkbon] = useState<Werkbon | null>(null);
   const [selectedTicket, setSelectedTicket] = useState<Vastgoedticket | null>(null);
@@ -230,6 +231,7 @@ export default function DashboardPage() {
         <div role="tablist" aria-label="Dashboardonderdelen" className="mb-6 flex gap-2 overflow-x-auto">
           {(
             [
+              { key: "overzicht", label: "Overzicht" },
               { key: "leads", label: "Leads" },
               { key: "offertes", label: "Offertes" },
               { key: "producten", label: "Producten" },
@@ -259,7 +261,9 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {view === "leads" ? (
+        {view === "overzicht" ? (
+          <DashboardOverzicht />
+        ) : view === "leads" ? (
           selectedLead ? (
             <LeadDetail
               key={selectedLead.id}
