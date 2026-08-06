@@ -95,12 +95,12 @@ export default function VastgoedticketenOverview({ onSelectTicket }: Props) {
   const afgerondeTickets = tickets.filter((ticket) => ticket.status === "Afgerond").length;
 
   const kpis = [
-    { label: "Open tickets", value: openTickets },
-    { label: "Spoedtickets", value: spoedTickets },
-    { label: "Tickets deze week", value: ticketsDezeWeek },
-    { label: "Afgeronde tickets", value: afgerondeTickets },
+    { label: "Open meldingen", value: openTickets },
+    { label: "Spoedmeldingen", value: spoedTickets },
+    { label: "Meldingen deze week", value: ticketsDezeWeek },
+    { label: "Afgeronde meldingen", value: afgerondeTickets },
     {
-      label: "Omzet uit tickets",
+      label: "Omzet uit meldingen",
       value: formatBedragRond(omzetUitTickets),
     },
   ];
@@ -126,7 +126,7 @@ export default function VastgoedticketenOverview({ onSelectTicket }: Props) {
       });
 
       if (createError || !data) {
-        setError(createError || "Ticket aanmaken is mislukt.");
+        setError(createError || "Servicemelding aanmaken is mislukt.");
         return;
       }
 
@@ -142,12 +142,12 @@ export default function VastgoedticketenOverview({ onSelectTicket }: Props) {
   return (
     <section className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-xl shadow-black/20 sm:p-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-xl font-semibold text-white">Service &amp; Storingen</h2>
+        <h2 className="text-xl font-semibold text-white">Servicemeldingen</h2>
         <button
           onClick={() => setShowForm((current) => !current)}
           className="rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
         >
-          {showForm ? "Annuleren" : "+ Nieuw ticket"}
+          {showForm ? "Annuleren" : "+ Nieuwe servicemelding"}
         </button>
       </div>
 
@@ -226,7 +226,7 @@ export default function VastgoedticketenOverview({ onSelectTicket }: Props) {
             disabled={submitting}
             className="rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2"
           >
-            {submitting ? "Bezig met aanmaken…" : "Ticket aanmaken"}
+            {submitting ? "Bezig met aanmaken…" : "Servicemelding aanmaken"}
           </button>
         </form>
       ) : null}
@@ -234,7 +234,7 @@ export default function VastgoedticketenOverview({ onSelectTicket }: Props) {
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         <input
           type="text"
-          placeholder="Zoek op klant, ticketnummer, locatie of contactpersoon"
+          placeholder="Zoek op klant, meldingsnummer, locatie of contactpersoon"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-300"
@@ -259,7 +259,7 @@ export default function VastgoedticketenOverview({ onSelectTicket }: Props) {
         <p className="mt-6 text-sm text-slate-400">
           {tickets.length === 0
             ? "Er zijn nog geen service- of storingsmeldingen aangemaakt."
-            : "Geen tickets gevonden voor deze zoekopdracht of filters."}
+            : "Geen servicemeldingen gevonden voor deze zoekopdracht of filters."}
         </p>
       ) : null}
 
@@ -269,7 +269,7 @@ export default function VastgoedticketenOverview({ onSelectTicket }: Props) {
             <table className="w-full min-w-[900px] border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-white/10 text-xs uppercase tracking-[0.2em] text-slate-400">
-                  <th className="px-4 py-3">Ticketnummer</th>
+                  <th className="px-4 py-3">Meldingsnummer</th>
                   <th className="px-4 py-3">Datum</th>
                   <th className="px-4 py-3">Klant</th>
                   <th className="px-4 py-3">Locatie</th>

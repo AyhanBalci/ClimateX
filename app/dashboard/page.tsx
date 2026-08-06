@@ -241,7 +241,7 @@ export default function DashboardPage() {
               { key: "producten", label: "Producten" },
               { key: "werkbonnen", label: "Werkbonnen" },
               { key: "facturen", label: "Facturen" },
-              { key: "tickets", label: "Service & Storingen" },
+              { key: "tickets", label: "Servicemeldingen" },
               { key: "planning", label: "Planning" },
             ] as const
           ).map((tab) => (

@@ -197,7 +197,7 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
 
   const timeline = useMemo(() => {
     const items = [
-      { id: "created", label: "Ticket aangemaakt", created_at: currentTicket.created_at },
+      { id: "created", label: "Servicemelding aangemaakt", created_at: currentTicket.created_at },
       ...historie.map((entry) => ({
         id: entry.id,
         label: `Status gewijzigd naar "${entry.status}"`,
@@ -450,7 +450,7 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
   return (
     <div>
       <button onClick={onBack} className="text-sm text-cyan-300 transition hover:text-cyan-200">
-        ← Terug naar ticketoverzicht
+        ← Terug naar servicemeldingen
       </button>
 
       <div className="mt-6 rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-xl shadow-black/20 sm:p-8">
@@ -577,7 +577,7 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
               rows={3}
               value={newNote}
               onChange={(event) => setNewNote(event.target.value)}
-              placeholder="Schrijf een notitie over dit ticket"
+              placeholder="Schrijf een notitie over deze servicemelding"
               className="w-full rounded-3xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
             />
             <button
