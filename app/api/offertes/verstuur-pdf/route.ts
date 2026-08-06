@@ -53,5 +53,30 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: sendError }, { status: 500 });
   }
 
-  return NextResponse.json({ success: true });
+  // De offerte ligt nu bij de klant, dus mag hij niet langer als concept in het
+  // CRM en het portaal staan. Zonder deze stap moest een beheerder daarna nog
+  // handmatig "Markeer als verstuurd" aanklikken, en zag de klant in het portaal
+  // "Wordt voorbereid" terwijl de offerte al in zijn mailbox lag.
+  // Alleen vanuit Concept, zodat een reeds geaccepteerde of afgewezen offerte
+  // niet wordt teruggezet wanneer de PDF opnieuw wordt verstuurd.
+  let statusBijgewerkt = false;
+  if (offerte.status === "Concept") {
+    const { error: statusError } = await supabase
+      .from("offertes")
+      .update({ status: "Verstuurd" })
+      .eq("id", offerte.id)
+      .eq("status", "Concept");
+
+    if (statusError) {
+      console.error(
+        `[verstuur-pdf] Offerte ${offerte.offertenummer} is gemaild, maar de status kon niet ` +
+          `naar "Verstuurd" worden gezet: ${statusError.message}`
+      );
+    } else {
+      statusBijgewerkt = true;
+      console.log(`[verstuur-pdf] Offerte ${offerte.offertenummer} gemaild en status op "Verstuurd" gezet.`);
+    }
+  }
+
+  return NextResponse.json({ success: true, statusBijgewerkt });
 }

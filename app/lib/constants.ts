@@ -14,6 +14,9 @@ export const HOUSING_OPTIONS = [
 
 export const OFFERTE_STATUS_OPTIONS = ["Concept", "Verstuurd", "Geaccepteerd", "Afgewezen"];
 
+/** Aantal dagen dat een offerte geldig blijft, gerekend vanaf de offertedatum. */
+export const OFFERTE_GELDIGHEID_DAGEN = 30;
+
 export const WERKBON_STATUS_OPTIONS = ["Concept", "Gepland", "Onderweg", "Bezig", "Gereed", "Gefactureerd"];
 
 export const FACTUUR_STATUS_OPTIONS = ["Concept", "Verzonden", "Betaald", "Achterstallig"];

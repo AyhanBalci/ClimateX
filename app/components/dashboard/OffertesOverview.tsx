@@ -7,6 +7,7 @@ import { markOfferteVerstuurd, updateOfferteStatus } from "../../lib/offerteActi
 import OfferteActieKnoppen from "./OfferteActieKnoppen";
 import OfferteKoppelingen from "./OfferteKoppelingen";
 import { formatBedragRond, formatDatumTijd } from "../../lib/formatters";
+import { offerteStatusWeergave } from "../../lib/offerteStatus";
 
 
 
@@ -71,6 +72,11 @@ export default function OffertesOverview({ onOpenWerkbon, onOpenPlanning }: Prop
     });
     return map;
   }, [planningen]);
+
+  /** Werkt de status in het scherm bij nadat de server hem op "Verstuurd" heeft gezet. */
+  const markeerAlsVerstuurd = (offerteId: string) => {
+    setOffertes((current) => current.map((item) => (item.id === offerteId ? { ...item, status: "Verstuurd" } : item)));
+  };
 
   const handleMarkVerstuurd = async (offerte: Offerte) => {
     if (offerteActionId) return;
@@ -147,10 +153,11 @@ export default function OffertesOverview({ onOpenWerkbon, onOpenPlanning }: Prop
                     <td className="px-4 py-3">{offerte.merk}</td>
                     <td className="px-4 py-3">{offerte.model}</td>
                     <td className="px-4 py-3">{formatBedragRond(offerte.prijs)}</td>
-                    <td className="px-4 py-3">{offerte.status}</td>
+                    <td className="px-4 py-3">{offerteStatusWeergave(offerte.status, offerte.datum).label}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap items-center gap-2">
                         <OfferteActieKnoppen
+                          onVerstuurd={markeerAlsVerstuurd}
                           offerte={offerte}
                           klant={{
                             naam: offerte.leads?.naam || offerte.vastgoedtickets?.klant || "",
@@ -213,9 +220,10 @@ export default function OffertesOverview({ onOpenWerkbon, onOpenPlanning }: Prop
                 <p className="font-semibold text-white">{offerte.offertenummer}</p>
                 <p className="mt-1 text-sm text-slate-400">{offerte.merk} {offerte.model}</p>
                 <p className="mt-1 text-sm text-slate-400">{offerte.leads?.naam || offerte.vastgoedtickets?.klant || "—"} · {formatDatumTijd(offerte.datum)}</p>
-                <p className="mt-2 text-sm text-slate-200">{formatBedragRond(offerte.prijs)} · {offerte.status}</p>
+                <p className="mt-2 text-sm text-slate-200">{formatBedragRond(offerte.prijs)} · {offerteStatusWeergave(offerte.status, offerte.datum).label}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <OfferteActieKnoppen
+                    onVerstuurd={markeerAlsVerstuurd}
                     offerte={offerte}
                     klant={{
                       naam: offerte.leads?.naam || offerte.vastgoedtickets?.klant || "",

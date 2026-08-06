@@ -1,6 +1,7 @@
 import { jsPDF } from "jspdf";
 import { Offerte } from "./types";
 import { formatBedrag, formatDatum } from "./formatters";
+import { OFFERTE_GELDIGHEID_DAGEN } from "./constants";
 
 export type KlantGegevens = {
   naam: string;
@@ -9,8 +10,6 @@ export type KlantGegevens = {
   plaats: string;
   type_woning: string;
 };
-
-export const OFFERTE_GELDIGHEID_DAGEN = 30;
 
 /** Zelfde percentage en afronding als factuurActions, zodat offerte en factuur nooit uiteenlopen. */
 const BTW_PERCENTAGE = 0.21;

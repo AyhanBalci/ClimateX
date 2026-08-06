@@ -8,13 +8,16 @@ type Props = {
   offerte: Offerte;
   klant: KlantGegevens;
   className?: string;
+  /** Wordt aangeroepen zodra de server de status op "Verstuurd" heeft gezet. */
+  onVerstuurd?: (offerteId: string) => void;
 };
 
-export default function OfferteActieKnoppen({ offerte, klant, className }: Props) {
+export default function OfferteActieKnoppen({ offerte, klant, className, onVerstuurd }: Props) {
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const handleVerstuur = async () => {
+    if (busy) return;
     setBusy(true);
     setFeedback(null);
     try {
@@ -24,7 +27,16 @@ export default function OfferteActieKnoppen({ offerte, klant, className }: Props
         body: JSON.stringify({ offerteId: offerte.id }),
       });
       const data = await response.json();
-      setFeedback(response.ok ? "PDF is per e-mail verstuurd naar de klant." : data.error || "Versturen is mislukt.");
+      if (response.ok) {
+        setFeedback(
+          data.statusBijgewerkt
+            ? "PDF is per e-mail verstuurd. Status staat nu op Verstuurd."
+            : "PDF is per e-mail verstuurd naar de klant."
+        );
+        if (data.statusBijgewerkt) onVerstuurd?.(offerte.id);
+      } else {
+        setFeedback(data.error || "Versturen is mislukt.");
+      }
     } catch (err) {
       setFeedback(err instanceof Error ? err.message : "Versturen is mislukt.");
     }

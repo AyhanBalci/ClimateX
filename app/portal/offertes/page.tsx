@@ -8,15 +8,9 @@ import { klantAccepteerOfferte } from "../../lib/klantOfferteActions";
 import { downloadOffertePdf } from "../../lib/generateOffertePdf";
 import { Offerte } from "../../lib/types";
 import { formatBedragRond, formatDatum } from "../../lib/formatters";
+import { offerteStatusWeergave } from "../../lib/offerteStatus";
 
 
-
-const STATUS_LABEL: Record<string, string> = {
-  Concept: "Wordt voorbereid",
-  Verstuurd: "Wacht op uw akkoord",
-  Geaccepteerd: "Akkoord gegeven",
-  Afgewezen: "Afgewezen",
-};
 
 export default function PortalOffertesPage() {
   const { session } = usePortalSession();
@@ -110,7 +104,7 @@ export default function PortalOffertesPage() {
                 </div>
                 <div className="text-right">
                   <p className="text-lg font-semibold text-cyan-300">{formatBedragRond(offerte.prijs)}</p>
-                  <p className="text-xs text-slate-400">{STATUS_LABEL[offerte.status] || offerte.status}</p>
+                  <p className="text-xs text-slate-400">{offerteStatusWeergave(offerte.status, offerte.datum).klantLabel}</p>
                 </div>
               </div>
 
@@ -121,7 +115,7 @@ export default function PortalOffertesPage() {
                 >
                   PDF downloaden
                 </button>
-                {offerte.status === "Verstuurd" ? (
+                {offerte.status === "Verstuurd" && !offerteStatusWeergave(offerte.status, offerte.datum).verlopen ? (
                   <button
                     onClick={() => handleAkkoord(offerte.id)}
                     disabled={busyId === offerte.id}
@@ -131,6 +125,14 @@ export default function PortalOffertesPage() {
                   </button>
                 ) : null}
               </div>
+
+              {offerteStatusWeergave(offerte.status, offerte.datum).verlopen ? (
+                <p className="mt-3 text-xs leading-5 text-slate-400">
+                  De geldigheidstermijn van deze offerte is verstreken, daarom kunt u er geen akkoord meer op geven.
+                  Neem contact met ons op via 06 1400 4488 als u alsnog wilt doorgaan; wij maken dan een nieuwe
+                  offerte met actuele prijzen.
+                </p>
+              ) : null}
             </div>
           ))}
         </div>
