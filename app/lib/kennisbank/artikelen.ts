@@ -1,4 +1,4 @@
-import { Artikel } from "./types";
+import type { Artikel } from "./types";
 
 /** Datum waarop de subsidie- en regelgevingsinformatie is geverifieerd bij de bron. */
 const GECONTROLEERD = "2026-08-05";
