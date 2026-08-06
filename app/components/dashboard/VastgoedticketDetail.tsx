@@ -456,7 +456,7 @@ export default function VastgoedticketDetail({ ticket, onBack, onOpenWerkbon, on
       <div className="mt-6 rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-xl shadow-black/20 sm:p-8">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Vastgoedticket</p>
+            <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Servicemelding</p>
             <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">{currentTicket.ticketnummer}</h2>
           </div>
           <div className="flex flex-wrap items-center gap-2">

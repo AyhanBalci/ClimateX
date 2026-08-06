@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Lead } from "../../lib/types";
 import { STATUS_OPTIONS, HOUSING_OPTIONS } from "../../lib/constants";
-import { updateLeadStatus } from "../../lib/leadActions";
+import { deleteLead, updateLeadStatus } from "../../lib/leadActions";
 import { formatDatum } from "../../lib/formatters";
 
 
@@ -11,9 +11,10 @@ type Props = {
   leads: Lead[];
   onSelectLead: (lead: Lead) => void;
   onLeadUpdated: (leadId: string, newStatus: string) => void;
+  onLeadDeleted: (leadId: string) => void;
 };
 
-export default function LeadsTable({ leads, onSelectLead, onLeadUpdated }: Props) {
+export default function LeadsTable({ leads, onSelectLead, onLeadUpdated, onLeadDeleted }: Props) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [woningFilter, setWoningFilter] = useState("");
@@ -22,6 +23,7 @@ export default function LeadsTable({ leads, onSelectLead, onLeadUpdated }: Props
   const [selectedStatus, setSelectedStatus] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [updatingLeadId, setUpdatingLeadId] = useState<string | null>(null);
+  const [verwijderLeadId, setVerwijderLeadId] = useState<string | null>(null);
 
   const filteredLeads = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -60,6 +62,27 @@ export default function LeadsTable({ leads, onSelectLead, onLeadUpdated }: Props
       onLeadUpdated(leadId, newStatus);
     } finally {
       setUpdatingLeadId(null);
+    }
+  };
+
+  const handleDelete = async (lead: Lead) => {
+    if (verwijderLeadId) return;
+    const bevestigd = window.confirm(
+      `Lead "${lead.naam}" definitief verwijderen? Notities, statushistorie en gekoppelde afspraken gaan mee. Dit kan niet ongedaan worden gemaakt.`
+    );
+    if (!bevestigd) return;
+
+    setVerwijderLeadId(lead.id);
+    try {
+      const { error: deleteError } = await deleteLead(lead.id);
+      if (deleteError) {
+        setError(deleteError);
+        return;
+      }
+      setError(null);
+      onLeadDeleted(lead.id);
+    } finally {
+      setVerwijderLeadId(null);
     }
   };
 
@@ -114,7 +137,11 @@ export default function LeadsTable({ leads, onSelectLead, onLeadUpdated }: Props
         </div>
       </div>
 
-      {error ? <p className="mt-4 text-sm text-rose-400">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="mt-4 text-sm text-rose-400">
+          {error}
+        </p>
+      ) : null}
 
       <p className="mt-4 text-xs uppercase tracking-[0.2em] text-slate-500">
         {filteredLeads.length} van {leads.length} leads
@@ -185,12 +212,21 @@ export default function LeadsTable({ leads, onSelectLead, onLeadUpdated }: Props
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => onSelectLead(lead)}
-                        className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-4 py-2 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-400/20"
-                      >
-                        Bekijken
-                      </button>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          onClick={() => onSelectLead(lead)}
+                          className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-4 py-2 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-400/20"
+                        >
+                          Bekijken
+                        </button>
+                        <button
+                          onClick={() => handleDelete(lead)}
+                          disabled={verwijderLeadId === lead.id}
+                          className="rounded-full bg-rose-500/10 px-3 py-2 text-xs text-rose-300 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {verwijderLeadId === lead.id ? "Bezig…" : "Verwijderen"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -242,6 +278,13 @@ export default function LeadsTable({ leads, onSelectLead, onLeadUpdated }: Props
                     {updatingLeadId === lead.id ? "Bezig…" : "Wijzigen"}
                   </button>
                 </div>
+                <button
+                  onClick={() => handleDelete(lead)}
+                  disabled={verwijderLeadId === lead.id}
+                  className="mt-3 w-full rounded-full bg-rose-500/10 px-4 py-3 text-xs font-semibold text-rose-300 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {verwijderLeadId === lead.id ? "Bezig met verwijderen…" : "Lead verwijderen"}
+                </button>
               </div>
             ))}
           </div>

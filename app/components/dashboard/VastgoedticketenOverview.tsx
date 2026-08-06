@@ -142,7 +142,7 @@ export default function VastgoedticketenOverview({ onSelectTicket }: Props) {
   return (
     <section className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-xl shadow-black/20 sm:p-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-xl font-semibold text-white">Vastgoedtickets</h2>
+        <h2 className="text-xl font-semibold text-white">Service &amp; Storingen</h2>
         <button
           onClick={() => setShowForm((current) => !current)}
           className="rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
@@ -258,7 +258,7 @@ export default function VastgoedticketenOverview({ onSelectTicket }: Props) {
       {!loading && filtered.length === 0 ? (
         <p className="mt-6 text-sm text-slate-400">
           {tickets.length === 0
-            ? "Er zijn nog geen vastgoedtickets aangemaakt."
+            ? "Er zijn nog geen service- of storingsmeldingen aangemaakt."
             : "Geen tickets gevonden voor deze zoekopdracht of filters."}
         </p>
       ) : null}

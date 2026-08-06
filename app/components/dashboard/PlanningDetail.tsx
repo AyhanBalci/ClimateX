@@ -199,7 +199,7 @@ export default function PlanningDetail({ planning, onBack, onPlanningUpdated, on
 
       {ticket ? (
         <div className="mt-6 rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-xl shadow-black/20 sm:p-8">
-          <h3 className="text-lg font-semibold text-white">Gekoppeld vastgoedticket</h3>
+          <h3 className="text-lg font-semibold text-white">Gekoppelde servicemelding</h3>
           <div className="mt-3 rounded-3xl border border-white/10 bg-[#090909] p-4 text-sm text-slate-300">
             <p className="font-semibold text-white">{ticket.ticketnummer}</p>
             <p className="mt-1 text-slate-400">{ticket.klant} · {ticket.locatie}</p>

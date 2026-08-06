@@ -80,6 +80,11 @@ export default function DashboardPage() {
     setSelectedLead((current) => (current && current.id === leadId ? { ...current, status: newStatus } : current));
   };
 
+  const handleLeadDeleted = (leadId: string) => {
+    setLeads((current) => current.filter((lead) => lead.id !== leadId));
+    setSelectedLead((current) => (current && current.id === leadId ? null : current));
+  };
+
   const handleFactuurCreated = () => {
     setView("facturen");
     setSelectedWerkbon(null);
@@ -164,7 +169,7 @@ export default function DashboardPage() {
               { key: "producten", label: "Producten" },
               { key: "werkbonnen", label: "Werkbonnen" },
               { key: "facturen", label: "Facturen" },
-              { key: "tickets", label: "Vastgoedtickets" },
+              { key: "tickets", label: "Service & Storingen" },
               { key: "planning", label: "Planning" },
             ] as const
           ).map((tab) => (
@@ -205,7 +210,12 @@ export default function DashboardPage() {
               {leadsError ? <p className="mt-6 text-sm text-rose-400">{leadsError}</p> : null}
               {!leadsLoading && !leadsError ? (
                 <div className="mt-6">
-                  <LeadsTable leads={leads} onSelectLead={setSelectedLead} onLeadUpdated={handleLeadUpdated} />
+                  <LeadsTable
+                    leads={leads}
+                    onSelectLead={setSelectedLead}
+                    onLeadUpdated={handleLeadUpdated}
+                    onLeadDeleted={handleLeadDeleted}
+                  />
                 </div>
               ) : null}
             </section>
