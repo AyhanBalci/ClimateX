@@ -172,13 +172,25 @@ export function buildOffertePdfDocument(offerte: Offerte, klant: KlantGegevens):
   doc.text("Handtekening klant", margin, y + 5);
   doc.text("Datum", margin + lineWidth + 10, y + 5);
 
-  // Footer
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(140, 140, 140);
-  doc.text("ClimateX — 06 1400 4488 — Slimme energieoplossingen voor woningen en bedrijven", pageWidth / 2, pageHeight - 10, {
-    align: "center",
-  });
+  // Footer op elke pagina. Dit gebeurt bewust pas na alle inhoud: pas dan is
+  // bekend hoeveel pagina's het zijn geworden. Zonder deze lus kreeg alleen de
+  // laatste pagina een footer en ontbrak elke paginanummering, waardoor losse
+  // vellen van een meerpagina-offerte niet aan elkaar te koppelen waren.
+  const paginas = doc.getNumberOfPages();
+  for (let p = 1; p <= paginas; p++) {
+    doc.setPage(p);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(140, 140, 140);
+    doc.text(
+      "ClimateX — 06 1400 4488 — Slimme energieoplossingen voor woningen en bedrijven",
+      pageWidth / 2,
+      pageHeight - 10,
+      { align: "center" }
+    );
+    doc.text(`Offerte ${offerte.offertenummer}`, margin, pageHeight - 10);
+    doc.text(`Pagina ${p} van ${paginas}`, pageWidth - margin, pageHeight - 10, { align: "right" });
+  }
 
   return doc;
 }

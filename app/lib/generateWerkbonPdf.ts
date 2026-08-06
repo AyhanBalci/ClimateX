@@ -117,12 +117,22 @@ export function downloadWerkbonPdf(werkbon: Werkbon) {
   doc.text(`Klant: ${werkbon.handtekening_klant || ""}`, margin, y + 19);
   doc.text(`Installateur: ${werkbon.handtekening_monteur || ""}`, margin + colWidth + 10, y + 19);
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(140, 140, 140);
-  doc.text("ClimateX — 06 1400 4488 — Slimme energieoplossingen voor woningen en bedrijven", pageWidth / 2, pageHeight - 10, {
-    align: "center",
-  });
+  // Footer op elke pagina, pas nadat vaststaat hoeveel pagina's het zijn geworden.
+  const paginas = doc.getNumberOfPages();
+  for (let p = 1; p <= paginas; p++) {
+    doc.setPage(p);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(140, 140, 140);
+    doc.text(
+      "ClimateX — 06 1400 4488 — Slimme energieoplossingen voor woningen en bedrijven",
+      pageWidth / 2,
+      pageHeight - 10,
+      { align: "center" }
+    );
+    doc.text(`Werkbon ${werkbon.werkbonnummer}`, margin, pageHeight - 10);
+    doc.text(`Pagina ${p} van ${paginas}`, pageWidth - margin, pageHeight - 10, { align: "right" });
+  }
 
   doc.save(`${werkbon.werkbonnummer}.pdf`);
 }
