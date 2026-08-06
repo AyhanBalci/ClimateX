@@ -78,3 +78,36 @@ export function sessieIsGeldig(token: string | undefined): boolean {
   const verlooptOp = Number(inhoud);
   return Number.isFinite(verlooptOp) && verlooptOp > Date.now();
 }
+
+/**
+ * Bewaakt route handlers die alleen een ingelogde beheerder mag aanroepen.
+ *
+ * Verschillende routes versturen e-mail naar klanten of naar de beheerder.
+ * Zonder deze controle kan iedereen die het adres kent die verzending
+ * aanzetten: een klant met herinneringen bestoken kost niets meer dan een
+ * POST-verzoek, en de verstuurde bijlagen bevatten klantgegevens.
+ *
+ * Geeft null als het verzoek mag doorgaan, en anders het antwoord dat de route
+ * moet teruggeven.
+ */
+export function weigerZonderDashboardSessie(request: Request): Response | null {
+  if (!isDashboardAuthGeconfigureerd()) {
+    return Response.json(
+      { error: "De beheeromgeving is niet geconfigureerd. Stel DASHBOARD_PASSWORD in." },
+      { status: 503 }
+    );
+  }
+
+  const cookies = request.headers.get("cookie") || "";
+  const token = cookies
+    .split(";")
+    .map((deel) => deel.trim())
+    .find((deel) => deel.startsWith(`${SESSIE_COOKIE}=`))
+    ?.slice(SESSIE_COOKIE.length + 1);
+
+  if (!sessieIsGeldig(token ? decodeURIComponent(token) : undefined)) {
+    return Response.json({ error: "Niet ingelogd in de beheeromgeving." }, { status: 401 });
+  }
+
+  return null;
+}

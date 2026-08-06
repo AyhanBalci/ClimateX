@@ -11,8 +11,14 @@ import { factuurHerinneringEmail } from "../../../lib/emailTemplates";
 import { dagenTeLaat, isAchterstallig } from "../../../lib/factuurOverzicht";
 import { formatBedrag } from "../../../lib/formatters";
 import { Factuur } from "../../../lib/types";
+import { weigerZonderDashboardSessie } from "../../../lib/dashboardAuth";
 
 export async function POST(request: NextRequest) {
+  // Deze route verstuurt e-mail met klantgegevens; alleen een ingelogde
+  // beheerder mag dat in gang zetten.
+  const geweigerd = weigerZonderDashboardSessie(request);
+  if (geweigerd) return geweigerd;
+
   if (!isSupabaseConfigured || !supabase) {
     return NextResponse.json({ error: "Supabase is niet geconfigureerd." }, { status: 500 });
   }

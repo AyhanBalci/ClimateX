@@ -9,6 +9,7 @@ import {
 } from "../../../lib/resend";
 import { meldingenSamenvattingEmail } from "../../../lib/emailTemplates";
 import { Melding } from "../../../lib/types";
+import { weigerZonderDashboardSessie } from "../../../lib/dashboardAuth";
 
 const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL || "ayhan-b@outlook.com";
 
@@ -19,7 +20,12 @@ const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL || "ayhan-b@outlook.com
  * herhaalbaar mag zijn bij het voorladen van een link. Aan te roepen vanuit het
  * dashboard of vanaf een geplande taak.
  */
-export async function POST() {
+export async function POST(request: Request) {
+  // Deze route verstuurt e-mail naar de beheerder; alleen een ingelogde
+  // beheerder mag dat in gang zetten.
+  const geweigerd = weigerZonderDashboardSessie(request);
+  if (geweigerd) return geweigerd;
+
   if (!isSupabaseConfigured || !supabase) {
     return NextResponse.json({ error: "Supabase is niet geconfigureerd." }, { status: 500 });
   }

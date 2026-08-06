@@ -3,8 +3,14 @@ import { isSupabaseConfigured, supabase } from "../../../lib/supabase";
 import { buildWerkbonPdfDocument } from "../../../lib/generateWerkbonPdf";
 import { sendWerkbonPdfEmail } from "../../../lib/sendWerkbonPdfEmail";
 import { Werkbon } from "../../../lib/types";
+import { weigerZonderDashboardSessie } from "../../../lib/dashboardAuth";
 
 export async function POST(request: NextRequest) {
+  // Deze route verstuurt e-mail met klantgegevens; alleen een ingelogde
+  // beheerder mag dat in gang zetten.
+  const geweigerd = weigerZonderDashboardSessie(request);
+  if (geweigerd) return geweigerd;
+
   if (!isSupabaseConfigured || !supabase) {
     return NextResponse.json({ error: "Supabase is niet geconfigureerd." }, { status: 500 });
   }
