@@ -1,6 +1,6 @@
 import { jsPDF } from "jspdf";
 import { Offerte } from "./types";
-import { formatBedragRond, formatDatum } from "./formatters";
+import { formatBedrag, formatDatum } from "./formatters";
 
 export type KlantGegevens = {
   naam: string;
@@ -12,9 +12,18 @@ export type KlantGegevens = {
 
 export const OFFERTE_GELDIGHEID_DAGEN = 30;
 
+/** Zelfde percentage en afronding als factuurActions, zodat offerte en factuur nooit uiteenlopen. */
+const BTW_PERCENTAGE = 0.21;
+
+function btwBedragen(prijsExclBtw: number) {
+  const btw = Math.round(prijsExclBtw * BTW_PERCENTAGE * 100) / 100;
+  const totaal = Math.round((prijsExclBtw + btw) * 100) / 100;
+  return { excl: prijsExclBtw, btw, totaal };
+}
+
 const ALGEMENE_VOORWAARDEN = [
   "Deze offerte is vrijblijvend en geldig tot de hierboven vermelde geldigheidsdatum.",
-  "Genoemde prijzen zijn inclusief btw, tenzij anders vermeld, en zijn gebaseerd op de bij ClimateX bekende situatie.",
+  "Genoemde prijzen zijn exclusief btw, tenzij anders vermeld, en zijn gebaseerd op de bij ClimateX bekende situatie.",
   "Na akkoord plant ClimateX de installatie in overleg met de klant in.",
   "Op de installatie en de geleverde laadpaal geldt standaard garantie volgens de garantievoorwaarden van ClimateX.",
   "Op alle offertes en overeenkomsten van ClimateX zijn de algemene voorwaarden van ClimateX van toepassing.",
@@ -130,17 +139,31 @@ export function buildOffertePdfDocument(offerte: Offerte, klant: KlantGegevens):
     divider();
   }
 
-  // Totaalprijs
-  ensureSpace(20);
+  // Prijsopbouw met btw-specificatie. De klant ziet hiermee vooraf exact
+  // hetzelfde bedrag als later op de factuur komt te staan.
+  const bedragen = btwBedragen(offerte.prijs);
+  ensureSpace(42);
+  section("Prijsopbouw");
+  ([
+    ["Subtotaal (excl. btw)", formatBedrag(bedragen.excl)],
+    ["Btw (21%)", formatBedrag(bedragen.btw)],
+  ] as const).forEach(([label, waarde]) => {
+    doc.text(label, margin, y);
+    doc.text(waarde, pageWidth - margin, y, { align: "right" });
+    y += 6;
+  });
+
   y += 2;
   doc.setFillColor(34, 211, 238);
   doc.roundedRect(margin, y, pageWidth - margin * 2, 16, 3, 3, "F");
   doc.setTextColor(10, 10, 10);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13);
-  doc.text(`Totaalbedrag: ${formatBedragRond(offerte.prijs)}`, pageWidth / 2, y + 10.5, { align: "center" });
+  doc.text(`Totaal incl. btw: ${formatBedrag(bedragen.totaal)}`, pageWidth / 2, y + 10.5, { align: "center" });
   y += 26;
   doc.setTextColor(20, 20, 20);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
 
   // Algemene voorwaarden
   ensureSpace(40);
