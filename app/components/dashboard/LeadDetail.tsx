@@ -2,11 +2,12 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Lead, LeadNotitie, LeadStatusHistorie, Offerte, Planning, Product, Werkbon } from "../../lib/types";
-import { STATUS_OPTIONS } from "../../lib/constants";
+import { KLANT_DOCUMENT_CATEGORIE_OPTIONS, STATUS_OPTIONS } from "../../lib/constants";
 import { supabase } from "../../lib/supabase";
 import { updateLeadStatus } from "../../lib/leadActions";
 import { markOfferteVerstuurd, updateOfferteStatus } from "../../lib/offerteActions";
 import { getNextOfferteNummer } from "../../lib/offerteNummer";
+import FileUpload from "./FileUpload";
 import KlantAccountKoppeling from "./KlantAccountKoppeling";
 import OfferteActieKnoppen from "./OfferteActieKnoppen";
 import OfferteKoppelingen from "./OfferteKoppelingen";
@@ -490,6 +491,17 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated, onOpenWerkbon,
                 <p className="mt-2 text-sm text-slate-200">{item.label}</p>
               </div>
             ))}
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-xl shadow-black/20 sm:p-8">
+          <h3 className="text-lg font-semibold text-white">Documenten</h3>
+          <p className="mt-1 text-sm text-slate-400">
+            Dezelfde bestanden als op het klantprofiel; beide schermen hangen aan dezelfde lead. Ook de foto&apos;s
+            die de klant zelf via de meterkastcheck heeft geüpload staan hier.
+          </p>
+          <div className="mt-4">
+            <FileUpload leadId={lead.id} categorieen={KLANT_DOCUMENT_CATEGORIE_OPTIONS} />
           </div>
         </section>
       </div>
