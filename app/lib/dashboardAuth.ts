@@ -16,21 +16,48 @@ export const SESSIE_COOKIE = "cx_dashboard";
 const SESSIE_DUUR_SECONDEN = 60 * 60 * 8;
 
 /**
- * DASHBOARD_PASSWORD heeft de voorkeur. PORTAL_ADMIN_SECRET is een bestaande
- * variabele en dient als terugval, zodat de beheeromgeving bereikbaar blijft
- * zolang er nog geen eigen wachtwoord is ingesteld.
+ * Het dashboardwachtwoord komt uitsluitend uit DASHBOARD_PASSWORD.
  *
- * Is geen van beide gezet, dan geeft dit null en weigert de login iedereen.
- * Dat is bewust: terugvallen op een vaste waarde in de code zou het probleem
- * dat we hier oplossen precies weer introduceren.
+ * Er stond hier eerder een terugval op PORTAL_ADMIN_SECRET. Die is verwijderd
+ * omdat hij onzichtbaar maakte wélk wachtwoord er gold: was DASHBOARD_PASSWORD
+ * leeg of stond hij op de verkeerde omgeving, dan nam het portaalwachtwoord het
+ * stilzwijgend over. De login gaf dan "Wachtwoord onjuist" op een wachtwoord
+ * dat volgens de instellingen had moeten werken, zonder enig spoor naar de
+ * oorzaak. Twee bronnen voor één slot is een fout op zich.
+ *
+ * PORTAL_ADMIN_SECRET blijft bestaan voor het klantenportaal; die twee staan
+ * nu volledig los van elkaar.
+ *
+ * Ontbreekt DASHBOARD_PASSWORD, dan geeft dit null en weigert de login iedereen.
  */
 function geheim(): string | null {
-  const wachtwoord = process.env.DASHBOARD_PASSWORD || process.env.PORTAL_ADMIN_SECRET;
-  return wachtwoord && wachtwoord.length > 0 ? wachtwoord : null;
+  const wachtwoord = process.env.DASHBOARD_PASSWORD;
+  // Alleen spaties is net zo goed niets, en is bij plakken zo gebeurd.
+  return wachtwoord && wachtwoord.trim().length > 0 ? wachtwoord : null;
 }
 
 export function isDashboardAuthGeconfigureerd(): boolean {
   return geheim() !== null;
+}
+
+/**
+ * Meldt bij het opstarten dat de beheeromgeving niet bruikbaar is.
+ *
+ * Bewust een luide waarschuwing en geen harde crash: dit bestand hangt aan de
+ * route handlers van een site die verder gewoon publiek bereikbaar hoort te
+ * zijn. Het proces laten vallen zou de hele website platleggen omdat één
+ * beheerderswachtwoord ontbreekt, en dat is een zwaardere storing dan het
+ * probleem dat het oplost. De login zelf weigert iedereen met een 503.
+ */
+if (!isDashboardAuthGeconfigureerd()) {
+  console.error(
+    "[dashboardAuth] DASHBOARD_PASSWORD ontbreekt of is leeg. De beheeromgeving " +
+      "op /dashboard weigert daardoor elke login met status 503. Zet deze variabele " +
+      "in de omgeving (in Vercel: Settings > Environment Variables, met het vinkje " +
+      "Production aan) en deploy opnieuw. Let op onzichtbare spaties of regeleinden " +
+      "bij het plakken. Er is sinds deze wijziging geen terugval meer op " +
+      "PORTAL_ADMIN_SECRET; die variabele geldt uitsluitend nog voor het klantenportaal."
+  );
 }
 
 /** Vergelijkt zonder dat de looptijd iets over het wachtwoord prijsgeeft. */
@@ -93,7 +120,11 @@ export function sessieIsGeldig(token: string | undefined): boolean {
 export function weigerZonderDashboardSessie(request: Request): Response | null {
   if (!isDashboardAuthGeconfigureerd()) {
     return Response.json(
-      { error: "De beheeromgeving is niet geconfigureerd. Stel DASHBOARD_PASSWORD in." },
+      {
+        error:
+          "De beheeromgeving is niet ingesteld: DASHBOARD_PASSWORD ontbreekt op de server. " +
+          "Zet die variabele in de omgeving en deploy opnieuw.",
+      },
       { status: 503 }
     );
   }

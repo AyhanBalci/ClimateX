@@ -34,11 +34,18 @@ export async function GET() {
 export async function POST(request: Request) {
   if (!isDashboardAuthGeconfigureerd()) {
     console.error(
-      "[dashboard/session] Geen DASHBOARD_PASSWORD of PORTAL_ADMIN_SECRET ingesteld; " +
-        "inloggen is daarom niet mogelijk."
+      "[dashboard/session] DASHBOARD_PASSWORD ontbreekt of is leeg; inloggen is " +
+        "daarom niet mogelijk. Zet de variabele in de omgeving (in Vercel met het " +
+        "vinkje Production aan) en deploy opnieuw."
     );
+    // De melding noemt de variabele met naam. Dit scherm is alleen voor
+    // beheerders, en zonder die naam bleef onduidelijk wat er moest gebeuren.
     return NextResponse.json(
-      { error: "De beheeromgeving is nog niet ingesteld. Neem contact op met de beheerder." },
+      {
+        error:
+          "De beheeromgeving is niet ingesteld: DASHBOARD_PASSWORD ontbreekt op de server. " +
+          "Zet die variabele in de omgeving en deploy opnieuw.",
+      },
       { status: 503 }
     );
   }
