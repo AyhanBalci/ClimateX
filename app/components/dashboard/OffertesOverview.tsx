@@ -39,7 +39,7 @@ export default function OffertesOverview({ onOpenWerkbon, onOpenPlanning }: Prop
       const [offertesRes, werkbonnenRes, planningRes] = await Promise.all([
         supabase
           .from("offertes")
-          .select("*, leads(naam, telefoon, email, plaats, type_woning), vastgoedtickets(klant, locatie, contactpersoon, telefoonnummer)")
+          .select("*, leads(naam, telefoon, email, plaats, type_woning), vastgoedtickets(klant, locatie, contactpersoon, telefoonnummer), offerte_acceptaties(geaccepteerd_op)")
           .order("datum", { ascending: false }),
         supabase.from("werkbonnen").select("*").not("offerte_id", "is", null),
         supabase.from("planning").select("*").not("werkbon_id", "is", null),
@@ -48,7 +48,14 @@ export default function OffertesOverview({ onOpenWerkbon, onOpenPlanning }: Prop
       if (offertesRes.error || werkbonnenRes.error || planningRes.error) {
         setError(offertesRes.error?.message || werkbonnenRes.error?.message || planningRes.error?.message || "Onbekende fout.");
       } else {
-        setOffertes((offertesRes.data as Offerte[]) || []);
+        setOffertes(
+          ((offertesRes.data as (Offerte & { offerte_acceptaties?: { geaccepteerd_op: string }[] })[]) || []).map(
+            ({ offerte_acceptaties, ...offerte }) => ({
+              ...offerte,
+              geaccepteerd_op: offerte_acceptaties?.[0]?.geaccepteerd_op ?? null,
+            })
+          )
+        );
         setWerkbonnen((werkbonnenRes.data as Werkbon[]) || []);
         setPlanningen((planningRes.data as Planning[]) || []);
       }

@@ -2,6 +2,7 @@ import { jsPDF } from "jspdf";
 import type { Offerte } from "./types";
 import { formatBedrag, formatDatum } from "./formatters";
 import { OFFERTE_GELDIGHEID_DAGEN } from "./constants";
+import { AKKOORDTEKST } from "./offerteAcceptatie";
 
 export type KlantGegevens = {
   naam: string;
@@ -180,19 +181,38 @@ export function buildOffertePdfDocument(offerte: Offerte, klant: KlantGegevens):
   divider();
 
   // Akkoordverklaring
-  ensureSpace(35);
+  //
+  // Accepteren gebeurt digitaal in het klantenportaal, niet meer met een
+  // handtekening op papier. Is de offerte al geaccepteerd, dan staat hier het
+  // vastgelegde moment; zo niet, dan wijst dit blok de klant de weg.
+  ensureSpace(30);
   section("Akkoordverklaring");
   doc.setFontSize(9);
-  doc.text("Door ondertekening gaat u akkoord met deze offerte en de algemene voorwaarden van ClimateX.", margin, y);
-  y += 14;
-  doc.setDrawColor(200, 200, 200);
-  const lineWidth = (pageWidth - margin * 2 - 10) / 2;
-  doc.line(margin, y, margin + lineWidth, y);
-  doc.line(margin + lineWidth + 10, y, margin + lineWidth * 2 + 10, y);
-  doc.setFontSize(9);
-  doc.setTextColor(120, 120, 120);
-  doc.text("Handtekening klant", margin, y + 5);
-  doc.text("Datum", margin + lineWidth + 10, y + 5);
+
+  if (offerte.geaccepteerd_op) {
+    const moment = new Date(offerte.geaccepteerd_op);
+    const leesbaar = Number.isNaN(moment.getTime())
+      ? ""
+      : moment.toLocaleString("nl-NL", { dateStyle: "long", timeStyle: "short" });
+
+    doc.text("Deze offerte is door de klant digitaal geaccepteerd via het klantenportaal.", margin, y);
+    y += 5;
+    doc.setFont("helvetica", "bold");
+    doc.text(`Geaccepteerd op: ${leesbaar}`, margin, y);
+    doc.setFont("helvetica", "normal");
+    y += 6;
+    doc.setTextColor(120, 120, 120);
+    doc.text(`Akkoordverklaring: "${AKKOORDTEKST}"`, margin, y);
+  } else {
+    const uitleg = doc.splitTextToSize(
+      "U accepteert deze offerte digitaal in het klantenportaal van ClimateX. Vink daar de akkoordverklaring " +
+        "aan en kies \"Offerte accepteren\". Wij leggen dan datum, tijd en de inhoud van deze offerte vast. " +
+        "Een handtekening op papier is niet nodig.",
+      pageWidth - margin * 2
+    );
+    doc.text(uitleg, margin, y);
+    y += uitleg.length * 4.5;
+  }
 
   // Footer op elke pagina. Dit gebeurt bewust pas na alle inhoud: pas dan is
   // bekend hoeveel pagina's het zijn geworden. Zonder deze lus kreeg alleen de

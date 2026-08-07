@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
   const { data, error: fetchError } = await supabase
     .from("offertes")
-    .select("*, leads(naam, telefoon, email, plaats, type_woning), vastgoedtickets(klant, locatie, contactpersoon, telefoonnummer)")
+    .select("*, leads(naam, telefoon, email, plaats, type_woning), vastgoedtickets(klant, locatie, contactpersoon, telefoonnummer), offerte_acceptaties(geaccepteerd_op)")
     .eq("id", body.offerteId)
     .maybeSingle();
 
@@ -36,7 +36,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: fetchError?.message || "Offerte niet gevonden." }, { status: 404 });
   }
 
-  const offerte = data as Offerte;
+  // De acceptatie komt als lijst uit de join; platslaan zodat de PDF hem toont.
+  const { offerte_acceptaties, ...rij } = data as Offerte & {
+    offerte_acceptaties?: { geaccepteerd_op: string }[];
+  };
+  const offerte: Offerte = {
+    ...rij,
+    geaccepteerd_op: offerte_acceptaties?.[0]?.geaccepteerd_op ?? null,
+  };
 
   const klant = {
     naam: offerte.leads?.naam || offerte.vastgoedtickets?.klant || "",

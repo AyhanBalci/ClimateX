@@ -5,8 +5,9 @@ import PortalShell from "../../components/portal/PortalShell";
 import { usePortalSession } from "../../lib/portalAuth";
 import { getMyLeadAndTicketIds, getMyOffertes } from "../../lib/portalData";
 import { klantAccepteerOfferte } from "../../lib/klantOfferteActions";
+import { AKKOORDTEKST } from "../../lib/offerteAcceptatie";
 import { Offerte } from "../../lib/types";
-import { formatBedragRond, formatDatum } from "../../lib/formatters";
+import { formatBedragRond, formatDatum, formatDatumTijd } from "../../lib/formatters";
 import { offerteStatusWeergave } from "../../lib/offerteStatus";
 
 /**
@@ -27,6 +28,9 @@ export default function PortalOffertesPage() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Het vinkje per offerte. Zonder aangevinkt vakje blijft de knop uit, en
+  // weigert ook de server het akkoord.
+  const [aangevinkt, setAangevinkt] = useState<Record<string, boolean>>({});
 
   async function fetchOffertes() {
     if (!session?.user.id) return;
@@ -57,14 +61,17 @@ export default function PortalOffertesPage() {
     load();
   }, [session?.user.id]);
 
-  const handleAkkoord = async (offerteId: string) => {
-    if (busyId) return;
+  const handleAccepteren = async (offerteId: string) => {
+    if (busyId || !aangevinkt[offerteId]) return;
     setBusyId(offerteId);
     setError(null);
-    const { error: akkoordError } = await klantAccepteerOfferte(offerteId);
-    if (akkoordError) {
-      setError("Het akkoord geven is niet gelukt. Probeer het opnieuw of neem contact met ons op.");
+
+    const resultaat = await klantAccepteerOfferte(offerteId, true);
+    if (resultaat.error) {
+      setError(resultaat.error);
     } else {
+      // Ook bij een offerte die al geaccepteerd bleek: opnieuw ophalen zodat
+      // het scherm de vastgelegde stand toont in plaats van de oude.
       await fetchOffertes();
     }
     setBusyId(null);
@@ -94,7 +101,7 @@ export default function PortalOffertesPage() {
     <PortalShell>
       <section className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-xl shadow-black/20 sm:p-8">
         <h2 className="text-xl font-semibold text-white">Mijn offertes</h2>
-        <p className="mt-2 text-sm text-slate-400">Bekijk uw offertes, download de PDF of geef akkoord.</p>
+        <p className="mt-2 text-sm text-slate-400">Bekijk uw offertes, download de PDF of accepteer digitaal.</p>
 
         {loading ? <p className="mt-6 text-sm text-slate-400">Bezig met laden...</p> : null}
         {error ? <p className="mt-6 text-sm text-rose-400">{error}</p> : null}
@@ -124,16 +131,42 @@ export default function PortalOffertesPage() {
                 >
                   PDF downloaden
                 </button>
-                {offerte.status === "Verstuurd" && !offerteStatusWeergave(offerte.status, offerte.datum).verlopen ? (
-                  <button
-                    onClick={() => handleAkkoord(offerte.id)}
-                    disabled={busyId === offerte.id}
-                    className="rounded-full bg-cyan-400 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:opacity-50"
-                  >
-                    {busyId === offerte.id ? "Bezig..." : "Akkoord geven"}
-                  </button>
-                ) : null}
               </div>
+
+              {offerte.geaccepteerd_op ? (
+                <div className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-400/5 p-4">
+                  <p className="text-sm font-semibold text-emerald-300">Offerte geaccepteerd</p>
+                  <p className="mt-1 text-sm text-emerald-100/80">
+                    U heeft deze offerte digitaal geaccepteerd op {formatDatumTijd(offerte.geaccepteerd_op)}.
+                  </p>
+                  <p className="mt-2 text-xs text-emerald-100/60">&ldquo;{AKKOORDTEKST}&rdquo;</p>
+                </div>
+              ) : offerte.status === "Verstuurd" &&
+                !offerteStatusWeergave(offerte.status, offerte.datum).verlopen ? (
+                <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-4">
+                  <label className="flex cursor-pointer items-start gap-3 text-sm text-slate-200">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(aangevinkt[offerte.id])}
+                      onChange={(event) =>
+                        setAangevinkt((huidig) => ({ ...huidig, [offerte.id]: event.target.checked }))
+                      }
+                      className="mt-0.5 h-5 w-5 shrink-0 accent-cyan-400"
+                    />
+                    <span>{AKKOORDTEKST}</span>
+                  </label>
+                  <button
+                    onClick={() => handleAccepteren(offerte.id)}
+                    disabled={!aangevinkt[offerte.id] || busyId === offerte.id}
+                    className="mt-4 min-h-[44px] w-full rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
+                  >
+                    {busyId === offerte.id ? "Bezig met accepteren..." : "Offerte accepteren"}
+                  </button>
+                  <p className="mt-2 text-xs text-slate-500">
+                    Na accepteren leggen wij datum, tijd en de inhoud van deze offerte vast.
+                  </p>
+                </div>
+              ) : null}
 
               {offerteStatusWeergave(offerte.status, offerte.datum).verlopen ? (
                 <p className="mt-3 text-xs leading-5 text-slate-400">

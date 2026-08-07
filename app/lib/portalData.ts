@@ -26,11 +26,21 @@ export async function getMyOffertes(leadIds: string[], ticketIds: string[]): Pro
   if (!supabase || (leadIds.length === 0 && ticketIds.length === 0)) return [];
   const { data, error } = await supabase
     .from("offertes")
-    .select("*, leads(naam, telefoon, email, plaats, type_woning), vastgoedtickets(klant, locatie, contactpersoon, telefoonnummer)")
+    .select(
+      "*, leads(naam, telefoon, email, plaats, type_woning), vastgoedtickets(klant, locatie, contactpersoon, telefoonnummer), offerte_acceptaties(geaccepteerd_op)"
+    )
     .or(buildOrFilter(leadIds, ticketIds))
     .order("datum", { ascending: false });
   if (error) throw new Error(error.message);
-  return (data as Offerte[]) || [];
+
+  // De join levert een lijst; de unieke sleutel op offerte_id maakt dat er
+  // hooguit één acceptatie is. Platslaan naar één veld houdt het scherm simpel.
+  return ((data as (Offerte & { offerte_acceptaties?: { geaccepteerd_op: string }[] })[]) || []).map(
+    ({ offerte_acceptaties, ...offerte }) => ({
+      ...offerte,
+      geaccepteerd_op: offerte_acceptaties?.[0]?.geaccepteerd_op ?? null,
+    })
+  );
 }
 
 export async function getMyFacturen(leadIds: string[], ticketIds: string[]): Promise<Factuur[]> {

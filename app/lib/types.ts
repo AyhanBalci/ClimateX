@@ -48,6 +48,11 @@ export type Offerte = {
   offertenummer: string;
   werkzaamheden: string | null;
   opmerkingen: string | null;
+  /**
+   * Tijdstip waarop de klant deze offerte digitaal accepteerde. Wordt via een
+   * join meegeladen waar dat nodig is; is leeg als er geen acceptatie is.
+   */
+  geaccepteerd_op?: string | null;
   leads?: { naam: string; telefoon: string; email: string; plaats: string; type_woning: string } | null;
   vastgoedtickets?: { klant: string; locatie: string; contactpersoon: string | null; telefoonnummer: string | null } | null;
 };
