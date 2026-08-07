@@ -6,6 +6,7 @@
  */
 
 import { supabase } from "./supabase";
+import { uniekeKanaalnaam } from "./realtimeKanaal";
 import {
   DashboardData,
   DashboardFactuur,
@@ -60,12 +61,16 @@ export async function fetchDashboardData(): Promise<{ data: DashboardData; error
  * `onWijziging` aan zodra er iets verandert. Staat realtime replicatie in
  * Supabase uit, dan gebeurt er niets bijzonders: de knop "Vernieuwen" blijft de
  * terugvaloptie.
+ *
+ * Elk abonnement krijgt een eigen kanaalnaam. Meerdere componenten luisteren
+ * tegelijk mee, en een gedeelde naam liet Supabase het tweede abonnement op een
+ * al geabonneerd kanaal zetten; zie realtimeKanaal.ts.
  */
 export function abonneerOpDashboardWijzigingen(onWijziging: () => void): () => void {
   if (!supabase) return () => {};
 
   const tabellen = ["leads", "offertes", "werkbonnen", "facturen", "vastgoedtickets"];
-  const kanaal = supabase.channel("dashboard-wijzigingen");
+  const kanaal = supabase.channel(uniekeKanaalnaam("dashboard-wijzigingen"));
 
   tabellen.forEach((tabel) => {
     kanaal.on("postgres_changes", { event: "*", schema: "public", table: tabel }, onWijziging);

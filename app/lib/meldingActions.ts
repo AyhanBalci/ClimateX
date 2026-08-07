@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { uniekeKanaalnaam } from "./realtimeKanaal";
 import type { Melding } from "./types";
 
 /** Hoeveel meldingen het paneel toont. Ouder blijft in de database staan. */
@@ -45,7 +46,8 @@ export async function markeerAllesGelezen() {
 export function abonneerOpMeldingen(onNieuweMelding: () => void): () => void {
   if (!supabase) return () => {};
 
-  const kanaal = supabase.channel("meldingen-stroom");
+  // Eigen kanaalnaam per abonnement, om dezelfde reden als bij het dashboard.
+  const kanaal = supabase.channel(uniekeKanaalnaam("meldingen-stroom"));
   kanaal.on("postgres_changes", { event: "*", schema: "public", table: "meldingen" }, onNieuweMelding);
   kanaal.subscribe();
 
