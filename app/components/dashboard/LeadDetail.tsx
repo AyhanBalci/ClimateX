@@ -8,6 +8,7 @@ import { updateLeadStatus } from "../../lib/leadActions";
 import { markOfferteVerstuurd, updateOfferteStatus } from "../../lib/offerteActions";
 import { getNextOfferteNummer } from "../../lib/offerteNummer";
 import FileUpload from "./FileUpload";
+import LeadDefinitiefVerwijderen from "./LeadDefinitiefVerwijderen";
 import KlantAccountKoppeling from "./KlantAccountKoppeling";
 import OfferteActieKnoppen from "./OfferteActieKnoppen";
 import OfferteKoppelingen from "./OfferteKoppelingen";
@@ -19,11 +20,13 @@ type Props = {
   lead: Lead;
   onBack: () => void;
   onLeadUpdated: (leadId: string, newStatus: string) => void;
+  /** Wordt aangeroepen zodra de lead definitief verwijderd is. */
+  onLeadVerwijderd?: () => void;
   onOpenWerkbon: (werkbon: Werkbon) => void;
   onOpenPlanning: (planning: Planning) => void;
 };
 
-export default function LeadDetail({ lead, onBack, onLeadUpdated, onOpenWerkbon, onOpenPlanning }: Props) {
+export default function LeadDetail({ lead, onBack, onLeadUpdated, onLeadVerwijderd, onOpenWerkbon, onOpenPlanning }: Props) {
   const [notities, setNotities] = useState<LeadNotitie[]>([]);
   const [historie, setHistorie] = useState<LeadStatusHistorie[]>([]);
   const [offertes, setOffertes] = useState<Offerte[]>([]);
@@ -502,6 +505,22 @@ export default function LeadDetail({ lead, onBack, onLeadUpdated, onOpenWerkbon,
           </p>
           <div className="mt-4">
             <FileUpload leadId={lead.id} categorieen={KLANT_DOCUMENT_CATEGORIE_OPTIONS} />
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-6 shadow-xl shadow-black/20 sm:p-8">
+          <h3 className="text-lg font-semibold text-white">Beheer</h3>
+          <p className="mt-1 text-sm text-slate-400">
+            Bedoeld om testaanvragen op te ruimen. De gewone verwijderknop in het leadoverzicht blijft blokkeren
+            zodra er offertes, werkbonnen of facturen aan een lead hangen; hieronder ziet u eerst precies wat er
+            verdwijnt voordat u die blokkade opheft.
+          </p>
+          <div className="mt-4">
+            <LeadDefinitiefVerwijderen
+              leadId={lead.id}
+              leadNaam={lead.naam}
+              onVerwijderd={() => (onLeadVerwijderd ? onLeadVerwijderd() : onBack())}
+            />
           </div>
         </section>
       </div>

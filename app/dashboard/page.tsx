@@ -339,6 +339,7 @@ export default function DashboardPage() {
               lead={selectedLead}
               onBack={() => setSelectedLead(null)}
               onLeadUpdated={handleLeadUpdated}
+              onLeadVerwijderd={() => handleLeadDeleted(selectedLead.id)}
               onOpenWerkbon={handleOpenWerkbon}
               onOpenPlanning={handleOpenPlanning}
             />
