@@ -8,16 +8,27 @@ import {
   waarschuwBijAfwijkendAfzenderdomein,
 } from "../../../lib/resend";
 import { portalUitnodigingEmail } from "../../../lib/emailTemplates";
+import { weigerZonderDashboardSessie } from "../../../lib/dashboardAuth";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const ADMIN_SECRET = process.env.PORTAL_ADMIN_SECRET;
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://climate-x.nl";
 
 export async function POST(request: NextRequest) {
-  if (!ADMIN_SECRET || request.headers.get("x-portal-admin-secret") !== ADMIN_SECRET) {
-    return NextResponse.json({ error: "Niet toegestaan." }, { status: 401 });
-  }
+  // Autorisatie via de dashboardsessie, gelijk aan de andere beveiligde routes.
+  //
+  // Hier stond een gedeeld geheim in de header, dat de beheerder bij elke actie
+  // intypte. Dat geheim werd vergeleken met PORTAL_ADMIN_SECRET terwijl het
+  // scherm om het dashboardwachtwoord vroeg; zolang beide dezelfde waarde
+  // hadden viel dat niet op, maar zodra ze uiteenliepen weigerde deze route
+  // elke aanroep met "Niet toegestaan.".
+  //
+  // Een tweede wachtwoord voegde bovendien weinig toe: wie de dashboardsessie
+  // heeft, kan sowieso al alle klantgegevens inzien en facturen versturen. Het
+  // sessiecookie is httpOnly, ondertekend en verloopt na acht uur, waar het
+  // gedeelde geheim bij elke aanroep opnieuw over de lijn ging.
+  const geweigerd = weigerZonderDashboardSessie(request);
+  if (geweigerd) return geweigerd;
 
   if (!supabaseUrl || !serviceRoleKey) {
     return NextResponse.json(

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { dashboardFetch } from "../../lib/dashboardFetch";
 
 type Props = {
   naam: string;
@@ -12,17 +13,12 @@ type Props = {
 
 export default function KlantAccountKoppeling({ naam, email: emailProp, leadId, ticketId, klantUserId }: Props) {
   const [email, setEmail] = useState(emailProp || "");
-  const [adminWachtwoord, setAdminWachtwoord] = useState("");
   const [busy, setBusy] = useState(false);
   const [link, setLink] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const callInvite = async (sendEmail: boolean) => {
-    if (!adminWachtwoord) {
-      setError("Vul het dashboardwachtwoord in om deze actie te bevestigen.");
-      return;
-    }
     if (!email) {
       setError("Deze klant heeft geen e-mailadres.");
       return;
@@ -31,9 +27,13 @@ export default function KlantAccountKoppeling({ naam, email: emailProp, leadId, 
     setError(null);
     setMessage(null);
     try {
-      const response = await fetch("/api/portal/invite", {
+      // Autorisatie loopt via de dashboardsessie. dashboardFetch stuurt het
+      // sessiecookie mee en meldt het aan de rest van het scherm zodra de
+      // sessie verlopen blijkt, zodat er één duidelijke melding komt in plaats
+      // van een losse fout bij deze knop.
+      const response = await dashboardFetch("/api/portal/invite", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-portal-admin-secret": adminWachtwoord },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, naam, leadId, ticketId, sendEmail }),
       });
       const data = await response.json();
@@ -72,13 +72,6 @@ export default function KlantAccountKoppeling({ naam, email: emailProp, leadId, 
           placeholder="E-mailadres van de klant"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-2 text-xs text-white outline-none focus:border-cyan-300"
-        />
-        <input
-          type="password"
-          placeholder="Dashboardwachtwoord ter bevestiging"
-          value={adminWachtwoord}
-          onChange={(event) => setAdminWachtwoord(event.target.value)}
           className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-2 text-xs text-white outline-none focus:border-cyan-300"
         />
       </div>

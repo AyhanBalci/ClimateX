@@ -25,8 +25,8 @@ const SESSIE_DUUR_SECONDEN = 60 * 60 * 8;
  * dat volgens de instellingen had moeten werken, zonder enig spoor naar de
  * oorzaak. Twee bronnen voor één slot is een fout op zich.
  *
- * PORTAL_ADMIN_SECRET blijft bestaan voor het klantenportaal; die twee staan
- * nu volledig los van elkaar.
+ * PORTAL_ADMIN_SECRET wordt sindsdien nergens in de code meer uitgelezen. Ook
+ * /api/portal/invite gebruikt inmiddels de dashboardsessie.
  *
  * Ontbreekt DASHBOARD_PASSWORD, dan geeft dit null en weigert de login iedereen.
  */
@@ -56,7 +56,7 @@ if (!isDashboardAuthGeconfigureerd()) {
       "in de omgeving (in Vercel: Settings > Environment Variables, met het vinkje " +
       "Production aan) en deploy opnieuw. Let op onzichtbare spaties of regeleinden " +
       "bij het plakken. Er is sinds deze wijziging geen terugval meer op " +
-      "PORTAL_ADMIN_SECRET; die variabele geldt uitsluitend nog voor het klantenportaal."
+      "PORTAL_ADMIN_SECRET; die variabele wordt nergens meer uitgelezen."
   );
 }
 
