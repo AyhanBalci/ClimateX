@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import PortalShell from "../../components/portal/PortalShell";
+import { PortalFout, PortalLaden, PortalLeeg } from "../../components/portal/PortalStatus";
 import { usePortalSession } from "../../lib/portalAuth";
 import { getMyLeadAndTicketIds, getMyWerkbonnen } from "../../lib/portalData";
 import { Werkbon } from "../../lib/types";
@@ -34,21 +35,38 @@ export default function PortalWerkbonnenPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Opnieuw laden via een teller waar het effect aan hangt; zo blijft de
+  // ophaallogica binnen het effect staan.
+  const [herlaadTeller, setHerlaadTeller] = useState(0);
+  const herlaad = () => setHerlaadTeller((huidig) => huidig + 1);
+
   useEffect(() => {
-    async function fetchData() {
-      if (!session?.user.id) return;
+    const gebruikerId = session?.user.id;
+    if (!gebruikerId) return;
+
+    let verouderd = false;
+
+    async function laadGegevens(id: string) {
       setLoading(true);
+      setError(null);
       try {
-        const { leadIds, ticketIds } = await getMyLeadAndTicketIds(session.user.id);
+        const { leadIds, ticketIds } = await getMyLeadAndTicketIds(id);
         const data = await getMyWerkbonnen(leadIds, ticketIds);
-        setWerkbonnen(data);
+        if (!verouderd) setWerkbonnen(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Onbekende fout.");
+        if (!verouderd) setError(err instanceof Error ? err.message : "Onbekende fout.");
+      } finally {
+        // Altijd, ook bij een fout: anders blijft het scherm eindeloos laden.
+        if (!verouderd) setLoading(false);
       }
-      setLoading(false);
     }
-    fetchData();
-  }, [session?.user.id]);
+
+    laadGegevens(gebruikerId);
+
+    return () => {
+      verouderd = true;
+    };
+  }, [session?.user.id, herlaadTeller]);
 
   return (
     <PortalShell>
@@ -56,10 +74,10 @@ export default function PortalWerkbonnenPage() {
         <h2 className="text-xl font-semibold text-white">Mijn werkbonnen</h2>
         <p className="mt-2 text-sm text-slate-400">Bekijk de status en geplande datum van uw werkbonnen.</p>
 
-        {loading ? <p className="mt-6 text-sm text-slate-400">Bezig met laden...</p> : null}
-        {error ? <p className="mt-6 text-sm text-rose-400">{error}</p> : null}
+        {loading ? <PortalLaden wat="werkbonnen" /> : null}
+        {!loading && error ? <PortalFout wat="werkbonnen" onOpnieuw={herlaad} /> : null}
         {!loading && werkbonnen.length === 0 ? (
-          <p className="mt-6 text-sm text-slate-400">U heeft nog geen werkbonnen.</p>
+          <PortalLeeg tekst="U heeft nog geen werkbonnen. Na een uitgevoerde installatie vindt u ze hier terug." />
         ) : null}
 
         <div className="mt-6 space-y-4">

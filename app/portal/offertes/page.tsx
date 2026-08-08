@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import PortalShell from "../../components/portal/PortalShell";
+import { PortalFout, PortalLaden, PortalLeeg } from "../../components/portal/PortalStatus";
 import { usePortalSession } from "../../lib/portalAuth";
 import { getMyLeadAndTicketIds, getMyOffertes } from "../../lib/portalData";
 import { klantAccepteerOfferte } from "../../lib/klantOfferteActions";
@@ -32,34 +33,39 @@ export default function PortalOffertesPage() {
   // weigert ook de server het akkoord.
   const [aangevinkt, setAangevinkt] = useState<Record<string, boolean>>({});
 
-  async function fetchOffertes() {
-    if (!session?.user.id) return;
-    setLoading(true);
-    try {
-      const { leadIds, ticketIds } = await getMyLeadAndTicketIds(session.user.id);
-      const data = await getMyOffertes(leadIds, ticketIds);
-      setOffertes(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Onbekende fout.");
-    }
-    setLoading(false);
-  }
+  // Opnieuw laden gebeurt door deze teller op te hogen; het effect hieronder
+  // hangt eraan. Datzelfde patroon staat elders in het dashboard en houdt de
+  // ophaallogica binnen het effect, waar de lintregels hem willen hebben.
+  const [herlaadTeller, setHerlaadTeller] = useState(0);
+  const herlaad = () => setHerlaadTeller((huidig) => huidig + 1);
 
   useEffect(() => {
-    async function load() {
-      if (!session?.user.id) return;
+    const gebruikerId = session?.user.id;
+    if (!gebruikerId) return;
+
+    let verouderd = false;
+
+    async function laadOffertes(id: string) {
       setLoading(true);
+      setError(null);
       try {
-        const { leadIds, ticketIds } = await getMyLeadAndTicketIds(session.user.id);
+        const { leadIds, ticketIds } = await getMyLeadAndTicketIds(id);
         const data = await getMyOffertes(leadIds, ticketIds);
-        setOffertes(data);
+        if (!verouderd) setOffertes(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Onbekende fout.");
+        if (!verouderd) setError(err instanceof Error ? err.message : "Onbekende fout.");
+      } finally {
+        // Altijd, ook bij een fout: anders blijft het scherm eindeloos laden.
+        if (!verouderd) setLoading(false);
       }
-      setLoading(false);
     }
-    load();
-  }, [session?.user.id]);
+
+    laadOffertes(gebruikerId);
+
+    return () => {
+      verouderd = true;
+    };
+  }, [session?.user.id, herlaadTeller]);
 
   const handleAccepteren = async (offerteId: string) => {
     if (busyId || !aangevinkt[offerteId]) return;
@@ -72,7 +78,7 @@ export default function PortalOffertesPage() {
     } else {
       // Ook bij een offerte die al geaccepteerd bleek: opnieuw ophalen zodat
       // het scherm de vastgelegde stand toont in plaats van de oude.
-      await fetchOffertes();
+      herlaad();
     }
     setBusyId(null);
   };
@@ -103,11 +109,11 @@ export default function PortalOffertesPage() {
         <h2 className="text-xl font-semibold text-white">Mijn offertes</h2>
         <p className="mt-2 text-sm text-slate-400">Bekijk uw offertes, download de PDF of accepteer digitaal.</p>
 
-        {loading ? <p className="mt-6 text-sm text-slate-400">Bezig met laden...</p> : null}
-        {error ? <p className="mt-6 text-sm text-rose-400">{error}</p> : null}
+        {loading ? <PortalLaden wat="offertes" /> : null}
+        {!loading && error ? <PortalFout wat="offertes" onOpnieuw={herlaad} /> : null}
 
         {!loading && offertes.length === 0 ? (
-          <p className="mt-6 text-sm text-slate-400">U heeft nog geen offertes.</p>
+          <PortalLeeg tekst="U heeft nog geen offertes. Zodra wij een offerte voor u opstellen, verschijnt die hier." />
         ) : null}
 
         <div className="mt-6 space-y-4">
