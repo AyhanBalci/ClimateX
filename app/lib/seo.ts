@@ -1,7 +1,12 @@
 import { Brand, Product } from "./producten/types";
 import { productDisplayName } from "./producten/helpers";
+import { publiekeSiteUrl } from "./siteUrl";
 
-export const SITE_URL = "https://climate-x-alpha.vercel.app";
+// Kwam uit de centrale configuratie, zodat canonieke URL's en Open Graph
+// hetzelfde domein gebruiken als de rest van de applicatie. Hier stond een
+// hardcoded vercel.app-adres, waardoor productie naar een ander domein
+// verwees dan waarop de site draait.
+export const SITE_URL = publiekeSiteUrl();
 export const SITE_NAME = "ClimateX";
 export const SITE_TELEFOON = "+31614004488";
 export const SITE_EMAIL = "contact@climatex.nl";

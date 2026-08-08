@@ -1,13 +1,20 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
+import { portaalTerugkeerUrl } from "../../lib/siteUrl";
 
-export default function PortalLoginPage() {
+function PortalLoginFormulier() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Reden waarom de klant hier terechtkwam, doorgegeven door PortalAuthGuard
+  // nadat Supabase een verlopen of ongeldige link afwees.
+  const zoekParameters = useSearchParams();
+  const linkFout = zoekParameters.get("fout");
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -28,7 +35,10 @@ export default function PortalLoginPage() {
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: {
-        emailRedirectTo: `${window.location.origin}/portal/dashboard`,
+        // Niet window.location.origin: een klant die op climate-x.nl zonder
+        // www binnenkomt zou dan een tweede adres opleveren dat óók in de
+        // Supabase-allowlist moet staan. Eén vast adres houdt die lijst kort.
+        emailRedirectTo: portaalTerugkeerUrl(),
       },
     });
 
@@ -50,6 +60,27 @@ export default function PortalLoginPage() {
         <p className="mt-4 text-sm text-slate-400">
           Vul uw e-mailadres in. U ontvangt direct een inloglink per e-mail — een wachtwoord is niet nodig.
         </p>
+
+        {linkFout && !sent ? (
+          <div className="mt-6 rounded-3xl border border-amber-300/30 bg-amber-400/10 p-5 text-sm text-amber-100">
+            {linkFout === "verlopen" ? (
+              <>
+                <p className="font-semibold text-amber-200">Deze inloglink is verlopen</p>
+                <p className="mt-1">
+                  Een inloglink is beperkt geldig en kan maar één keer gebruikt worden. Vul hieronder uw
+                  e-mailadres in, dan sturen wij direct een nieuwe link.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="font-semibold text-amber-200">Inloggen via de link is niet gelukt</p>
+                <p className="mt-1">
+                  Vul hieronder uw e-mailadres in om een nieuwe inloglink te ontvangen.
+                </p>
+              </>
+            )}
+          </div>
+        ) : null}
 
         {sent ? (
           <div className="mt-8 rounded-3xl border border-cyan-300/30 bg-cyan-400/10 p-5 text-sm text-cyan-200">
@@ -91,5 +122,23 @@ export default function PortalLoginPage() {
         </p>
       </div>
     </main>
+  );
+}
+
+/**
+ * useSearchParams vereist een Suspense-grens; zonder die grens weigert de
+ * build deze pagina statisch te genereren.
+ */
+export default function PortalLoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-zinc-950 text-white">
+          <p className="text-sm text-slate-400">Bezig met laden...</p>
+        </main>
+      }
+    >
+      <PortalLoginFormulier />
+    </Suspense>
   );
 }

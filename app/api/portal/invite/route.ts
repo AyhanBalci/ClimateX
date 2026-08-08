@@ -9,10 +9,10 @@ import {
 } from "../../../lib/resend";
 import { portalUitnodigingEmail } from "../../../lib/emailTemplates";
 import { weigerZonderDashboardSessie } from "../../../lib/dashboardAuth";
+import { portaalTerugkeerUrl } from "../../../lib/siteUrl";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://climate-x.nl";
 
 export async function POST(request: NextRequest) {
   // Autorisatie via de dashboardsessie, gelijk aan de andere beveiligde routes.
@@ -57,7 +57,11 @@ export async function POST(request: NextRequest) {
   const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
     type: "magiclink",
     email,
-    options: { redirectTo: `${SITE_URL}/portal/dashboard` },
+    // Via de centrale site-URL, die in productie nooit een localhost-adres
+    // teruggeeft. Dit adres moet in Supabase bij de Redirect URLs staan,
+    // anders negeert Supabase het en stuurt hij de klant naar zijn eigen
+    // Site URL.
+    options: { redirectTo: portaalTerugkeerUrl() },
   });
 
   if (linkError || !linkData?.user) {
